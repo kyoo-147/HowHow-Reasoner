@@ -446,3 +446,7 @@ A phase is done only when:
 10. output ends with the exact state label **`READY FOR HUMAN REVIEW`**.
 
 HowHow is complete as a product phase when a human can inspect the entire chain `question ↔ brief ↔ source/evidence ↔ hypothesis/decision ↔ code/data/environment ↔ experiment/metric ↔ figure/table ↔ claim ↔ reviewer ↔ manuscript ↔ package`, reproduce what the package claims within its declared limits, understand what remains unknown, and decide the next human-owned action.
+
+### Web control-plane client
+
+Run the typed local cockpit with `pnpm install --frozen-lockfile && pnpm dev`. Set `VITE_API_BASE_URL` (default `http://127.0.0.1:8000`) and `VITE_PROJECT_ID` when the control plane uses a different endpoint or project. The browser reads only the FastAPI API; it does not access project files directly.
