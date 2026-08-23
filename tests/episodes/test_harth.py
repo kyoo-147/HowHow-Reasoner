@@ -67,6 +67,35 @@ def test_bounded_harth_window_loader(tmp_path) -> None:
     assert details["rows_read"] == 8
 
 
+def test_bounded_loader_uses_deterministic_subject_quotas_and_fails_closed(tmp_path) -> None:
+    from howhow.episodes.harth.smoke import load_windows
+
+    header = "timestamp,back_x,back_y,back_z,thigh_x,thigh_y,thigh_z,label,subject\n"
+    paths = []
+    for number, subject in enumerate(("S015", "S016", "S001")):
+        path = tmp_path / f"part-{number}.csv"
+        rows = "".join(
+            f"{index},1,2,3,4,5,6,activity,{subject}\n" for index in range(4)
+        )
+        path.write_text(header + rows, encoding="utf-8")
+        paths.append(path)
+    first = load_windows(
+        list(reversed(paths)), max_rows=9, max_subjects=3, window_size=2, stride=1,
+        required_subjects=("S015", "S016", "S001"),
+    )
+    second = load_windows(
+        paths, max_rows=9, max_subjects=3, window_size=2, stride=1,
+        required_subjects=("S015", "S016", "S001"),
+    )
+    assert first[3]["rows_read"] == 9
+    assert first[3]["subject_quotas"] == {"S001": 3, "S015": 3, "S016": 3}
+    assert first[2] == second[2]
+    np.testing.assert_array_equal(first[0], second[0])
+    with pytest.raises(ValueError, match="absent"):
+        load_windows(paths, max_rows=9, max_subjects=3, window_size=2, stride=1,
+                     required_subjects=("S022",))
+
+
 def test_bounded_harth_window_loader_uses_filename_subject_fallback(tmp_path) -> None:
     from howhow.episodes.harth.smoke import load_windows
 

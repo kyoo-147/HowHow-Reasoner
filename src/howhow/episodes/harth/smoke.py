@@ -12,6 +12,7 @@ import sys
 import time
 import zipfile
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -120,57 +121,76 @@ def _normalise_subject(value: str) -> str:
 
 
 def load_windows(
-    csvs: list[Path], *, max_rows: int, max_subjects: int, window_size: int, stride: int
+    csvs: list[Path],
+    *,
+    max_rows: int,
+    max_subjects: int,
+    window_size: int,
+    stride: int,
+    required_subjects: Sequence[str] = (),
 ) -> tuple[np.ndarray, np.ndarray, list[str], dict[str, Any]]:
-    """Read a deterministic prefix of each file and produce majority-label windows."""
+    """Read deterministic per-subject quotas, never a global row prefix."""
     if max_rows < 1 or max_subjects < 1 or window_size < 2 or stride < 1:
         raise ValueError("row, subject, window, and stride limits must be positive")
-    rows: list[tuple[str, str, list[float]]] = []
-    subjects: set[str] = set()
-    files_used = 0
-    rows_read = 0
-    for path in csvs:
+    ordered_csvs = sorted({path.resolve() for path in csvs}, key=lambda path: path.as_posix())
+    required = tuple(dict.fromkeys(_normalise_subject(str(s)) for s in required_subjects))
+    counts: Counter[str] = Counter()
+    for path in ordered_csvs:
         with path.open(newline="", encoding="utf-8-sig") as stream:
             reader = csv.DictReader(stream)
             fields = {str(field).strip().lower() for field in (reader.fieldnames or [])}
-            # UCI HARTH identifies subjects in validated filenames (for example
-            # S006.csv), so a subject column is optional for those files.
             fallback = _subject_from_filename(path)
-            required = (REQUIRED - {"subject"}) | set(SENSORS)
+            required_fields = (REQUIRED - {"subject"}) | set(SENSORS)
             if fallback is None:
-                required.add("subject")
-            missing = required - fields
+                required_fields.add("subject")
+            missing = required_fields - fields
             if missing:
                 raise ValueError(f"{path}: missing required columns {sorted(missing)}")
-            file_rows = 0
             for raw in reader:
-                if rows_read >= max_rows:
-                    break
                 subject = _normalise_subject(str(raw.get("subject", "") or fallback or ""))
                 if not subject or subject == "S000":
                     raise ValueError(f"{path}: row has no parseable subject ID")
-                if subject not in subjects and len(subjects) >= max_subjects:
+                counts[subject] += 1
+    missing_required = sorted(set(required) - set(counts))
+    if missing_required:
+        raise ValueError(f"configured subjects absent from archive: {missing_required}")
+    subjects = tuple(sorted(counts))[:max_subjects]
+    if not set(required).issubset(subjects):
+        raise ValueError("required subjects exceed max_subjects")
+    quotas = {subject: max_rows // len(subjects) for subject in subjects}
+    for subject in subjects[: max_rows % len(subjects)]:
+        quotas[subject] += 1
+    rows: list[tuple[str, str, list[float]]] = []
+    seen: Counter[str] = Counter()
+    files_used = 0
+    rows_read = 0
+    for path in ordered_csvs:
+        file_rows = 0
+        with path.open(newline="", encoding="utf-8-sig") as stream:
+            reader = csv.DictReader(stream)
+            fallback = _subject_from_filename(path)
+            for raw in reader:
+                subject = _normalise_subject(str(raw.get("subject", "") or fallback or ""))
+                if subject not in quotas or seen[subject] >= quotas[subject]:
                     continue
                 try:
                     values = [float(raw[name]) for name in SENSORS]
                 except (KeyError, TypeError, ValueError) as exc:
-                    raise ValueError(f"{path}: non-numeric sensor row {rows_read + 1}") from exc
+                    raise ValueError(f"{path}: non-numeric sensor row for {subject}") from exc
                 label = str(raw["label"]).strip()
                 if not label:
-                    raise ValueError(f"{path}: blank label at row {rows_read + 1}")
-                subjects.add(subject)
+                    raise ValueError(f"{path}: blank label for {subject}")
                 rows.append((subject, label, values))
+                seen[subject] += 1
                 rows_read += 1
                 file_rows += 1
-            files_used += int(file_rows > 0)
-            if rows_read >= max_rows:
-                break
+        files_used += int(file_rows > 0)
     if not rows:
         raise ValueError("bounded read produced no rows")
     features: list[list[float]] = []
     labels: list[str] = []
     window_subjects: list[str] = []
-    for subject in sorted(subjects):
+    for subject in subjects:
         subject_rows = [row for row in rows if row[0] == subject]
         for start in range(0, max(0, len(subject_rows) - window_size + 1), stride):
             chunk = subject_rows[start : start + window_size]
@@ -188,7 +208,8 @@ def load_windows(
         window_subjects,
         {
             "rows_read": rows_read,
-            "subjects": sorted(subjects),
+            "subjects": list(subjects),
+            "subject_quotas": quotas,
             "files_used": files_used,
             "window_count": len(features),
             "window_size": window_size,
@@ -235,14 +256,18 @@ def run_smoke(args: argparse.Namespace) -> Path:
         download = download_harth(archive, deadline=started_clock + args.timeout)
         extraction_root = args.data_dir.resolve() / "extracted" / run_id
         safe_extract_zip(archive, extraction_root)
+        config = json.loads(args.config.read_text(encoding="utf-8"))
+        required_subjects = tuple(config["split"]["test_subjects"]) + tuple(
+            config["split"].get("training_subjects", [])
+        )
         features, raw_labels, subjects, extraction = load_windows(
             discover_csvs(extraction_root),
             max_rows=args.max_rows,
             max_subjects=args.max_subjects,
             window_size=args.window_size,
             stride=args.stride,
+            required_subjects=required_subjects,
         )
-        config = json.loads(args.config.read_text(encoding="utf-8"))
         split = subject_held_out_split(
             subjects, config["split"]["test_subjects"], seed=int(config["split"]["seed"])
         )
