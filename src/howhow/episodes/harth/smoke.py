@@ -133,10 +133,15 @@ def load_windows(
         with path.open(newline="", encoding="utf-8-sig") as stream:
             reader = csv.DictReader(stream)
             fields = {str(field).strip().lower() for field in (reader.fieldnames or [])}
-            missing = (REQUIRED | set(SENSORS)) - fields
+            # UCI HARTH identifies subjects in validated filenames (for example
+            # S006.csv), so a subject column is optional for those files.
+            fallback = _subject_from_filename(path)
+            required = (REQUIRED - {"subject"}) | set(SENSORS)
+            if fallback is None:
+                required.add("subject")
+            missing = required - fields
             if missing:
                 raise ValueError(f"{path}: missing required columns {sorted(missing)}")
-            fallback = _subject_from_filename(path)
             file_rows = 0
             for raw in reader:
                 if rows_read >= max_rows:
@@ -339,6 +344,8 @@ def main() -> None:
         raise SystemExit("real HARTH smoke is opt-in: set HOWHOW_RUN_REAL_HARTH=1")
     manifest = run_smoke(args)
     print(manifest)
+    if json.loads(manifest.read_text(encoding="utf-8"))["status"] == "FAILED":
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
