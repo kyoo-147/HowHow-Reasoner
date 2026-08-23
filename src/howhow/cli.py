@@ -16,6 +16,26 @@ event_app = typer.Typer()
 package_app = typer.Typer()
 literature_app = typer.Typer()
 app.add_typer(literature_app, name="literature")
+app.add_typer(literature_app, name="literature")
+
+harth_app = typer.Typer()
+app.add_typer(harth_app, name="harth")
+
+
+@harth_app.command("v2")
+def harth_v2(
+    input_file: Path = typer.Argument(..., exists=True, readable=True),  # noqa: B008
+    classes: list[str] = typer.Option(..., "--class", help="Frozen class vocabulary."),  # noqa: B008
+    checkpoint: Path | None = typer.Option(None, "--checkpoint"),  # noqa: B008
+    protocol_file: Path | None = typer.Option(None, "--protocol-file"),  # noqa: B008
+) -> None:
+    """Run HARTH protocol-v2 on explicitly supplied (normally synthetic) windows."""
+    from .episodes.harth.v2 import run_protocol
+
+    payload = json.loads(input_file.read_text(encoding="utf-8"))
+    records = payload["windows"] if isinstance(payload, dict) else payload
+    result = run_protocol(records, classes, checkpoint=checkpoint, protocol_file=protocol_file)
+    typer.echo(json.dumps(result.to_dict(), sort_keys=True))
 
 
 @literature_app.command("export-harth")
