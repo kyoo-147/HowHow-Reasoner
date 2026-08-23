@@ -1,10 +1,10 @@
 # HARTH related-work corpus
 
-This is a bounded, reproducible metadata corpus for `harth-calibration-v1`.
+This is a bounded, reproducible evidence corpus for `harth-calibration-v1`.
 
-- `sources.jsonl` contains Crossref `SourceRecord` rows and short `EvidenceSpan` rows only.
-- `related-work-matrix.json` links the bounded evidence to support, contradiction, unknowns, and candidate gaps.
-- `retrieval-report.json` records the retrieval timestamp, provider outcome, and raw-response policy.
-- `live-smoke.jsonl` is the pre-existing provider smoke artifact; it is not a complete review.
+- `sources.jsonl` is the existing Crossref metadata slice. Metadata/title spans are `UNVERIFIED`.
+- `oa-evidence.jsonl` records legally reachable landing-page provenance, response hashes, licenses, and short quotes. Only quotes from successfully retrieved HTML are `VERIFIED`; provider failures and unresolved locators remain `UNVERIFIED`.
+- `oa-retrieval-report.json` records the bounded live run and failures.
+- `related-work-matrix.json` is a claim-evidence matrix and deliberately does not claim exhaustive review, novelty, or HARTH-specific calibration results.
 
-The retrieval script is `scripts/build_harth_literature.py`. It stores SHA-256 hashes of the raw provider JSON response but never stores provider full text or PDFs. Metadata-only spans remain `UNVERIFIED`; the matrix deliberately does not claim novelty, correctness, or HARTH-specific calibration results.
+Run `uv run python scripts/build_harth_oa_evidence.py --live` for bounded retrieval. The script never writes PDFs, raw HTML, or full-text response bodies. A failed provider must remain visible in the report; do not convert it to an access or evidence claim. `--output` supports isolated test/fixture runs.

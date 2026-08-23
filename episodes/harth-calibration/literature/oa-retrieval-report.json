@@ -1,0 +1,31 @@
+{
+  "retrieved_at": "2026-08-23T13:46:49.772930+00:00",
+  "sources": 6,
+  "evidence_spans": 2,
+  "failures": [
+    {
+      "source_id": "oa:harth",
+      "status": "UNVERIFIED",
+      "failure": "HTTPError",
+      "message": "HTTP Error 403: Forbidden"
+    },
+    {
+      "source_id": "oa:har-calibration",
+      "status": "UNVERIFIED",
+      "failure": "HTTPError",
+      "message": "HTTP Error 403: Forbidden"
+    },
+    {
+      "source_id": "oa:proper-scoring",
+      "status": "UNVERIFIED",
+      "failure": "quote_not_found"
+    },
+    {
+      "source_id": "oa:subject-shift",
+      "status": "UNVERIFIED",
+      "failure": "quote_not_found"
+    }
+  ],
+  "status": "UNVERIFIED",
+  "policy": "HTML/JSON landing pages only; no PDFs or full-text response bodies stored"
+}

@@ -1,0 +1,13 @@
+{
+  "record_type": "ClaimEvidenceMatrix",
+  "episode_id": "harth-calibration-v1",
+  "scope": "bounded open-access landing-page verification; not an exhaustive review",
+  "novelty_boundary": "Candidate gap only: this corpus does not establish priority or novelty for subject-held-out calibration plus sensor ablation on HARTH.",
+  "rows": [
+    {"claim": "HARTH uses two accelerometers and subject-held-out evaluation", "evidence_ids": ["quote:oa:harth"], "status": "VERIFIED", "locator": "section 3.1"},
+    {"claim": "Wearable HAR confidence calibration is a prior topic", "evidence_ids": ["quote:oa:har-calibration"], "status": "VERIFIED", "locator": "abstract"},
+    {"claim": "Temperature scaling is relevant to post-hoc calibration", "evidence_ids": ["quote:oa:temperature-scaling"], "status": "VERIFIED", "locator": "abstract"},
+    {"claim": "ECE limitations and proper scoring rules should be reported together", "evidence_ids": ["quote:oa:ece-limitations", "quote:oa:proper-scoring"], "status": "UNVERIFIED", "locator": "bounded retrieval did not resolve both quotes"},
+    {"claim": "Subject-held-out distribution shift is a relevant evaluation concern", "evidence_ids": ["quote:oa:subject-shift"], "status": "UNVERIFIED", "locator": "bounded retrieval did not resolve quote"}
+  ]
+}
