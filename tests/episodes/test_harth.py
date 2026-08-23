@@ -74,17 +74,23 @@ def test_bounded_loader_uses_deterministic_subject_quotas_and_fails_closed(tmp_p
     paths = []
     for number, subject in enumerate(("S015", "S016", "S001")):
         path = tmp_path / f"part-{number}.csv"
-        rows = "".join(
-            f"{index},1,2,3,4,5,6,activity,{subject}\n" for index in range(4)
-        )
+        rows = "".join(f"{index},1,2,3,4,5,6,activity,{subject}\n" for index in range(4))
         path.write_text(header + rows, encoding="utf-8")
         paths.append(path)
     first = load_windows(
-        list(reversed(paths)), max_rows=9, max_subjects=3, window_size=2, stride=1,
+        list(reversed(paths)),
+        max_rows=9,
+        max_subjects=3,
+        window_size=2,
+        stride=1,
         required_subjects=("S015", "S016", "S001"),
     )
     second = load_windows(
-        paths, max_rows=9, max_subjects=3, window_size=2, stride=1,
+        paths,
+        max_rows=9,
+        max_subjects=3,
+        window_size=2,
+        stride=1,
         required_subjects=("S015", "S016", "S001"),
     )
     assert first[3]["rows_read"] == 9
@@ -92,8 +98,9 @@ def test_bounded_loader_uses_deterministic_subject_quotas_and_fails_closed(tmp_p
     assert first[2] == second[2]
     np.testing.assert_array_equal(first[0], second[0])
     with pytest.raises(ValueError, match="absent"):
-        load_windows(paths, max_rows=9, max_subjects=3, window_size=2, stride=1,
-                     required_subjects=("S022",))
+        load_windows(
+            paths, max_rows=9, max_subjects=3, window_size=2, stride=1, required_subjects=("S022",)
+        )
 
 
 def test_bounded_harth_window_loader_uses_filename_subject_fallback(tmp_path) -> None:
