@@ -1,4 +1,6 @@
 import shutil
+import struct
+import zlib
 from pathlib import Path
 
 import pytest
@@ -54,6 +56,31 @@ def test_absolute_paths_are_rejected(tmp_path: Path) -> None:
         PackageBuilder(BuildConfig(latex=fake_tool(tmp_path / "latex.cmd", pdf=True))).build(
             source, tmp_path / "out"
         )
+
+
+def test_committed_fixture_png_is_decodable() -> None:
+    data = Path("templates/paper/figures/fixture.png").read_bytes()
+    assert data.startswith(b"\x89PNG\r\n\x1a\n")
+
+    offset = 8
+    compressed = bytearray()
+    width = height = None
+    while offset < len(data):
+        length = struct.unpack(">I", data[offset : offset + 4])[0]
+        chunk_type = data[offset + 4 : offset + 8]
+        chunk = data[offset + 8 : offset + 8 + length]
+        crc = struct.unpack(">I", data[offset + 8 + length : offset + 12 + length])[0]
+        assert zlib.crc32(chunk_type + chunk) & 0xFFFFFFFF == crc
+        if chunk_type == b"IHDR":
+            width, height = struct.unpack(">II", chunk[:8])
+        elif chunk_type == b"IDAT":
+            compressed.extend(chunk)
+        elif chunk_type == b"IEND":
+            break
+        offset += 12 + length
+
+    assert (width, height) == (1, 1)
+    assert zlib.decompress(compressed)
 
 
 @pytest.mark.real_miktex
