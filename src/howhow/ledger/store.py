@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from collections.abc import Iterator
@@ -83,6 +84,34 @@ class EventStore:
 
     def verify(self) -> int:
         return len(self.read())
+
+    def append_idempotent(self, event: EventEnvelope, key: str) -> EventEnvelope:
+        """Append once for ``key`` while holding the writer lock."""
+        if not key:
+            raise ValueError("idempotency key must not be empty")
+        with self._writer():
+            events = self.read()
+            for existing in events:
+                if existing.payload.get("idempotency_key") == key:
+                    return existing
+            payload = {**event.payload, "idempotency_key": key}
+            payload_sha256 = hashlib.sha256(
+                json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            event = event.model_copy(update={"payload": payload, "payload_sha256": payload_sha256})
+            previous = event_hash(events[-1]) if events else None
+            event = event.model_copy(update={"previous_event_sha256": previous})
+            with self.project.events.open("ab") as handle:
+                handle.write(canonical_event(event))
+                handle.flush()
+                os.fsync(handle.fileno())
+            if os.name != "nt":
+                fd = os.open(self.project.events.parent, os.O_RDONLY)
+                try:
+                    os.fsync(fd)
+                finally:
+                    os.close(fd)
+            return event
 
     def append(self, event: EventEnvelope) -> EventEnvelope:
         with self._writer():
