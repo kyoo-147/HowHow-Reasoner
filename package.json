@@ -7,7 +7,8 @@
     "build": "pnpm --dir apps/web build",
     "test": "pnpm --dir apps/web test",
     "typecheck": "pnpm --dir apps/web typecheck",
-    "lint": "pnpm --dir apps/web lint"
+    "lint": "pnpm --dir apps/web lint",
+    "audit:supply-chain": "uv run scripts/audit_supply_chain.py --check"
   },
   "packageManager": "pnpm@10.33.2"
 }
