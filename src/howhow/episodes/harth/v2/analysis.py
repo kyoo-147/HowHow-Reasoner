@@ -100,8 +100,8 @@ def _paired_pvalue(values: Mapping[str, float]) -> float:
             count += abs(float(np.mean(x * signs))) >= observed - 1e-15
     else:
         rng = np.random.default_rng(0)
-        signs = rng.choice((-1.0, 1.0), size=(BOOTSTRAP_REPS, len(x)))
-        count = int(np.sum(np.abs((signs * x).mean(axis=1)) >= observed - 1e-15))
+        sampled_signs = rng.choice((-1.0, 1.0), size=(BOOTSTRAP_REPS, len(x)))
+        count = int(np.sum(np.abs((sampled_signs * x).mean(axis=1)) >= observed - 1e-15))
         total = BOOTSTRAP_REPS
     return float(min(1.0, (count + 1) / (total + 1)))
 
