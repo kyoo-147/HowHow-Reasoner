@@ -26,6 +26,7 @@ strict = true
 plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
+markers = ["real_miktex: optional smoke test requiring a local TeX installation"]
 testpaths = ["tests"]
 
 [build-system]
