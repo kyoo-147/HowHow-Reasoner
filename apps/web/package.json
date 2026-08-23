@@ -1,0 +1,9 @@
+{
+  "name": "@howhow/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {"dev":"vite","build":"tsc -b && vite build","test":"vitest run","typecheck":"tsc -b --pretty false","lint":"eslint . --max-warnings 0"},
+  "dependencies": {"@vitejs/plugin-react":"latest","vite":"latest","typescript":"5.9.3","react":"latest","react-dom":"latest","lucide-react":"latest"},
+  "devDependencies": {"vitest":"latest","eslint":"latest","@eslint/js":"latest","typescript-eslint":"latest","@types/react":"latest","@types/react-dom":"latest","eslint-plugin-react-hooks":"latest","eslint-plugin-react-refresh":"latest"}
+}

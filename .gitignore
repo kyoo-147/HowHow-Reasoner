@@ -4,3 +4,7 @@ Sori/
 __pycache__/
 *.py[cod]
 .venv/
+
+node_modules/
+apps/web/dist/
+*.tsbuildinfo
