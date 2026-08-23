@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -84,6 +85,17 @@ def create_app(
     root = (project_root or Path.cwd()).expanduser().resolve()
     registry = ProviderRegistry()
     app = FastAPI(title="HowHow Control Plane", version="v1")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://127.0.0.1:4173",
+            "http://localhost:4173",
+            "http://127.0.0.1:5173",
+            "http://localhost:5173",
+        ],
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Accept", "Content-Type", "Idempotency-Key"],
+    )
     app.state.project_root = root
     app.state.registry = registry
     app.state.max_body_bytes = max_body_bytes
