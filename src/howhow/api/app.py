@@ -107,9 +107,11 @@ def create_app(
             declared_length = int(length) if length is not None else 0
         except (TypeError, ValueError):
             from fastapi.responses import JSONResponse
+
             return JSONResponse(status_code=400, content={"detail": "invalid content-length"})
         if declared_length < 0:
             from fastapi.responses import JSONResponse
+
             return JSONResponse(status_code=400, content={"detail": "invalid content-length"})
         if declared_length > max_body_bytes:
             from fastapi.responses import JSONResponse
