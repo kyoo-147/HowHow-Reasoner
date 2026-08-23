@@ -20,6 +20,25 @@ app.add_typer(package_app, name="package")
 
 
 @app.command()
+def serve(
+    host: str = typer.Option(
+        "127.0.0.1", help="Bind address; non-loopback requires --allow-non-loopback."
+    ),
+    port: int = typer.Option(8787, min=1, max=65535),
+    project_root: Path | None = typer.Option(None, "--project-root"),  # noqa: B008
+    allow_non_loopback: bool = typer.Option(False, "--allow-non-loopback"),
+) -> None:
+    """Run the local control-plane API with loopback-only defaults."""
+    import uvicorn
+
+    if host not in {"127.0.0.1", "localhost", "::1"} and not allow_non_loopback:
+        raise typer.BadParameter("non-loopback binding requires --allow-non-loopback")
+    from .api import create_app
+
+    uvicorn.run(create_app(project_root=project_root or Path.cwd()), host=host, port=port)
+
+
+@app.command()
 def version() -> None:
     typer.echo(__version__)
 
