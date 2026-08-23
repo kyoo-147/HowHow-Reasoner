@@ -18,8 +18,18 @@ from .engine import (
     protocol_hash,
     run_protocol,
 )
+from .result_schema import (
+    SCHEMA_VERSION,
+    ResultSchemaError,
+    engine_result_to_schema,
+    validate_result,
+)
 
 __all__ = [
+    "SCHEMA_VERSION",
+    "ResultSchemaError",
+    "engine_result_to_schema",
+    "validate_result",
     "BOOTSTRAP_REPS",
     "PROTOCOL_ID",
     "TEMPERATURE_BOUNDS",

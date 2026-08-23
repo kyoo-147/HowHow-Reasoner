@@ -36,30 +36,47 @@ def test_invalid_artifact_cannot_generate_metrics(tmp_path: Path) -> None:
 
 def test_valid_artifact_generates_only_machine_values(tmp_path: Path) -> None:
     artifact = tmp_path / "results.json"
+    digest = "a" * 64
+    state = {
+        "metrics": {"nll": 0.25, "brier": 0.1, "ece": 0.05, "accuracy": 0.5, "macro_f1": 0.4},
+        "interval": [0.2, 0.3],
+        "class_support": {"rest": 3, "walk": 3},
+    }
     artifact.write_text(
         json.dumps(
             {
-                "schema_version": "v2",
+                "schema_version": "harth-result-v1",
                 "status": "VALIDATED",
-                "protocol_version": "protocol-v2",
-                "gates": {
-                    name: True
-                    for name in (
-                        "provenance",
-                        "frozen_split",
-                        "leakage",
-                        "finite_metrics",
-                        "class_coverage",
-                    )
+                "protocol_id": "harth-calibration-v2",
+                "input_hash": digest,
+                "protocol_hash": digest,
+                "code_hash": digest,
+                "provenance": {
+                    "input_hash": digest,
+                    "protocol_hash": digest,
+                    "code_hash": digest,
+                    "source": "test",
                 },
-                "folds": [{"subject": "S1", "metrics": {"nll": 0.25, "brier": 0.1, "ece": 0.05}}],
+                "class_vocabulary": ["rest", "walk"],
+                "fold_ids": ["full_sensor::S1"],
+                "folds": [
+                    {
+                        "fold_id": "full_sensor::S1",
+                        "configuration": "full_sensor",
+                        "test_subject": "S1",
+                        "train_subjects": ["S2"],
+                        "temperature": 1.0,
+                        "optimizer": {"converged": True},
+                        "states": {"uncalibrated": state, "calibrated": state},
+                    }
+                ],
             }
         ),
         encoding="utf-8",
     )
     subprocess.run([sys.executable, str(GENERATOR), "--artifact", str(artifact)], check=True)
     text = (PAPER / "generated" / "results.tex").read_text(encoding="utf-8")
-    assert "S1 & 0.250000 & 0.100000 & 0.050000" in text
+    assert "full_sensor::S1 & 0.250000 & 0.100000 & 0.050000" in text
     subprocess.run([sys.executable, str(GENERATOR)], check=True)
 
 
