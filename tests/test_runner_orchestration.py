@@ -102,8 +102,8 @@ def test_cancellation_event_is_typed() -> None:
     )
     result = LocalSubprocessProvider().run(req)
     assert result.state.value in {"cancelled", "output_limit"}
- 
- 
+
+
 def test_native_provider_is_truthfully_serial_degraded() -> None:
     capabilities = LocalSubprocessProvider().capabilities()
     assert capabilities.concurrency == 1
