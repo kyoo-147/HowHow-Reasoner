@@ -117,5 +117,44 @@ def package_check(output: Path) -> None:
     typer.echo(json.dumps(checks, sort_keys=True))
 
 
+workflow_app = typer.Typer()
+app.add_typer(workflow_app, name="workflow")
+
+
+@workflow_app.command("demo")
+def workflow_demo(
+    path: Path, project_id: str = typer.Option("fixture-episode", "--project-id")
+) -> None:
+    """Run the local deterministic demo; all results are labelled FIXTURE."""
+    from .workflows import FixtureDemo
+
+    snapshot = FixtureDemo.run(path, project_id=project_id)
+    typer.echo(
+        json.dumps(
+            {"label": "FIXTURE", "state": snapshot.state.value, "project_id": snapshot.project_id},
+            sort_keys=True,
+        )
+    )
+
+
+@workflow_app.command("status")
+def workflow_status(path: Path) -> None:
+    """Rebuild and print workflow state from the event ledger."""
+    from .workflows import EpisodeWorkflow
+
+    snapshot = EpisodeWorkflow(path).snapshot
+    typer.echo(
+        json.dumps(
+            {
+                "state": snapshot.state.value,
+                "project_id": snapshot.project_id,
+                "tasks": snapshot.tasks,
+                "completed": snapshot.completed,
+            },
+            sort_keys=True,
+        )
+    )
+
+
 if __name__ == "__main__":
     app()
