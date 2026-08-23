@@ -1,0 +1,106 @@
+{
+  "protocol_id": "harth-calibration-v2",
+  "decision": "REVISE",
+  "status": "PROTOCOL_ONLY_NO_REAL_RERUN",
+  "primary_design": "nested_subject_held_out_loso",
+  "legacy_analysis": {
+    "training_subjects": ["S006"],
+    "test_subjects": ["S015", "S016", "S017", "S018", "S019", "S020", "S021", "S022"],
+    "interpretation": "exploratory_same_data_only",
+    "confirmatory": false
+  },
+  "estimand": {
+    "target": "expected per-window loss for a new eligible HARTH subject from the finite eligible-subject set",
+    "unit_of_generalization": "subject",
+    "loss_unit": "complete_non_overlapping_window",
+    "primary_metrics": ["nll", "multiclass_brier", "top_label_ece"],
+    "ece": {"bins": 10, "binning": "equal_width_on_[0,1]_right_endpoint_in_final_bin"},
+    "summary": "macro_average_of_subject_level_mean_losses",
+    "pooled_window_summary": "secondary_descriptive_only"
+  },
+  "outer_split": {
+    "method": "leave_one_eligible_subject_out",
+    "freeze_before_results": true,
+    "subject_session_boundary": true,
+    "minimum_training_subjects_for_temperature": 2,
+    "fixed_sensitivity_cohort": ["S015", "S016", "S017", "S018", "S019", "S020", "S021", "S022"]
+  },
+  "data_policy": {
+    "default": "all_eligible_rows_and_complete_windows",
+    "row_sampling": false,
+    "deterministic_order": "normalized_posix_path_then_source_row_order",
+    "window_cross_subject_or_session": false,
+    "subset_policy": "separate_exploratory_run_with_declared_subject_stratified_quota_and_seed",
+    "failure_on_ambiguity": true
+  },
+  "preprocessing": {
+    "representation": "per_channel_window_mean_and_standard_deviation",
+    "full_sensors": ["back_x", "back_y", "back_z", "thigh_x", "thigh_y", "thigh_z"],
+    "fit_scope": "outer_training_subjects_only",
+    "model": "deterministic_cpu_nearest_centroid"
+  },
+  "temperature_scaling": {
+    "enabled": true,
+    "logit_space": true,
+    "fit_scope": "inner_subject_validation_only",
+    "inner_split": "leave_one_inner_training_subject_out",
+    "bounds": [0.05, 20.0],
+    "objective": "inner_validation_nll",
+    "optimizer": "deterministic_bounded_1d_fixed_tolerance",
+    "tie_break": "smaller_temperature",
+    "test_labels_used_for_fit": false,
+    "class_coverage_failure": "record_failure_without_fallback_calibration"
+  },
+  "sensor_ablations": ["full_sensor", "back_only", "thigh_only"],
+  "uncertainty": {
+    "method": "subject_cluster_bootstrap",
+    "resamples": 2000,
+    "seed": 0,
+    "interval": "percentile_95",
+    "resampling_unit": "outer_test_subject",
+    "within_subject_policy": "retain_all_windows"
+  },
+  "comparisons": {
+    "primary": "calibrated_vs_uncalibrated_same_outer_folds",
+    "secondary": "sensor_ablations_vs_full_sensor",
+    "paired_subject_differences": true,
+    "primary_familywise_alpha": 0.05,
+    "primary_adjustment": "Holm_across_nll_brier_ece",
+    "ablation_p_values": "exploratory_raw_and_adjusted_reported"
+  },
+  "budget": {
+    "max_outer_folds": 22,
+    "sensor_configurations": 3,
+    "calibration_states": 2,
+    "bootstrap_resamples_per_configuration": 2000,
+    "wall_clock_minutes": 30,
+    "early_stopping_on_test_metrics": false,
+    "stop_on_first_hard_failure": true
+  },
+  "hard_failures": [
+    "subject_or_session_leakage",
+    "mutable_or_missing_frozen_config",
+    "test_derived_preprocessing_or_calibration",
+    "invalid_probabilities",
+    "incomplete_provenance",
+    "crossed_windows",
+    "changed_input_after_results_inspection",
+    "non_finite_metrics",
+    "failed_class_coverage",
+    "timeout"
+  ],
+  "interpretation": {
+    "positive": "paired lower loss under this finite preregistered HARTH subject sample only",
+    "negative": "no improvement detected under this protocol; not proof calibration never helps",
+    "inconclusive": "insufficient subjects, class failure, unstable calibration, wide intervals, or preserved failure",
+    "claim_exclusions": ["deployment_performance", "universal_calibration", "causal_sensor_importance", "clinical_utility", "novelty", "literature_priority", "other_datasets"]
+  },
+  "evidence_boundary": {
+    "real_rerun_performed": false,
+    "synthetic_fixtures_are_harth_evidence": false,
+    "related_work_corpus_status": "UNVERIFIED",
+    "same_data_revision_confirmatory": false
+  },
+  "required_outputs": ["protocol-v2-proposal.md", "protocol-v2-proposal.json", "reviewer-dissent.md", "recommendation.md"],
+  "immutable_after_run": true
+}
