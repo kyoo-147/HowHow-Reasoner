@@ -1,0 +1,16 @@
+{
+  "dataset": "HARTH",
+  "provider": "UCI Machine Learning Repository",
+  "uci_id": 779,
+  "url": "https://archive.ics.uci.edu/static/public/779/harth.zip",
+  "metadata_url": "https://archive.ics.uci.edu/dataset/779/harth",
+  "doi": "10.24432/C5NC90",
+  "license": "CC BY 4.0",
+  "citation": [
+    "Logacjov, A., Kongsvold, A., Bach, K., Bårdstu, H. B., & Mork, P. J. (2021). HARTH: A Human Activity Recognition Dataset for Machine Learning. Sensors, 21(23), 7853. https://doi.org/10.3390/s21237853",
+    "Logacjov, A., Kongsvold, A., Bach, K., Bårdstu, H. B., & Mork, P. J. HARTH [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5NC90"
+  ],
+  "raw_data_policy": "No dataset blobs are committed. Download into this directory; .part supports resume and completed archives are immutable.",
+  "checksum_policy": "The downloader records SHA-256 and verifies an operator-supplied expected SHA-256; unknown checksum is never silently called verified.",
+  "provenance": "Metadata and license checked against UCI record on 2026-08-23; real-data execution remains opt-in."
+}

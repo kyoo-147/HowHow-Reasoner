@@ -5,6 +5,7 @@ description = "Provider-neutral evidence-first research contracts"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "fastapi==0.116.1",
+    "numpy==2.3.2",
     "pydantic==2.11.7",
     "typer==0.16.0",
     "uvicorn==0.35.0",
