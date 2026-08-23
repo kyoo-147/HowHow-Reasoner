@@ -22,7 +22,12 @@ import numpy as np
 
 from .baseline import NearestCentroidBaseline
 from .download import download_harth
-from .metrics import calibration_metrics
+from .metrics import (
+    calibration_metrics,
+    discrimination_metrics,
+    per_subject_metrics,
+    subject_cluster_bootstrap,
+)
 from .splits import assert_no_subject_leakage, subject_held_out_split
 
 SENSORS = ("back_x", "back_y", "back_z", "thigh_x", "thigh_y", "thigh_z")
@@ -120,6 +125,19 @@ def _normalise_subject(value: str) -> str:
     return f"S{int(match.group(0)):03d}" if match else value
 
 
+def _parse_timestamp(value: str, path: Path) -> float:
+    text = value.strip()
+    if not text:
+        raise ValueError(f"{path}: blank timestamp")
+    try:
+        return float(text)
+    except ValueError:
+        try:
+            return datetime.fromisoformat(text.replace("Z", "+00:00")).timestamp()
+        except ValueError as exc:
+            raise ValueError(f"{path}: timestamp is not parseable: {value!r}") from exc
+
+
 def load_windows(
     csvs: list[Path],
     *,
@@ -129,12 +147,14 @@ def load_windows(
     stride: int,
     required_subjects: Sequence[str] = (),
 ) -> tuple[np.ndarray, np.ndarray, list[str], dict[str, Any]]:
-    """Read deterministic per-subject quotas, never a global row prefix."""
+    """Read bounded windows without crossing file/session boundaries."""
     if max_rows < 1 or max_subjects < 1 or window_size < 2 or stride < 1:
         raise ValueError("row, subject, window, and stride limits must be positive")
     ordered_csvs = sorted({path.resolve() for path in csvs}, key=lambda path: path.as_posix())
     required = tuple(dict.fromkeys(_normalise_subject(str(s)) for s in required_subjects))
     counts: Counter[str] = Counter()
+    parsed_files: list[tuple[Path, list[dict[str, Any]]]] = []
+    gaps: list[dict[str, Any]] = []
     for path in ordered_csvs:
         with path.open(newline="", encoding="utf-8-sig") as stream:
             reader = csv.DictReader(stream)
@@ -146,11 +166,43 @@ def load_windows(
             missing = required_fields - fields
             if missing:
                 raise ValueError(f"{path}: missing required columns {sorted(missing)}")
+            rows: list[dict[str, Any]] = []
+            previous: dict[str, float] = {}
             for raw in reader:
                 subject = _normalise_subject(str(raw.get("subject", "") or fallback or ""))
                 if not subject or subject == "S000":
                     raise ValueError(f"{path}: row has no parseable subject ID")
+                session = (
+                    str(raw.get("session", raw.get("recording", "")) or "").strip() or "__file__"
+                )
+                timestamp = _parse_timestamp(str(raw.get("timestamp", "")), path)
+                if session in previous:
+                    if timestamp <= previous[session]:
+                        raise ValueError(
+                            f"{path}: timestamps must be strictly monotonic per recording/session"
+                        )
+                    gap = timestamp - previous[session]
+                    if gap > 1.5:
+                        gaps.append({"file": str(path), "session": session, "seconds": gap})
+                previous[session] = timestamp
+                try:
+                    values = [float(raw[name]) for name in SENSORS]
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise ValueError(f"{path}: non-numeric sensor row for {subject}") from exc
+                label = str(raw["label"]).strip()
+                if not label:
+                    raise ValueError(f"{path}: blank label for {subject}")
                 counts[subject] += 1
+                rows.append(
+                    {
+                        "subject": subject,
+                        "label": label,
+                        "values": values,
+                        "timestamp": timestamp,
+                        "session": session,
+                    }
+                )
+            parsed_files.append((path, rows))
     missing_required = sorted(set(required) - set(counts))
     if missing_required:
         raise ValueError(f"configured subjects absent from archive: {missing_required}")
@@ -160,78 +212,51 @@ def load_windows(
     quotas = {subject: max_rows // len(subjects) for subject in subjects}
     for subject in subjects[: max_rows % len(subjects)]:
         quotas[subject] += 1
-    rows: list[tuple[str, str, list[float]]] = []
     seen: Counter[str] = Counter()
-    files_used = 0
+    groups: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
     rows_read = 0
-    for path in ordered_csvs:
-        file_rows = 0
-        with path.open(newline="", encoding="utf-8-sig") as stream:
-            reader = csv.DictReader(stream)
-            fallback = _subject_from_filename(path)
-            for raw in reader:
-                subject = _normalise_subject(str(raw.get("subject", "") or fallback or ""))
-                if subject not in quotas or seen[subject] >= quotas[subject]:
-                    continue
-                try:
-                    values = [float(raw[name]) for name in SENSORS]
-                except (KeyError, TypeError, ValueError) as exc:
-                    raise ValueError(f"{path}: non-numeric sensor row for {subject}") from exc
-                label = str(raw["label"]).strip()
-                if not label:
-                    raise ValueError(f"{path}: blank label for {subject}")
-                rows.append((subject, label, values))
-                seen[subject] += 1
-                rows_read += 1
-                file_rows += 1
-        files_used += int(file_rows > 0)
-    if not rows:
-        raise ValueError("bounded read produced no rows")
+    for path, source_rows in parsed_files:
+        for row in source_rows:
+            subject = row["subject"]
+            if subject not in quotas or seen[subject] >= quotas[subject]:
+                continue
+            seen[subject] += 1
+            rows_read += 1
+            groups.setdefault((subject, str(path), row["session"]), []).append(row)
     features: list[list[float]] = []
     labels: list[str] = []
     window_subjects: list[str] = []
-    for subject in subjects:
-        subject_rows = [row for row in rows if row[0] == subject]
-        for start in range(0, max(0, len(subject_rows) - window_size + 1), stride):
-            chunk = subject_rows[start : start + window_size]
-            if len(chunk) < window_size:
-                continue
-            matrix = np.asarray([row[2] for row in chunk], dtype=float)
+    provenance: list[dict[str, str]] = []
+    for subject, file_path, session in sorted(groups):
+        group = groups[(subject, file_path, session)]
+        for start in range(0, max(0, len(group) - window_size + 1), stride):
+            chunk = group[start : start + window_size]
+            matrix = np.asarray([row["values"] for row in chunk], dtype=float)
             features.append(np.concatenate((matrix.mean(0), matrix.std(0))))
-            labels.append(Counter(row[1] for row in chunk).most_common(1)[0][0])
+            labels.append(Counter(row["label"] for row in chunk).most_common(1)[0][0])
             window_subjects.append(subject)
+            provenance.append(
+                {
+                    "file": file_path,
+                    "session": session,
+                    "start_timestamp": str(chunk[0]["timestamp"]),
+                    "end_timestamp": str(chunk[-1]["timestamp"]),
+                }
+            )
     if not features:
         raise ValueError("bounded read produced no complete windows")
-    return (
-        np.asarray(features),
-        np.asarray(labels),
-        window_subjects,
-        {
-            "rows_read": rows_read,
-            "subjects": list(subjects),
-            "subject_quotas": quotas,
-            "files_used": files_used,
-            "window_count": len(features),
-            "window_size": window_size,
-            "stride": stride,
-        },
-    )
-
-
-def _bootstrap_metrics(
-    probabilities: np.ndarray, labels: np.ndarray, reps: int, seed: int
-) -> dict[str, list[float]]:
-    rng = np.random.default_rng(seed)
-    values: dict[str, list[float]] = {key: [] for key in ("nll", "brier", "ece")}
-    for _ in range(reps):
-        indices = rng.integers(0, len(labels), size=len(labels))
-        metrics = calibration_metrics(probabilities[indices], labels[indices])
-        for key in values:
-            values[key].append(float(metrics[key]))
-    return {
-        key: [float(np.quantile(value, 0.025)), float(np.quantile(value, 0.975))]
-        for key, value in values.items()
+    details = {
+        "rows_read": rows_read,
+        "subjects": list(subjects),
+        "subject_quotas": quotas,
+        "files_used": sum(bool(rows) for _, rows in parsed_files),
+        "window_count": len(features),
+        "window_size": window_size,
+        "stride": stride,
+        "gap_diagnostics": gaps,
+        "window_provenance": provenance,
     }
+    return np.asarray(features), np.asarray(labels), window_subjects, details
 
 
 def run_smoke(args: argparse.Namespace) -> Path:
@@ -283,7 +308,13 @@ def run_smoke(args: argparse.Namespace) -> Path:
         model = NearestCentroidBaseline().fit(features[train], y_train)
         probabilities = model.predict_proba(features[test])
         metrics: dict[str, Any] = calibration_metrics(probabilities, y_test, bins=10)
-        metrics["bootstrap_95pct"] = _bootstrap_metrics(probabilities, y_test, args.bootstrap, 0)
+        metrics["discrimination"] = discrimination_metrics(probabilities, y_test)
+        metrics["per_subject"] = per_subject_metrics(
+            probabilities, y_test, np.asarray(subjects)[test], bins=10
+        )
+        metrics["bootstrap_95pct"] = subject_cluster_bootstrap(
+            probabilities, y_test, np.asarray(subjects)[test], reps=args.bootstrap, seed=0
+        )
         metrics["classes"] = classes
         output_data = output / f"{run_id}.metrics.json"
         _json(output_data, metrics)
@@ -356,7 +387,7 @@ def parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--max-rows", type=int, default=100_000)
     parser.add_argument("--max-subjects", type=int, default=22)
-    parser.add_argument("--bootstrap", type=int, default=200)
+    parser.add_argument("--bootstrap", type=int, default=2000)
     parser.add_argument("--window-size", type=int, default=128)
     parser.add_argument("--stride", type=int, default=64)
     parser.add_argument("--timeout", type=int, default=120)

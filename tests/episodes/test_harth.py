@@ -193,3 +193,57 @@ def test_harth_download_bounds_stalled_read_and_preserves_partial(tmp_path) -> N
     assert 0 < timeouts[0] <= 30
     assert not destination.exists()
     assert (tmp_path / "harth.zip.part").read_bytes() == b"partial"
+
+
+def test_discrimination_and_subject_cluster_bootstrap_are_deterministic() -> None:
+    from howhow.episodes.harth import discrimination_metrics, subject_cluster_bootstrap
+
+    probabilities = np.array([[0.8, 0.2], [0.6, 0.4], [0.2, 0.8], [0.4, 0.6]])
+    labels = np.array([0, 0, 1, 1])
+    assert discrimination_metrics(probabilities, labels) == {"accuracy": 1.0, "macro_f1": 1.0}
+    first = subject_cluster_bootstrap(probabilities, labels, ["S1", "S1", "S2", "S2"], reps=200)
+    assert first == subject_cluster_bootstrap(
+        probabilities, labels, ["S1", "S1", "S2", "S2"], reps=200
+    )
+    assert first["cluster_count"] == 2
+    assert first["per_subject_contributions"] == {"S1": 2, "S2": 2}
+
+
+def test_subject_cluster_bootstrap_rejects_one_cluster() -> None:
+    from howhow.episodes.harth import subject_cluster_bootstrap
+
+    with pytest.raises(ValueError, match="at least two subjects"):
+        subject_cluster_bootstrap(
+            np.array([[1.0, 0.0], [0.0, 1.0]]), np.array([0, 1]), ["S1", "S1"]
+        )
+
+
+@pytest.mark.parametrize("timestamps", [("0", "0"), ("2", "1"), ("bad", "2")])
+def test_bounded_loader_rejects_bad_timestamp_order(tmp_path, timestamps) -> None:
+    from howhow.episodes.harth.smoke import load_windows
+
+    path = tmp_path / "S001.csv"
+    header = "timestamp,back_x,back_y,back_z,thigh_x,thigh_y,thigh_z,label\n"
+    path.write_text(
+        header + "\n".join(f"{stamp},1,2,3,4,5,6,walking" for stamp in timestamps) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="timestamp"):
+        load_windows([path], max_rows=4, max_subjects=1, window_size=2, stride=1)
+
+
+def test_bounded_loader_preserves_session_boundaries_and_gap_diagnostics(tmp_path) -> None:
+    from howhow.episodes.harth.smoke import load_windows
+
+    path = tmp_path / "S001.csv"
+    header = "timestamp,session,back_x,back_y,back_z,thigh_x,thigh_y,thigh_z,label\n"
+    rows = [
+        "0,a,1,2,3,4,5,6,walking",
+        "1,a,1,2,3,4,5,6,walking",
+        "10,b,1,2,3,4,5,6,walking",
+        "11,b,1,2,3,4,5,6,walking",
+    ]
+    path.write_text(header + "\n".join(rows) + "\n", encoding="utf-8")
+    _, _, _, details = load_windows([path], max_rows=4, max_subjects=1, window_size=2, stride=1)
+    assert details["window_count"] == 2
+    assert {item["session"] for item in details["window_provenance"]} == {"a", "b"}
