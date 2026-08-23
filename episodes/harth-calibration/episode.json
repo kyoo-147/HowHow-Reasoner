@@ -4,7 +4,7 @@
   "scientific_claims": "none",
   "question": "Can a deterministic CPU baseline produce calibrated held-out-subject activity probabilities on HARTH?",
   "dataset": "HARTH",
-  "split": {"unit": "subject", "test_subjects": ["S015", "S016", "S017", "S018", "S019", "S020", "S021", "S022"], "seed": 0, "freeze_before_results": true},
+  "split": {"unit": "subject", "test_subjects": ["S015", "S016", "S017", "S018", "S019", "S020", "S021", "S022"], "training_subjects": ["S006"], "seed": 0, "freeze_before_results": true},
   "baseline": {"model": "nearest-centroid", "implementation": "src/howhow/episodes/harth/baseline.py", "cpu_first": true, "seed": 0},
   "metrics": {"nll": "mean negative log likelihood", "brier": "multiclass squared probability error", "ece": {"bins": 10, "binning": "equal-width [0,1], right endpoint included"}},
   "uncertainty": {"method": "percentile bootstrap", "resamples": 2000, "seed": 0, "alpha": 0.05},
