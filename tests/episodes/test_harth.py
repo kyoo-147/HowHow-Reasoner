@@ -37,3 +37,84 @@ def test_bootstrap_is_deterministic() -> None:
     assert bootstrap_confidence_interval(values, reps=200, seed=7) == bootstrap_confidence_interval(
         values, reps=200, seed=7
     )
+
+
+def test_safe_extract_rejects_traversal(tmp_path) -> None:
+    import zipfile
+
+    archive = tmp_path / "bad.zip"
+    with zipfile.ZipFile(archive, "w") as output:
+        output.writestr("../escape.csv", "bad")
+    from howhow.episodes.harth.smoke import safe_extract_zip
+
+    with pytest.raises(ValueError, match="unsafe"):
+        safe_extract_zip(archive, tmp_path / "out")
+
+
+def test_bounded_harth_window_loader(tmp_path) -> None:
+    from howhow.episodes.harth.smoke import load_windows
+
+    csv_path = tmp_path / "subject01.csv"
+    header = "timestamp,back_x,back_y,back_z,thigh_x,thigh_y,thigh_z,label,subject\n"
+    rows = "".join(f"{index},1,2,3,4,5,6,walking,S001\n" for index in range(8))
+    csv_path.write_text(header + rows, encoding="utf-8")
+    features, labels, subjects, details = load_windows(
+        [csv_path], max_rows=8, max_subjects=1, window_size=4, stride=2
+    )
+    assert features.shape == (3, 12)
+    assert labels.tolist() == ["walking"] * 3
+    assert subjects == ["S001"] * 3
+    assert details["rows_read"] == 8
+
+
+def test_harth_download_rejects_expired_deadline_before_open(tmp_path) -> None:
+    import time
+
+    from howhow.episodes.harth.download import download_harth
+
+    opened = False
+
+    def opener(*args, **kwargs):
+        nonlocal opened
+        opened = True
+        raise AssertionError("expired downloads must not open a connection")
+
+    with pytest.raises(TimeoutError, match="deadline expired"):
+        download_harth(tmp_path / "harth.zip", deadline=time.monotonic() - 1, opener=opener)
+    assert not opened
+
+
+def test_harth_download_bounds_stalled_read_and_preserves_partial(tmp_path) -> None:
+    import time
+
+    from howhow.episodes.harth.download import download_harth
+
+    class StalledResponse:
+        headers = {}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self, size):
+            if size != 1024 * 1024:
+                raise AssertionError("download must use bounded chunks")
+            if not hasattr(self, "sent"):
+                self.sent = True
+                return b"partial"
+            raise TimeoutError("simulated stalled socket read")
+
+    timeouts = []
+
+    def opener(request, *, timeout):
+        timeouts.append(timeout)
+        return StalledResponse()
+
+    destination = tmp_path / "harth.zip"
+    with pytest.raises(TimeoutError, match="stalled"):
+        download_harth(destination, deadline=time.monotonic() + 30, opener=opener)
+    assert 0 < timeouts[0] <= 30
+    assert not destination.exists()
+    assert (tmp_path / "harth.zip.part").read_bytes() == b"partial"

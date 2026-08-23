@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
+import time
 import urllib.request
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 UCI_HARTH_URL = "https://archive.ics.uci.edu/static/public/779/harth.zip"
 
@@ -33,7 +35,13 @@ def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
-def download_harth(destination: Path, *, expected_sha256: str | None = None) -> DownloadManifest:
+def download_harth(
+    destination: Path,
+    *,
+    expected_sha256: str | None = None,
+    deadline: float | None = None,
+    opener: Callable[..., Any] | None = None,
+) -> DownloadManifest:
     """Download to ``.part``, resume with HTTP Range, then atomically publish.
 
     Existing destination files are immutable: a matching checksum returns its
@@ -45,23 +53,37 @@ def download_harth(destination: Path, *, expected_sha256: str | None = None) -> 
         digest = sha256_file(destination)
         if expected_sha256 and digest != expected_sha256:
             raise ValueError("existing HARTH archive checksum mismatch; refusing overwrite")
-        return DownloadManifest(
+        manifest = DownloadManifest(
             UCI_HARTH_URL, str(destination), digest, destination.stat().st_size, "existing"
         )
+        destination.with_suffix(destination.suffix + ".manifest.json").write_text(
+            json.dumps(asdict(manifest), indent=2) + "\n", encoding="utf-8"
+        )
+        return manifest
     partial = destination.with_suffix(destination.suffix + ".part")
     offset = partial.stat().st_size if partial.exists() else 0
     request = urllib.request.Request(UCI_HARTH_URL)
     if offset:
         request.add_header("Range", f"bytes={offset}-")
+    remaining = None if deadline is None else deadline - time.monotonic()
+    if remaining is not None and remaining <= 0:
+        raise TimeoutError("HARTH download deadline expired before opening connection")
+    timeout = 60.0 if remaining is None else min(60.0, remaining)
+    open_url = opener or urllib.request.urlopen
     with (
-        urllib.request.urlopen(request, timeout=60) as response,
+        open_url(request, timeout=timeout) as response,
         partial.open("ab" if offset else "wb") as output,
     ):
         if offset and response.headers.get("Content-Range") is None:
             output.close()
             partial.unlink()
-            return download_harth(destination, expected_sha256=expected_sha256)
-        shutil.copyfileobj(response, output, length=1024 * 1024)
+            return download_harth(
+                destination, expected_sha256=expected_sha256, deadline=deadline, opener=opener
+            )
+        while chunk := response.read(1024 * 1024):
+            output.write(chunk)
+            if deadline is not None and time.monotonic() >= deadline:
+                raise TimeoutError("HARTH download exceeded configured timeout")
     digest = sha256_file(partial)
     if expected_sha256 and digest != expected_sha256:
         raise ValueError(f"HARTH checksum mismatch: expected {expected_sha256}, got {digest}")

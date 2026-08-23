@@ -8,3 +8,10 @@ __pycache__/
 node_modules/
 apps/web/dist/
 *.tsbuildinfo
+
+# HARTH real-data downloads and machine-local run evidence (keep placeholders tracked).
+episodes/harth-calibration/data/*
+!episodes/harth-calibration/data/.gitkeep
+!episodes/harth-calibration/data/manifest.json
+episodes/harth-calibration/artifacts/*
+!episodes/harth-calibration/artifacts/.gitkeep
