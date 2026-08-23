@@ -17,4 +17,17 @@ The JSON files in `schemas/v1/` are generated contract snapshots. Changes requir
 
 ## CI status
 
-GitHub Actions is temporarily disabled because the repository account is billing-locked; no cloud job steps ran for this PR. TODO: restore `.github/workflows/ci.yml` with the Windows and Ubuntu matrix when billing is fixed. Until then, `uv run python scripts/check.py` is the deterministic cross-platform local check and is the only validation claim made here.
+`.github/workflows/ci.yml` defines the same locked Python and frontend gates on
+Ubuntu and Windows, with least-privilege read-only permissions, cancellation of
+superseded runs, and a 20-minute job timeout. It does not upload artifacts or
+use repository secrets. Run the deterministic local equivalent with:
+
+```bash
+uv sync --locked
+uv run python scripts/check_all.py
+```
+
+The local command skips tests marked `real_miktex` unless
+`--real-miktex` is supplied. Cloud execution is `UNVERIFIED`/`BLOCKED` when
+the GitHub account billing lock prevents jobs from starting; a workflow file
+alone is not evidence that CI passed.
