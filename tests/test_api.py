@@ -71,3 +71,6 @@ def test_safety_guards_and_stream_resume(tmp_path: Path) -> None:
     assert stream.status_code == 200 and "brief_proposed" in stream.text
     assert api.get("/projects/p1/events?after=1").json() == []
     assert api.get("/readiness").json()["providers"][0]["status"].startswith("READY_")
+    audit = api.get("/projects/p1/evidence/audit")
+    assert audit.status_code == 200
+    assert audit.json() == {"events": 1, "verified_chain": True, "evidence": []}

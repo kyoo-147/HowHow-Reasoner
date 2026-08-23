@@ -8,6 +8,7 @@ export type Lifecycle =
 export type ApiStatus = 'READY' | 'WAITING' | 'PAUSED' | 'BLOCKED' | 'INCONCLUSIVE' | 'OFFLINE';
 export type EventEnvelope = { event_id: { value: string }; event_type: string; aggregate_type: string; payload: Record<string, unknown>; occurred_at: string };
 export type ProjectStatus = { project: { project_id?: string; name?: string }; projection: { aggregates: Record<string, Record<string, Record<string, unknown>>> }; event_count: number };
+export type EvidenceAudit = { events: number; verified_chain: boolean; evidence: EventEnvelope[] };
 export type BriefProposal = { question: string; scope?: string[]; constraints?: string[] };
 export type ApiClient = ReturnType<typeof createApiClient>;
 
@@ -37,7 +38,7 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = fetch
     status: (projectId: string) => request<ProjectStatus>(`/projects/${encodeURIComponent(projectId)}/status`),
     proposeBrief: (projectId: string, brief: BriefProposal) => request<{ status: string; event: EventEnvelope }>(`/projects/${encodeURIComponent(projectId)}/briefs`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': `web-brief-${projectId}-${brief.question}` }, body: JSON.stringify(brief) }),
     approve: (projectId: string, scope: string, actorId: string) => request<{ approval: Record<string, unknown>; event: EventEnvelope }>(`/projects/${encodeURIComponent(projectId)}/approvals`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope, actor_id: actorId }) }),
-    evidence: (projectId: string) => request<{ events: number; verified_chain: boolean; evidence: EventEnvelope[] }>(`/projects/${encodeURIComponent(projectId)}/evidence/audit`),
+    evidence: (projectId: string) => request<EvidenceAudit>(`/projects/${encodeURIComponent(projectId)}/evidence/audit`),
     events: (projectId: string, after: number) => request<EventEnvelope[]>(`/projects/${encodeURIComponent(projectId)}/events?after=${after}`),
   };
 }
