@@ -1,0 +1,15 @@
+{
+  "protocol_id": "harth-calibration-v2",
+  "archive": "episodes/harth-calibration/data/harth.zip",
+  "archive_sha256": "REQUIRED_OPERATOR_CHECKSUM",
+  "seed": 0,
+  "fold_strategy": "nested_subject_held_out_loso",
+  "max_outer_folds": 22,
+  "sensor_configurations": 3,
+  "calibration_states": 2,
+  "bootstrap_reps": 2000,
+  "wall_clock_minutes": 30,
+  "checkpoint_filename": "checkpoint.json",
+  "metrics_allowed_during_preflight": false,
+  "real_execution_requires": ["--execute-real", "HOWHOW_RUN_REAL_HARTH=1"]
+}
