@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PAPER = Path(__file__).resolve().parents[1]
+PAPER = Path(__file__).resolve().parents[1] / "episodes" / "harth-calibration" / "paper"
 GENERATOR = PAPER / "tools" / "generate_tables.py"
 CHECKER = PAPER / "tools" / "check_paper.py"
 
