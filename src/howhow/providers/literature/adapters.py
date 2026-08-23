@@ -200,9 +200,7 @@ class SemanticScholarAdapter(LiteratureAdapter):
 
     def _parse(self, item: Mapping[str, Any], response: HttpResponse) -> Paper:
         external_value = item.get("externalIds")
-        external: Mapping[str, Any] = (
-            external_value if isinstance(external_value, Mapping) else {}
-        )
+        external: Mapping[str, Any] = external_value if isinstance(external_value, Mapping) else {}
         doi = _text(external.get("DOI")) or None
         stable = _text(item.get("paperId")) or doi or _text(item.get("url"))
         oa = item.get("openAccessPdf")
