@@ -13,6 +13,7 @@ dependencies = [
 
 [project.scripts]
 howhow = "howhow.cli:app"
+supply-chain-audit = "scripts.audit_supply_chain:main"
 
 [dependency-groups]
 dev = [
