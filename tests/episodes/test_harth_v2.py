@@ -65,6 +65,15 @@ def test_missing_class_is_a_hard_failure() -> None:
 
 
 def test_timeout_and_deterministic_checkpoint_restart(tmp_path) -> None:
+    clock_reads = iter((0.0, 0.000002))
+
+    with pytest.raises(ProtocolFailure, match="timeout"):
+        run_protocol(
+            fixture_windows(),
+            ["rest", "walk"],
+            timeout_seconds=0.000001,
+            monotonic=lambda: next(clock_reads),
+        )
     with pytest.raises(ProtocolFailure, match="timeout"):
         run_protocol(fixture_windows(), ["rest", "walk"], timeout_seconds=0)
     checkpoint = tmp_path / "checkpoint.json"
