@@ -8,6 +8,12 @@ describe('control-plane client', () => {
     await client.health();
     expect(fetchImpl).toHaveBeenCalledWith('http://localhost:8000/health', expect.anything());
   });
+  it('loads evidence from the authoritative audit endpoint', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ events: 1, verified_chain: true, evidence: [] }), { status: 200 }));
+    const client = createApiClient('http://localhost:8000', fetchImpl);
+    await expect(client.evidence('p/fixture')).resolves.toMatchObject({ verified_chain: true, evidence: [] });
+    expect(fetchImpl).toHaveBeenCalledWith('http://localhost:8000/projects/p%2Ffixture/evidence/audit', expect.anything());
+  });
   it('surfaces API failures instead of fabricating state', async () => {
     const client = createApiClient('http://api', vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: 'rejected' }), { status: 403 })));
     await expect(client.approve('p', 'direction', 'actor')).rejects.toMatchObject({ status: 403, message: 'rejected' });
