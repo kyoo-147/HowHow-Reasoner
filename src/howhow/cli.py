@@ -14,6 +14,29 @@ app = typer.Typer(no_args_is_help=True)
 schema_app = typer.Typer()
 event_app = typer.Typer()
 package_app = typer.Typer()
+literature_app = typer.Typer()
+app.add_typer(literature_app, name="literature")
+
+
+@literature_app.command("export-harth")
+def literature_export_harth(
+    output: Path = typer.Option(  # noqa: B008
+        Path("episodes/harth-calibration/literature/sources.jsonl"), "--output"
+    ),
+    cache_dir: Path | None = typer.Option(None, "--cache-dir"),  # noqa: B008
+    provider: list[str] = typer.Option(["crossref", "openalex"], "--provider"),  # noqa: B008
+    limit: int = typer.Option(3, min=1, max=10),
+    live: bool = typer.Option(False, "--live", help="Use bounded network retrieval."),
+) -> None:
+    """Export bounded HARTH metadata and exact metadata spans as portable JSONL."""
+    from .providers.literature.export import export_harth
+
+    result = export_harth(
+        output, providers=tuple(provider), limit=limit, cache_dir=cache_dir, live=live
+    )
+    typer.echo(json.dumps(result, sort_keys=True))
+
+
 app.add_typer(schema_app, name="schema")
 app.add_typer(event_app, name="event")
 app.add_typer(package_app, name="package")

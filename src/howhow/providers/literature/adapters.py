@@ -1,4 +1,5 @@
-"""Normalized read-only adapters for common scholarly metadata APIs."""
+"""Read-only scholarly adapters with normalized identities and bounded retrieval."""
+# mypy: disable-error-code=no-untyped-def
 
 from __future__ import annotations
 
@@ -19,6 +20,13 @@ from howhow.evidence.retrieval import (
 
 
 @dataclass(frozen=True, slots=True)
+class ProviderConfig:
+    user_agent: str = "howhow/0.1"
+    email: str | None = None
+    retries: int = 2
+
+
+@dataclass(frozen=True, slots=True)
 class Paper:
     source: SourceRecord
     title: str
@@ -30,22 +38,32 @@ class Paper:
 
 
 class LiteratureAdapter:
-    provider: str = ""
-    endpoint: str = ""
+    provider = ""
+    endpoint = ""
 
     def __init__(
-        self, *, transport: Transport = default_transport, cache: CacheHook | None = None
+        self,
+        *,
+        transport: Transport = default_transport,
+        cache: CacheHook | None = None,
+        config: ProviderConfig | None = None,
     ) -> None:
         self.transport = transport
         self.cache = cache
+        self.config = config or ProviderConfig()
 
     def search(self, query: str, *, limit: int = 10) -> tuple[Paper, ...]:
         if not query.strip() or limit < 1 or limit > 100:
             raise ValueError("invalid query or limit")
+        headers = {"Accept": "application/json", "User-Agent": self.config.user_agent}
+        if self.config.email:
+            headers["From"] = self.config.email
         payload, response = retrieve_json(
             self.endpoint.format(query=quote_plus(query), limit=limit),
             transport=self.transport,
             cache=self.cache,
+            headers=headers,
+            retries=self.config.retries,
         )
         return tuple(self._parse(item, response) for item in self._items(payload)[:limit])
 
@@ -59,7 +77,6 @@ class LiteratureAdapter:
         self,
         *,
         stable_id: str,
-        item: Mapping[str, Any],
         response: HttpResponse,
         title: str,
         abstract: str,
@@ -69,154 +86,168 @@ class LiteratureAdapter:
         date: str | None = None,
         url: str | None = None,
         access: AccessStatus = AccessStatus.UNKNOWN,
+        arxiv_id: str | None = None,
+        openalex_id: str | None = None,
+        semantic_scholar_id: str | None = None,
     ) -> Paper:
-        raw = response.body
         source = SourceRecord(
-            source_id=f"{self.provider}:{stable_id}",
-            provider=self.provider,
-            stable_id=stable_id,
-            version=version,
-            access=access,
-            retrieved_at=retrieved_now(),
-            raw_sha256=sha256(raw).hexdigest(),
-            title=title,
-            url=url,
+            f"{self.provider}:{stable_id}",
+            self.provider,
+            stable_id,
+            version,
+            access,
+            retrieved_now(),
+            sha256(response.body).hexdigest(),
+            title,
+            url,
             abstract=abstract,
+            doi=doi,
+            arxiv_id=arxiv_id,
+            openalex_id=openalex_id,
+            semantic_scholar_id=semantic_scholar_id,
         )
         return Paper(source, title, abstract, authors, doi, date, version)
 
 
-def _authors(value: object, *keys: str) -> tuple[str, ...]:
-    result: list[str] = []
-    for author in value if isinstance(value, list) else []:
+def _text(v: object) -> str:
+    return v if isinstance(v, str) else ""
+
+
+def _authors(v: object, *keys: str) -> tuple[str, ...]:
+    out = []
+    for author in v if isinstance(v, list) else []:
         if isinstance(author, str):
-            result.append(author)
+            out.append(author)
         elif isinstance(author, Mapping):
+            nested: Mapping[str, Any] = author
+            author_value = author.get("author")
+            if isinstance(author_value, Mapping):
+                nested = author_value
             for key in keys:
-                name = author.get(key)
-                if isinstance(name, str) and name:
-                    result.append(name)
+                if isinstance(name := nested.get(key), str) and name:
+                    out.append(name)
                     break
-    return tuple(result)
-
-
-def _text(value: object) -> str:
-    return value if isinstance(value, str) else ""
+    return tuple(out)
 
 
 class ArxivAdapter(LiteratureAdapter):
-    provider, endpoint = (
-        "arxiv",
-        "https://export.arxiv.org/api/query?search_query=all:{query}&max_results={limit}",
-    )
+    provider = "arxiv"
+    endpoint = "https://export.arxiv.org/api/query?search_query=all:{query}&max_results={limit}"
 
-    def _items(self, payload: object) -> list[Mapping[str, Any]]:
-        return [x for x in payload.get("entries", [])] if isinstance(payload, Mapping) else []
+    def _items(self, payload):
+        return (
+            [x for x in payload.get("entries", []) if isinstance(x, Mapping)]
+            if isinstance(payload, Mapping)
+            else []
+        )
 
-    def _parse(self, item: Mapping[str, Any], response: HttpResponse) -> Paper:
-        stable = _text(item.get("id")).rstrip("/").rsplit("/", 1)[-1]
+    def _parse(self, item, response):
+        url = _text(item.get("id"))
+        stable = url.rstrip("/").rsplit("/", 1)[-1]
         return self._paper(
             stable_id=stable,
-            item=item,
             response=response,
             title=_text(item.get("title")).strip(),
             abstract=_text(item.get("summary")).strip(),
             authors=_authors(item.get("authors"), "name"),
             version=_text(item.get("version")) or None,
             date=_text(item.get("published")) or None,
-            url=_text(item.get("id")),
+            url=url,
             access=AccessStatus.OPEN,
+            arxiv_id=stable,
         )
 
 
 class OpenAlexAdapter(LiteratureAdapter):
-    provider, endpoint = (
-        "openalex",
-        "https://api.openalex.org/works?search={query}&per-page={limit}",
-    )
+    provider = "openalex"
+    endpoint = "https://api.openalex.org/works?search={query}&per-page={limit}"
 
-    def _items(self, payload: object) -> list[Mapping[str, Any]]:
-        return [x for x in payload.get("results", [])] if isinstance(payload, Mapping) else []
-
-    def _parse(self, item: Mapping[str, Any], response: HttpResponse) -> Paper:
-        stable = _text(item.get("id")).rstrip("/").rsplit("/", 1)[-1]
-        doi = _text(item.get("doi")) or None
-        authors = _authors(item.get("authorships"), "display_name")
-        return self._paper(
-            stable_id=stable,
-            item=item,
-            response=response,
-            title=_text(item.get("title")),
-            abstract="",
-            authors=authors,
-            doi=doi,
-            date=_text(item.get("publication_date")) or None,
-            url=_text(item.get("id")),
-            access=AccessStatus.OPEN
-            if item.get("open_access", {}).get("is_oa")
-            else AccessStatus.UNKNOWN,
-        )
-
-
-class CrossrefAdapter(LiteratureAdapter):
-    provider, endpoint = "crossref", "https://api.crossref.org/works?query={query}&rows={limit}"
-
-    def _items(self, payload: object) -> list[Mapping[str, Any]]:
+    def _items(self, payload):
         return (
-            [x for x in payload.get("message", {}).get("items", [])]
+            [x for x in payload.get("results", []) if isinstance(x, Mapping)]
             if isinstance(payload, Mapping)
             else []
         )
 
-    def _parse(self, item: Mapping[str, Any], response: HttpResponse) -> Paper:
-        doi = _text(item.get("DOI"))
-        stable = doi or _text(item.get("URL"))
-        title = (
-            (item.get("title") or [""])[0]
-            if isinstance(item.get("title"), list)
-            else _text(item.get("title"))
-        )
+    def _parse(self, item, response):
+        url = _text(item.get("id"))
+        stable = url.rstrip("/").rsplit("/", 1)[-1]
+        doi = _text(item.get("doi")) or None
+        open_access = item.get("open_access")
+        is_open = isinstance(open_access, Mapping) and bool(open_access.get("is_oa"))
         return self._paper(
             stable_id=stable,
-            item=item,
+            response=response,
+            title=_text(item.get("title")),
+            abstract="",
+            authors=_authors(item.get("authorships"), "display_name"),
+            doi=doi,
+            date=_text(item.get("publication_date")) or None,
+            url=url,
+            access=AccessStatus.OPEN if is_open else AccessStatus.UNKNOWN,
+            openalex_id=stable,
+        )
+
+
+class CrossrefAdapter(LiteratureAdapter):
+    provider = "crossref"
+    endpoint = "https://api.crossref.org/works?query={query}&rows={limit}"
+
+    def _items(self, payload):
+        return (
+            [x for x in payload.get("message", {}).get("items", []) if isinstance(x, Mapping)]
+            if isinstance(payload, Mapping)
+            else []
+        )
+
+    def _parse(self, item, response):
+        doi = _text(item.get("DOI")) or None
+        stable = doi or _text(item.get("URL"))
+        titles = item.get("title")
+        title = titles[0] if isinstance(titles, list) and titles else _text(titles)
+        pub = item.get("published", {})
+        date = _text(pub.get("date-time")) if isinstance(pub, Mapping) else ""
+        return self._paper(
+            stable_id=stable,
             response=response,
             title=title,
             abstract=_text(item.get("abstract")),
             authors=_authors(item.get("author"), "given", "family"),
-            doi=doi or None,
-            date=_text(item.get("published", {}).get("date-time")) or None,
-            url=_text(item.get("URL")),
+            doi=doi,
+            date=date or None,
+            url=_text(item.get("URL")) or None,
         )
 
 
 class SemanticScholarAdapter(LiteratureAdapter):
-    provider, endpoint = (
-        "semantic-scholar",
-        "https://api.semanticscholar.org/graph/v1/paper/search?query={query}&limit={limit}&fields=title,abstract,authors,externalIds,publicationDate,url,openAccessPdf",
-    )
+    provider = "semantic-scholar"
+    endpoint = "https://api.semanticscholar.org/graph/v1/paper/search?query={query}&limit={limit}&fields=title,abstract,authors,externalIds,publicationDate,url,openAccessPdf"
 
-    def _items(self, payload: object) -> list[Mapping[str, Any]]:
-        return [x for x in payload.get("data", [])] if isinstance(payload, Mapping) else []
+    def _items(self, payload):
+        return (
+            [x for x in payload.get("data", []) if isinstance(x, Mapping)]
+            if isinstance(payload, Mapping)
+            else []
+        )
 
-    def _parse(self, item: Mapping[str, Any], response: HttpResponse) -> Paper:
-        external_value = item.get("externalIds")
-        external: Mapping[str, Any] = external_value if isinstance(external_value, Mapping) else {}
+    def _parse(self, item, response):
+        external = item.get("externalIds") if isinstance(item.get("externalIds"), Mapping) else {}
         doi = _text(external.get("DOI")) or None
         stable = _text(item.get("paperId")) or doi or _text(item.get("url"))
         oa = item.get("openAccessPdf")
         return self._paper(
             stable_id=stable,
-            item=item,
             response=response,
             title=_text(item.get("title")),
             abstract=_text(item.get("abstract")),
             authors=_authors(item.get("authors"), "name"),
             doi=doi,
             date=_text(item.get("publicationDate")) or None,
-            url=_text(item.get("url")),
+            url=_text(item.get("url")) or None,
             access=AccessStatus.OPEN
             if isinstance(oa, Mapping) and oa.get("url")
             else AccessStatus.UNKNOWN,
+            semantic_scholar_id=stable,
         )
 
 
