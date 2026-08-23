@@ -1,0 +1,73 @@
+{
+  "$defs": {
+    "ID": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "ID",
+      "type": "object"
+    },
+    "RecordStatus": {
+      "enum": [
+        "PROPOSED",
+        "APPROVED",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED",
+        "REJECTED",
+        "INCONCLUSIVE",
+        "CANCELLED",
+        "BLOCKED"
+      ],
+      "title": "RecordStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "assumptions": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "falsifier": {
+      "title": "Falsifier",
+      "type": "string"
+    },
+    "hypothesis_id": {
+      "$ref": "#/$defs/ID"
+    },
+    "schema_version": {
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "statement": {
+      "title": "Statement",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RecordStatus",
+      "default": "PROPOSED"
+    }
+  },
+  "required": [
+    "hypothesis_id",
+    "statement",
+    "falsifier"
+  ],
+  "title": "Hypothesis",
+  "type": "object"
+}

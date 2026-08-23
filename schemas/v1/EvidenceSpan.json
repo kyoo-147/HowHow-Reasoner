@@ -1,0 +1,64 @@
+{
+  "$defs": {
+    "EvidenceStatus": {
+      "enum": [
+        "VERIFIED",
+        "UNVERIFIED",
+        "INCONCLUSIVE",
+        "REJECTED"
+      ],
+      "title": "EvidenceStatus",
+      "type": "string"
+    },
+    "ID": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "ID",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "evidence_id": {
+      "$ref": "#/$defs/ID"
+    },
+    "locator": {
+      "title": "Locator",
+      "type": "string"
+    },
+    "quote": {
+      "title": "Quote",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_id": {
+      "$ref": "#/$defs/ID"
+    },
+    "status": {
+      "$ref": "#/$defs/EvidenceStatus",
+      "default": "UNVERIFIED"
+    }
+  },
+  "required": [
+    "evidence_id",
+    "source_id",
+    "locator",
+    "quote"
+  ],
+  "title": "EvidenceSpan",
+  "type": "object"
+}

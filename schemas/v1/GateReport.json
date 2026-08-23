@@ -1,0 +1,70 @@
+{
+  "$defs": {
+    "GateStatus": {
+      "enum": [
+        "PASS",
+        "PASS_WITH_LIMITATIONS",
+        "REVISE",
+        "BLOCK",
+        "HUMAN_REQUIRED"
+      ],
+      "title": "GateStatus",
+      "type": "string"
+    },
+    "ID": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "ID",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "findings": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "gate_id": {
+      "$ref": "#/$defs/ID"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/GateStatus"
+    }
+  },
+  "required": [
+    "occurred_at",
+    "gate_id",
+    "name",
+    "status"
+  ],
+  "title": "GateReport",
+  "type": "object"
+}

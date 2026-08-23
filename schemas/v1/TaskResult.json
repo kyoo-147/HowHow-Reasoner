@@ -1,0 +1,173 @@
+{
+  "$defs": {
+    "ID": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "ID",
+      "type": "object"
+    },
+    "ProviderIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "implementation": {
+          "minLength": 1,
+          "title": "Implementation",
+          "type": "string"
+        },
+        "provider_id": {
+          "minLength": 1,
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "provider_kind": {
+          "minLength": 1,
+          "title": "Provider Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "default": "v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_id",
+        "provider_kind",
+        "implementation",
+        "version"
+      ],
+      "title": "ProviderIdentity",
+      "type": "object"
+    },
+    "RecordStatus": {
+      "enum": [
+        "PROPOSED",
+        "APPROVED",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED",
+        "REJECTED",
+        "INCONCLUSIVE",
+        "CANCELLED",
+        "BLOCKED"
+      ],
+      "title": "RecordStatus",
+      "type": "string"
+    },
+    "TaskFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "evidence": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ID"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "schema_version": {
+          "default": "v1",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "TaskFailure",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "artifacts": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ID"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "attempt": {
+      "minimum": 1,
+      "title": "Attempt",
+      "type": "integer"
+    },
+    "failure": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TaskFailure"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "provider": {
+      "$ref": "#/$defs/ProviderIdentity"
+    },
+    "resource_usage": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "default": {},
+      "title": "Resource Usage",
+      "type": "object"
+    },
+    "schema_version": {
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RecordStatus"
+    },
+    "task_id": {
+      "$ref": "#/$defs/ID"
+    }
+  },
+  "required": [
+    "occurred_at",
+    "task_id",
+    "attempt",
+    "status",
+    "provider"
+  ],
+  "title": "TaskResult",
+  "type": "object"
+}

@@ -1,0 +1,70 @@
+{
+  "$defs": {
+    "ProviderIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "implementation": {
+          "minLength": 1,
+          "title": "Implementation",
+          "type": "string"
+        },
+        "provider_id": {
+          "minLength": 1,
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "provider_kind": {
+          "minLength": 1,
+          "title": "Provider Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "default": "v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_id",
+        "provider_kind",
+        "implementation",
+        "version"
+      ],
+      "title": "ProviderIdentity",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "attempt": {
+      "minimum": 1,
+      "title": "Attempt",
+      "type": "integer"
+    },
+    "handle": {
+      "minLength": 1,
+      "title": "Handle",
+      "type": "string"
+    },
+    "provider": {
+      "$ref": "#/$defs/ProviderIdentity"
+    },
+    "schema_version": {
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "provider",
+    "handle",
+    "attempt"
+  ],
+  "title": "ProviderHandle",
+  "type": "object"
+}

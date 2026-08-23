@@ -1,0 +1,143 @@
+{
+  "$defs": {
+    "BudgetReservation": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "minimum": 0,
+          "title": "Limit",
+          "type": "number"
+        },
+        "reservation_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "resource": {
+          "title": "Resource",
+          "type": "string"
+        },
+        "schema_version": {
+          "default": "v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "spent": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Spent",
+          "type": "number"
+        }
+      },
+      "required": [
+        "reservation_id",
+        "resource",
+        "limit"
+      ],
+      "title": "BudgetReservation",
+      "type": "object"
+    },
+    "ID": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "ID",
+      "type": "object"
+    },
+    "Lifecycle": {
+      "enum": [
+        "INTAKE",
+        "BRIEFING",
+        "SCOPING",
+        "LITERATURE",
+        "CANDIDATES",
+        "WAITING_FOR_HUMAN",
+        "BASELINE",
+        "EXPERIMENTING",
+        "ANALYZING",
+        "WRITING",
+        "REVIEW",
+        "REPRODUCIBILITY",
+        "PACKAGING",
+        "READY_FOR_HUMAN_REVIEW",
+        "PAUSED",
+        "BLOCKED",
+        "FAILED",
+        "INCONCLUSIVE",
+        "CANCELLED",
+        "ARCHIVED"
+      ],
+      "title": "Lifecycle",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "brief_id": {
+      "$ref": "#/$defs/ID"
+    },
+    "budget": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BudgetReservation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "constraints": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Constraints",
+      "type": "array"
+    },
+    "lifecycle": {
+      "$ref": "#/$defs/Lifecycle",
+      "default": "BRIEFING"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "project_id": {
+      "$ref": "#/$defs/ID"
+    },
+    "question": {
+      "title": "Question",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Scope",
+      "type": "array"
+    }
+  },
+  "required": [
+    "occurred_at",
+    "brief_id",
+    "project_id",
+    "question"
+  ],
+  "title": "ResearchBrief",
+  "type": "object"
+}

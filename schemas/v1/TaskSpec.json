@@ -1,0 +1,172 @@
+{
+  "$defs": {
+    "BudgetReservation": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "minimum": 0,
+          "title": "Limit",
+          "type": "number"
+        },
+        "reservation_id": {
+          "$ref": "#/$defs/ID"
+        },
+        "resource": {
+          "title": "Resource",
+          "type": "string"
+        },
+        "schema_version": {
+          "default": "v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "spent": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Spent",
+          "type": "number"
+        }
+      },
+      "required": [
+        "reservation_id",
+        "resource",
+        "limit"
+      ],
+      "title": "BudgetReservation",
+      "type": "object"
+    },
+    "ID": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "ID",
+      "type": "object"
+    },
+    "ProviderIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "implementation": {
+          "minLength": 1,
+          "title": "Implementation",
+          "type": "string"
+        },
+        "provider_id": {
+          "minLength": 1,
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "provider_kind": {
+          "minLength": 1,
+          "title": "Provider Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "default": "v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_id",
+        "provider_kind",
+        "implementation",
+        "version"
+      ],
+      "title": "ProviderIdentity",
+      "type": "object"
+    },
+    "RecordStatus": {
+      "enum": [
+        "PROPOSED",
+        "APPROVED",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED",
+        "REJECTED",
+        "INCONCLUSIVE",
+        "CANCELLED",
+        "BLOCKED"
+      ],
+      "title": "RecordStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "budget": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BudgetReservation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "idempotency_key": {
+      "minLength": 1,
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "inputs": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ID"
+      },
+      "title": "Inputs",
+      "type": "array"
+    },
+    "objective": {
+      "title": "Objective",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "project_id": {
+      "$ref": "#/$defs/ID"
+    },
+    "provider": {
+      "$ref": "#/$defs/ProviderIdentity"
+    },
+    "schema_version": {
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/RecordStatus",
+      "default": "PROPOSED"
+    },
+    "task_id": {
+      "$ref": "#/$defs/ID"
+    }
+  },
+  "required": [
+    "occurred_at",
+    "task_id",
+    "project_id",
+    "objective",
+    "provider",
+    "idempotency_key"
+  ],
+  "title": "TaskSpec",
+  "type": "object"
+}

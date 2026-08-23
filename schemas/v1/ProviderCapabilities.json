@@ -1,0 +1,82 @@
+{
+  "$defs": {
+    "ProviderIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "implementation": {
+          "minLength": 1,
+          "title": "Implementation",
+          "type": "string"
+        },
+        "provider_id": {
+          "minLength": 1,
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "provider_kind": {
+          "minLength": 1,
+          "title": "Provider Kind",
+          "type": "string"
+        },
+        "schema_version": {
+          "default": "v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_id",
+        "provider_kind",
+        "implementation",
+        "version"
+      ],
+      "title": "ProviderIdentity",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "concurrency": {
+      "minimum": 1,
+      "title": "Concurrency",
+      "type": "integer"
+    },
+    "network": {
+      "title": "Network",
+      "type": "string"
+    },
+    "provider": {
+      "$ref": "#/$defs/ProviderIdentity"
+    },
+    "sandbox": {
+      "title": "Sandbox",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_kinds": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Task Kinds",
+      "type": "array"
+    }
+  },
+  "required": [
+    "provider",
+    "concurrency",
+    "sandbox",
+    "network"
+  ],
+  "title": "ProviderCapabilities",
+  "type": "object"
+}

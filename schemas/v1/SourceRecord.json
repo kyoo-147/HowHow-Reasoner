@@ -1,0 +1,62 @@
+{
+  "$defs": {
+    "ID": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "ID",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "access": {
+      "title": "Access",
+      "type": "string"
+    },
+    "content_sha256": {
+      "title": "Content Sha256",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "provider": {
+      "title": "Provider",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_id": {
+      "$ref": "#/$defs/ID"
+    },
+    "stable_locator": {
+      "title": "Stable Locator",
+      "type": "string"
+    }
+  },
+  "required": [
+    "occurred_at",
+    "source_id",
+    "provider",
+    "stable_locator",
+    "content_sha256",
+    "access"
+  ],
+  "title": "SourceRecord",
+  "type": "object"
+}

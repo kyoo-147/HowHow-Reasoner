@@ -1,0 +1,68 @@
+{
+  "$defs": {
+    "ID": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "ID",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "artifacts": {
+      "items": {
+        "$ref": "#/$defs/ID"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "completed": {
+      "default": false,
+      "title": "Completed",
+      "type": "boolean"
+    },
+    "gates": {
+      "items": {
+        "$ref": "#/$defs/ID"
+      },
+      "title": "Gates",
+      "type": "array"
+    },
+    "label": {
+      "default": "READY FOR HUMAN REVIEW",
+      "title": "Label",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "package_id": {
+      "$ref": "#/$defs/ID"
+    },
+    "schema_version": {
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "occurred_at",
+    "package_id",
+    "artifacts",
+    "gates"
+  ],
+  "title": "PackageManifest",
+  "type": "object"
+}

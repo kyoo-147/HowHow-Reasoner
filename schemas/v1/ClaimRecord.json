@@ -1,0 +1,76 @@
+{
+  "$defs": {
+    "ClaimStatus": {
+      "enum": [
+        "SUPPORTED",
+        "CONTRADICTED",
+        "UNRESOLVED",
+        "WITHDRAWN"
+      ],
+      "title": "ClaimStatus",
+      "type": "string"
+    },
+    "ID": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "title": "ID",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "claim_id": {
+      "$ref": "#/$defs/ID"
+    },
+    "claim_type": {
+      "title": "Claim Type",
+      "type": "string"
+    },
+    "evidence": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ID"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "limitations": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "schema_version": {
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/ClaimStatus",
+      "default": "UNRESOLVED"
+    },
+    "wording": {
+      "title": "Wording",
+      "type": "string"
+    }
+  },
+  "required": [
+    "claim_id",
+    "wording",
+    "claim_type"
+  ],
+  "title": "ClaimRecord",
+  "type": "object"
+}

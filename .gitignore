@@ -1,2 +1,6 @@
 .firstmate/
 Sori/
+
+__pycache__/
+*.py[cod]
+.venv/
