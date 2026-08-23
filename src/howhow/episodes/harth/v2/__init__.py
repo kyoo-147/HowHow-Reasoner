@@ -1,3 +1,4 @@
+from .analysis import analyze, summarize_fold_rows
 from .engine import (
     BOOTSTRAP_REPS,
     PROTOCOL_ID,
@@ -27,6 +28,8 @@ __all__ = [
     "ProtocolFailure",
     "Window",
     "build_nested_loso_folds",
+    "analyze",
+    "summarize_fold_rows",
     "execute",
     "fit_temperature",
     "holm_correction",
