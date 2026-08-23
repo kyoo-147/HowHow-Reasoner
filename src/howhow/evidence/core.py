@@ -1,4 +1,4 @@
-"""Small, deterministic evidence graph types; retrieved text is never executable."""
+"""Evidence records. Retrieved source text is untrusted data and never executable."""
 
 from __future__ import annotations
 
@@ -37,6 +37,10 @@ class SourceRecord:
     url: str | None = None
     license: str | None = None
     abstract: str = ""
+    doi: str | None = None
+    arxiv_id: str | None = None
+    openalex_id: str | None = None
+    semantic_scholar_id: str | None = None
 
     def __post_init__(self) -> None:
         if not self.source_id or not self.stable_id or not self.provider:
@@ -94,42 +98,38 @@ class ContradictionEdge:
             raise ValueError("contradiction edge requires a bounded reason/confidence")
 
 
-@dataclass(frozen=True, slots=True)
-class ClaimSupportAudit:
-    claim_id: str
-    supported: tuple[str, ...] = ()
-    contradicted: tuple[str, ...] = ()
-    limitations: tuple[str, ...] = ()
-    status: str = "UNRESOLVED"
-
-    def __post_init__(self) -> None:
-        if not self.supported and not self.contradicted and self.status == "SUPPORTED":
-            raise ValueError("a supported claim must cite evidence")
-
-
 def deduplication_key(source: SourceRecord) -> tuple[str, str, str]:
     return (source.provider.lower(), source.stable_id.lower(), source.version or "")
 
 
 def deduplicate_sources(sources: Iterable[SourceRecord]) -> tuple[SourceRecord, ...]:
-    """Keep first-seen records, while allowing different versions of one work."""
-    seen: set[tuple[str, str, str]] = set()
-    result: list[SourceRecord] = []
+    seen = set()
+    out = []
     for source in sources:
-        key = deduplication_key(source)
-        if key not in seen:
+        if (key := deduplication_key(source)) not in seen:
             seen.add(key)
-            result.append(source)
-    return tuple(result)
+            out.append(source)
+    return tuple(out)
 
 
 def resolve_identity(sources: Iterable[SourceRecord]) -> dict[str, tuple[str, ...]]:
-    """Group provider records by normalized DOI/arXiv/OpenAlex/S2 identity."""
     groups: dict[str, list[str]] = {}
     for source in sources:
-        value = source.stable_id.lower().strip()
-        value = re.sub(r"^(https?://(doi.org/|arxiv.org/))", "", value)
-        key = f"doi:{value}" if value.startswith("10.") else value
+        ids = [
+            source.doi,
+            source.arxiv_id,
+            source.openalex_id,
+            source.semantic_scholar_id,
+            source.stable_id,
+        ]
+        keys = []
+        for value in ids:
+            if value:
+                value = re.sub(
+                    r"^(https?://(doi.org/|arxiv.org/|openalex.org/))", "", value.lower().strip()
+                )
+                keys.append("doi:" + value if value.startswith("10.") else value)
+        key = min(keys) if keys else source.stable_id.lower()
         groups.setdefault(key, []).append(source.source_id)
     return {key: tuple(ids) for key, ids in groups.items()}
 
@@ -141,25 +141,30 @@ def audit_claim_support(
     contradiction_ids: Iterable[str] = (),
 ) -> ClaimSupportAudit:
     supported = tuple(
-        i for i in support_ids if i in evidence and evidence[i].status == EvidenceStatus.VERIFIED
+        i for i in support_ids if i in evidence and evidence[i].status is EvidenceStatus.VERIFIED
     )
     contradicted = tuple(
         i
         for i in contradiction_ids
-        if i in evidence and evidence[i].status != EvidenceStatus.REJECTED
+        if i in evidence and evidence[i].status is not EvidenceStatus.REJECTED
     )
-    if supported and contradicted:
-        status = "CONTRADICTED"
-    elif supported:
-        status = "SUPPORTED"
-    elif contradicted:
-        status = "CONTRADICTED"
-    else:
-        status = "UNRESOLVED"
-    limitations = (
-        () if status != "UNRESOLVED" else ("No verified exact source span supports this claim.",)
+    status = "CONTRADICTED" if contradicted else "SUPPORTED" if supported else "UNRESOLVED"
+    return ClaimSupportAudit(
+        claim_id,
+        supported,
+        contradicted,
+        () if status != "UNRESOLVED" else ("No verified exact source span supports this claim.",),
+        status,
     )
-    return ClaimSupportAudit(claim_id, supported, contradicted, limitations, status)
+
+
+@dataclass(frozen=True, slots=True)
+class ClaimSupportAudit:
+    claim_id: str
+    supported: tuple[str, ...] = ()
+    contradicted: tuple[str, ...] = ()
+    limitations: tuple[str, ...] = ()
+    status: str = "UNRESOLVED"
 
 
 def raw_hash(raw: bytes) -> str:

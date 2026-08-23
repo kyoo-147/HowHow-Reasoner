@@ -13,6 +13,7 @@ from .core import (
 )
 from .retrieval import (
     CacheHook,
+    FileCache,
     HttpResponse,
     RateClass,
     RetrievalError,
@@ -23,6 +24,7 @@ from .retrieval import (
 __all__ = [
     "AccessStatus",
     "CacheHook",
+    "FileCache",
     "ClaimSupportAudit",
     "ContradictionEdge",
     "EvidenceSpan",
