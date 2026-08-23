@@ -65,3 +65,56 @@ def test_bounded_harth_window_loader(tmp_path) -> None:
     assert labels.tolist() == ["walking"] * 3
     assert subjects == ["S001"] * 3
     assert details["rows_read"] == 8
+
+
+def test_harth_download_rejects_expired_deadline_before_open(tmp_path) -> None:
+    import time
+
+    from howhow.episodes.harth.download import download_harth
+
+    opened = False
+
+    def opener(*args, **kwargs):
+        nonlocal opened
+        opened = True
+        raise AssertionError("expired downloads must not open a connection")
+
+    with pytest.raises(TimeoutError, match="deadline expired"):
+        download_harth(tmp_path / "harth.zip", deadline=time.monotonic() - 1, opener=opener)
+    assert not opened
+
+
+def test_harth_download_bounds_stalled_read_and_preserves_partial(tmp_path) -> None:
+    import time
+
+    from howhow.episodes.harth.download import download_harth
+
+    class StalledResponse:
+        headers = {}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self, size):
+            if size != 1024 * 1024:
+                raise AssertionError("download must use bounded chunks")
+            if not hasattr(self, "sent"):
+                self.sent = True
+                return b"partial"
+            raise TimeoutError("simulated stalled socket read")
+
+    timeouts = []
+
+    def opener(request, *, timeout):
+        timeouts.append(timeout)
+        return StalledResponse()
+
+    destination = tmp_path / "harth.zip"
+    with pytest.raises(TimeoutError, match="stalled"):
+        download_harth(destination, deadline=time.monotonic() + 30, opener=opener)
+    assert 0 < timeouts[0] <= 30
+    assert not destination.exists()
+    assert (tmp_path / "harth.zip.part").read_bytes() == b"partial"

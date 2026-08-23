@@ -6,9 +6,11 @@ import hashlib
 import json
 import time
 import urllib.request
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 UCI_HARTH_URL = "https://archive.ics.uci.edu/static/public/779/harth.zip"
 
@@ -34,7 +36,11 @@ def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
 
 
 def download_harth(
-    destination: Path, *, expected_sha256: str | None = None, deadline: float | None = None
+    destination: Path,
+    *,
+    expected_sha256: str | None = None,
+    deadline: float | None = None,
+    opener: Callable[..., Any] | None = None,
 ) -> DownloadManifest:
     """Download to ``.part``, resume with HTTP Range, then atomically publish.
 
@@ -59,14 +65,21 @@ def download_harth(
     request = urllib.request.Request(UCI_HARTH_URL)
     if offset:
         request.add_header("Range", f"bytes={offset}-")
+    remaining = None if deadline is None else deadline - time.monotonic()
+    if remaining is not None and remaining <= 0:
+        raise TimeoutError("HARTH download deadline expired before opening connection")
+    timeout = 60.0 if remaining is None else min(60.0, remaining)
+    open_url = opener or urllib.request.urlopen
     with (
-        urllib.request.urlopen(request, timeout=60) as response,
+        open_url(request, timeout=timeout) as response,
         partial.open("ab" if offset else "wb") as output,
     ):
         if offset and response.headers.get("Content-Range") is None:
             output.close()
             partial.unlink()
-            return download_harth(destination, expected_sha256=expected_sha256, deadline=deadline)
+            return download_harth(
+                destination, expected_sha256=expected_sha256, deadline=deadline, opener=opener
+            )
         while chunk := response.read(1024 * 1024):
             output.write(chunk)
             if deadline is not None and time.monotonic() >= deadline:
