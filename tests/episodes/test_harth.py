@@ -67,6 +67,45 @@ def test_bounded_harth_window_loader(tmp_path) -> None:
     assert details["rows_read"] == 8
 
 
+def test_bounded_harth_window_loader_uses_filename_subject_fallback(tmp_path) -> None:
+    from howhow.episodes.harth.smoke import load_windows
+
+    csv_path = tmp_path / "S006.csv"
+    header = "timestamp,back_x,back_y,back_z,thigh_x,thigh_y,thigh_z,label\n"
+    rows = "".join(f"{index},1,2,3,4,5,6,walking\n" for index in range(4))
+    csv_path.write_text(header + rows, encoding="utf-8")
+    _, _, subjects, _ = load_windows(
+        [csv_path], max_rows=4, max_subjects=1, window_size=4, stride=1
+    )
+    assert subjects == ["S006"]
+
+
+def test_bounded_harth_window_loader_requires_subject_when_filename_has_none(tmp_path) -> None:
+    from howhow.episodes.harth.smoke import load_windows
+
+    csv_path = tmp_path / "activities.csv"
+    header = "timestamp,back_x,back_y,back_z,thigh_x,thigh_y,thigh_z,label\n"
+    csv_path.write_text(header, encoding="utf-8")
+    with pytest.raises(ValueError, match="subject"):
+        load_windows([csv_path], max_rows=4, max_subjects=1, window_size=4, stride=1)
+
+
+def test_harth_cli_exits_nonzero_for_failed_manifest(tmp_path, monkeypatch) -> None:
+    import json
+    import sys
+
+    from howhow.episodes.harth import smoke
+
+    manifest = tmp_path / "failed.json"
+    manifest.write_text(json.dumps({"status": "FAILED"}), encoding="utf-8")
+    monkeypatch.setenv("HOWHOW_RUN_REAL_HARTH", "1")
+    monkeypatch.setattr(smoke, "run_smoke", lambda args: manifest)
+    monkeypatch.setattr(sys, "argv", ["harth-smoke"])
+    with pytest.raises(SystemExit) as raised:
+        smoke.main()
+    assert raised.value.code == 1
+
+
 def test_harth_download_rejects_expired_deadline_before_open(tmp_path) -> None:
     import time
 
