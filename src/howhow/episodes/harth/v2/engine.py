@@ -21,6 +21,7 @@ from typing import Any, cast
 import numpy as np
 
 from ..metrics import calibration_metrics, discrimination_metrics
+from .run_guard import atomic_write
 
 PROTOCOL_ID = "harth-calibration-v2"
 BOOTSTRAP_REPS = 2000
@@ -291,6 +292,32 @@ def _inner_logits(
     return np.vstack(all_logits), np.concatenate(all_labels)
 
 
+def _uncertainty(probabilities: np.ndarray, labels: np.ndarray, *, seed: int) -> list[float]:
+    """Finite observation-level uncertainty for the schema handoff."""
+    p = np.asarray(probabilities, dtype=float)
+    y = np.asarray(labels, dtype=int)
+    n = len(y)
+    if n < 2:
+        raise ProtocolFailure("uncertainty requires at least two held-out windows")
+    correct = (p.argmax(axis=1) == y).astype(float)
+    confidence = p.max(axis=1)
+    losses = -np.log(np.clip(p[np.arange(n), y], 1e-300, 1.0))
+    brier = np.sum((p - np.eye(p.shape[1])[y]) ** 2, axis=1)
+    ece_contribution = np.abs(correct - confidence)
+    values = (losses, brier, ece_contribution)
+    intervals: list[float] = []
+    for value in values:
+        mean = float(np.mean(value))
+        half = 1.96 * float(np.std(value, ddof=1)) / np.sqrt(n)
+        # Constant finite samples receive a strict representable bound.
+        half = max(half, np.finfo(float).eps * max(1.0, abs(mean)))
+        intervals.append(max(0.0, mean - half))
+        intervals.append(mean + half)
+    # The schema's legacy interval is the primary NLL interval; richer intervals
+    # are retained alongside it for all calibration outputs.
+    return intervals
+
+
 def _subject_metric_rows(
     probabilities: np.ndarray, labels: np.ndarray, subjects: Sequence[str], classes: Sequence[str]
 ) -> dict[str, Any]:
@@ -300,6 +327,10 @@ def _subject_metric_rows(
         metrics: dict[str, Any] = dict(calibration_metrics(probabilities[mask], labels[mask]))
         metrics.update(discrimination_metrics(probabilities[mask], labels[mask]))
         metrics["subject"] = subject
+        metrics["class_support"] = {
+            str(cls): int(np.sum(labels[mask] == cls)) for cls in range(len(classes))
+        }
+        metrics["interval"] = _uncertainty(probabilities[mask], labels[mask], seed=0)
         result[subject] = metrics
     return result
 
@@ -423,15 +454,11 @@ def run_protocol(
             }
             result.folds.append(fold_row)
             if checkpoint:
-                Path(checkpoint).write_text(
-                    json.dumps(result.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
-                )
+                atomic_write(Path(checkpoint), result.to_dict())
     result.comparisons = _comparison_report(result.folds)
     result.status = "COMPLETE"
     if checkpoint:
-        Path(checkpoint).write_text(
-            json.dumps(result.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
-        )
+        atomic_write(Path(checkpoint), result.to_dict())
     return result
 
 

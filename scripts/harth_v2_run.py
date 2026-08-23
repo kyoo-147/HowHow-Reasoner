@@ -1,9 +1,4 @@
-"""Fail-closed HARTH protocol-v2 preflight and run preparation.
-
-This command validates the frozen protocol, input archive, resource budget, and
-output/checkpoint ownership before a real engine is ever called.  Preflight is
-safe and produces no scientific metrics.
-"""
+"""Fail-closed HARTH protocol-v2 preflight and execution command."""
 
 from __future__ import annotations
 
@@ -27,6 +22,7 @@ DEFAULT_ARCHIVE = ROOT / "episodes/harth-calibration/data/harth.zip"
 DEFAULT_OUTPUT = ROOT / "episodes/harth-calibration/artifacts/v2-run"
 BOOTSTRAP_REPS = 2000
 REAL_CONSENT_ENV = "HOWHOW_RUN_REAL_HARTH"
+EXPECTED_SUBJECTS = 22
 
 
 class PreflightFailure(ValueError):
@@ -120,12 +116,24 @@ def validate_archive(archive: Path, config: dict[str, Any]) -> dict[str, Any]:
     return {"path": str(archive), "sha256": actual, "bytes": archive.stat().st_size}
 
 
-def validate_output(output: Path) -> None:
+def validate_output(output: Path, *, resume: bool = False) -> None:
     if output.exists() and not output.is_dir():
         raise PreflightFailure(f"output path is not a directory: {output}")
-    if output.exists() and any(output.iterdir()):
+    if output.exists() and any(output.iterdir()) and not resume:
         raise PreflightFailure(f"output directory must be empty: {output}")
     output.mkdir(parents=True, exist_ok=True)
+
+
+def code_hash() -> str:
+    files = [
+        ROOT / "scripts/harth_v2_run.py",
+        *sorted((ROOT / "src/howhow/episodes/harth/v2").glob("*.py")),
+    ]
+    digest = hashlib.sha256()
+    for path in files:
+        digest.update(str(path.relative_to(ROOT)).encode())
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
 
 
 def build_manifest(
@@ -157,19 +165,20 @@ def build_manifest(
 
 def preflight(args: argparse.Namespace) -> Path:
     started = time.monotonic()
-    protocol = args.protocol.resolve()
-    config = args.config.resolve()
-    archive_path = args.archive.resolve()
+    protocol, config, archive_path = (
+        args.protocol.resolve(),
+        args.config.resolve(),
+        args.archive.resolve(),
+    )
     if git("status", "--porcelain"):
         raise PreflightFailure("working tree is dirty; refusing run preparation")
     if not protocol.is_file() or not config.is_file():
         raise PreflightFailure("frozen protocol or run config is missing")
-    protocol_data = load_json(protocol)
-    config_data = load_json(config)
+    protocol_data, config_data = load_json(protocol), load_json(config)
     validate_config(config_data, protocol_data, args)
     archive = validate_archive(archive_path, config_data)
     output = args.output.resolve()
-    validate_output(output)
+    validate_output(output, resume=args.execute_real and getattr(args, "resume", False))
     args.checkpoint = args.checkpoint.resolve()
     if args.checkpoint.parent != output:
         raise PreflightFailure("checkpoint must be inside the clean output directory")
@@ -181,19 +190,100 @@ def preflight(args: argparse.Namespace) -> Path:
 
 
 def parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--protocol", type=Path, default=DEFAULT_PROTOCOL)
-    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
-    parser.add_argument("--archive", type=Path, default=DEFAULT_ARCHIVE)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--checkpoint", type=Path, default=DEFAULT_OUTPUT / "checkpoint.json")
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--bootstrap-reps", type=int, default=BOOTSTRAP_REPS)
-    parser.add_argument("--max-outer-folds", type=int, default=22)
-    parser.add_argument("--wall-clock-minutes", type=int, default=30)
-    parser.add_argument("--preflight-only", action="store_true")
-    parser.add_argument("--execute-real", action="store_true")
-    return parser
+    value = argparse.ArgumentParser(description=__doc__)
+    value.add_argument("--protocol", type=Path, default=DEFAULT_PROTOCOL)
+    value.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    value.add_argument("--archive", type=Path, default=DEFAULT_ARCHIVE)
+    value.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    value.add_argument("--checkpoint", type=Path, default=DEFAULT_OUTPUT / "checkpoint.json")
+    value.add_argument("--class", dest="classes", action="append", default=[])
+    value.add_argument("--seed", type=int, default=0)
+    value.add_argument("--bootstrap-reps", type=int, default=BOOTSTRAP_REPS)
+    value.add_argument("--max-outer-folds", type=int, default=22)
+    value.add_argument("--wall-clock-minutes", type=int, default=30)
+    value.add_argument("--preflight-only", action="store_true")
+    value.add_argument("--execute-real", action="store_true")
+    value.add_argument("--resume", action="store_true")
+    return value
+
+
+def execute_real(args: argparse.Namespace) -> Path:
+    if os.environ.get(REAL_CONSENT_ENV) != "1":
+        raise PreflightFailure(f"--execute-real requires {REAL_CONSENT_ENV}=1")
+    from howhow.episodes.harth.v2 import (
+        engine_result_to_schema,
+        load_harth_archive,
+        protocol_hash,
+        run_protocol,
+        validate_result,
+    )
+    from howhow.episodes.harth.v2.run_guard import atomic_write
+
+    if len(args.classes) != 12:
+        raise PreflightFailure("exactly 12 frozen classes must be supplied with --class")
+    protocol_digest = protocol_hash(args.protocol)
+    source = load_harth_archive(
+        args.archive, args.classes, protocol_hash=protocol_digest, code_hash=code_hash()
+    )
+    if len(source.manifest.get("subjects", [])) != EXPECTED_SUBJECTS:
+        raise PreflightFailure("archive must contain exactly 22 eligible subjects")
+    input_digest = __import__("howhow.episodes.harth.v2", fromlist=["input_hash"]).input_hash(
+        source.windows
+    )
+    identity = {
+        "input_hash": input_digest,
+        "protocol_hash": protocol_digest,
+        "code_hash": code_hash(),
+    }
+    checkpoint = args.checkpoint
+    output = args.output.resolve()
+    from howhow.episodes.harth.v2.run_guard import RunGuard
+
+    if args.resume and checkpoint.is_file():
+        saved = load_json(checkpoint)
+        if any(saved.get(key) != value for key, value in identity.items()):
+            raise PreflightFailure("checkpoint immutable identity mismatch")
+    guard = RunGuard(
+        output,
+        input_hash=input_digest,
+        protocol_hash=protocol_digest,
+        code_hash=identity["code_hash"],
+    )
+    try:
+        result = run_protocol(
+            source.windows,
+            args.classes,
+            protocol_file=args.protocol,
+            checkpoint=checkpoint,
+            timeout_seconds=1800.0,
+        )
+        guard.check_timeout()
+        if result.status != "COMPLETE" or len(result.folds) != EXPECTED_SUBJECTS * 3:
+            raise PreflightFailure(
+                "engine did not produce all declared sensor configurations and folds"
+            )
+        artifact = engine_result_to_schema(result, code_hash=identity["code_hash"])
+        artifact = validate_result(artifact)
+    except BaseException as exc:
+        guard.failure(exc, phase="validation_or_execution")
+        raise
+    target = output / "results-v2.json"
+    atomic_write(target, artifact)
+    (output / "results.tex").write_text(_validated_tables(artifact), encoding="utf-8")
+    guard.final(phase="complete", scientific_metrics=True, result_artifact=str(target))
+    return target
+
+
+def _validated_tables(artifact: dict[str, Any]) -> str:
+    import importlib.util
+
+    path = ROOT / "episodes/harth-calibration/paper/tools/generate_tables.py"
+    spec = importlib.util.spec_from_file_location("harth_generate_tables", path)
+    if spec is None or spec.loader is None:
+        raise PreflightFailure("cannot load manuscript table generator")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.latex(artifact)
 
 
 def main() -> int:
@@ -204,18 +294,16 @@ def main() -> int:
     try:
         path = preflight(args)
         if args.execute_real:
-            if os.environ.get(REAL_CONSENT_ENV) != "1":
-                raise PreflightFailure(f"--execute-real requires {REAL_CONSENT_ENV}=1")
-            raise PreflightFailure(
-                "real engine execution is intentionally disabled in this preparation layer"
-            )
-        print(f"PREFLIGHT PASS: {path}")
+            path = execute_real(args)
+            print(f"RUN PASS: {path}")
+        else:
+            print(f"PREFLIGHT PASS: {path}")
         return 0
-    except (OSError, PreflightFailure, subprocess.CalledProcessError) as exc:
+    except BaseException as exc:
         output = args.output.resolve()
-        if output.is_dir() and not any(output.iterdir()):
+        if output.is_dir():
             failure = {
-                "status": "BLOCKED",
+                "status": "FAILED",
                 "scientific_metrics": False,
                 "started_at_utc": utc_now(),
                 "finished_at_utc": utc_now(),
@@ -227,7 +315,7 @@ def main() -> int:
             (output / "failure.json").write_text(
                 json.dumps(failure, indent=2, sort_keys=True) + "\n", encoding="utf-8"
             )
-        print(f"PREFLIGHT BLOCKED: {exc}", file=sys.stderr)
+        print(f"RUN BLOCKED: {exc}", file=sys.stderr)
         return 1
 
 

@@ -99,11 +99,9 @@ def _subject(value: Mapping[str, str], member: str) -> str:
 def _session(value: Mapping[str, str], member: str) -> str:
     if any(k in value and value[k].strip() for k in ("session", "session_id", "recording")):
         return _identity(value, ("session", "session_id", "recording"), "session")
-    stem = Path(member).stem
-    parts = stem.split("_")
-    if len(parts) < 2 or not parts[1]:
-        raise LoaderFailure(f"ambiguous session identity in {member!r}")
-    return parts[1]
+    # The canonical archive is one member per subject/session (harth/SNNN.csv).
+    # The member itself is the boundary; never fabricate a shared session ID.
+    return _normal_path(member)
 
 
 def _iter_member_rows(stream: io.TextIOBase, member: str) -> Iterator[RawRow]:
@@ -241,6 +239,8 @@ def load_harth_archive(
         "stride": stride,
         "protocol_hash": protocol_hash,
         "code_hash": code_hash,
+        "session_policy": "one_archive_member_per_subject_session",
+        "session_boundaries": [item["path"] for item in files],
         "scientific_metrics": False,
     }
     return LoadedArchive(tuple(windows), manifest, total_rows)

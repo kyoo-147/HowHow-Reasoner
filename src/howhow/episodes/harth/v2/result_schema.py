@@ -49,7 +49,7 @@ def _interval(value: Any, name: str) -> list[float]:
         _fail(f"malformed {name} interval")
     low = _number(value[0], f"{name} lower")
     high = _number(value[1], f"{name} upper")
-    if low > high:
+    if low >= high:
         _fail(f"malformed {name} interval")
     return [low, high]
 
@@ -159,7 +159,7 @@ def validate_result(data: object) -> dict[str, Any]:
                 not isinstance(support, Mapping)
                 or set(support) != set(classes)
                 or any(
-                    isinstance(v, bool) or not isinstance(v, int) or v < 1 for v in support.values()
+                    isinstance(v, bool) or not isinstance(v, int) or v < 2 for v in support.values()
                 )
             ):
                 _fail("invalid class support")
@@ -205,6 +205,7 @@ def validate_result(data: object) -> dict[str, Any]:
         "folds": normalized_folds,
         "gates": derived,
         "failures": list(data.get("failures", [])),
+        "analysis": data.get("analysis"),
     }
 
 
@@ -217,11 +218,23 @@ def engine_result_to_schema(result: Any, *, code_hash: str) -> dict[str, Any]:
             source = row[state][row["test_subject"]]
             metrics = {key: source[key] for key in METRICS}
             metrics.setdefault("accuracy", source.get("accuracy", 0.0))
+            if not isinstance(source.get("interval"), list) or len(source["interval"]) < 6:
+                raise ResultSchemaError("engine did not provide uncertainty")
+            if not isinstance(source.get("class_support"), Mapping):
+                raise ResultSchemaError("engine did not provide class support")
+            if any(
+                int(source["class_support"].get(str(i), 0)) < 1
+                for i in range(len(result.class_vocabulary))
+            ):
+                raise ResultSchemaError("engine class support is incomplete")
             metrics.setdefault("macro_f1", source.get("macro_f1", 0.0))
             states[state] = {
                 "metrics": metrics,
-                "interval": [metrics["nll"], metrics["nll"]],
-                "class_support": {c: 1 for c in result.class_vocabulary},
+                "interval": [float(source["interval"][0]), float(source["interval"][1])],
+                "class_support": {
+                    c: int(source["class_support"].get(str(i), 0))
+                    for i, c in enumerate(result.class_vocabulary)
+                },
             }
         raw_folds.append(
             {
@@ -234,6 +247,8 @@ def engine_result_to_schema(result: Any, *, code_hash: str) -> dict[str, Any]:
                 "states": states,
             }
         )
+    from .analysis import summarize_fold_rows
+
     return validate_result(
         {
             "schema_version": SCHEMA_VERSION,
@@ -251,6 +266,7 @@ def engine_result_to_schema(result: Any, *, code_hash: str) -> dict[str, Any]:
             },
             "fold_ids": [x["fold_id"] for x in raw_folds],
             "folds": raw_folds,
+            "analysis": summarize_fold_rows(result.folds),
         }
     )
 
