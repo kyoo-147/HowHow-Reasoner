@@ -7,6 +7,7 @@ def test_locked_inventory_has_both_ecosystems_and_harth_attribution() -> None:
     packages = locked_packages()
     assert any(package["ecosystem"] == "pypi" for package in packages)
     assert any(package["ecosystem"] == "npm" for package in packages)
+    assert all(package["name"] and package["version"] for package in packages)
     report, _ = audit(refresh=False)
     assert report["harth"] == {
         "license": "CC BY 4.0",
@@ -20,3 +21,9 @@ def test_audit_never_reports_secret_content() -> None:
     output = str(report) + str(findings)
     assert "BEGIN " + "PRIVATE KEY" not in output
     assert "AK" + "IA" not in output
+
+
+def test_vulnerability_scan_status_is_structured() -> None:
+    report, _ = audit(refresh=False)
+    assert report["vulnerability_scan"]["status"] == "NOT_APPLICABLE"
+    assert report["vulnerability_scan"]["schema"].endswith("vulnerability-scan.v1")
