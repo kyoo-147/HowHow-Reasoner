@@ -13,7 +13,7 @@ import hashlib
 import json
 import math
 import time
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, cast
@@ -352,6 +352,7 @@ def run_protocol(
     protocol_file: str | Path | None = None,
     checkpoint: str | Path | None = None,
     timeout_seconds: float = 1800.0,
+    monotonic: Callable[[], float] | None = None,
 ) -> EngineResult:
     """Execute synthetic or explicitly supplied windows under nested LOSO.
 
@@ -364,7 +365,8 @@ def run_protocol(
     vocabulary = tuple(str(c) for c in classes)
     _validate_windows(records, vocabulary)
     ihash, phash = input_hash(records), protocol_hash(protocol_file)
-    started = time.monotonic()
+    clock = time.monotonic if monotonic is None else monotonic
+    deadline = clock() + timeout_seconds
     result = EngineResult(
         PROTOCOL_ID,
         "RUNNING",
@@ -389,7 +391,7 @@ def run_protocol(
         for fold in folds:
             if (configuration, fold.test_subject) in completed:
                 continue
-            if time.monotonic() - started > timeout_seconds:
+            if clock() > deadline:
                 result.status, result.failures = "FAILED", ["timeout"]
                 raise ProtocolFailure("timeout")
             train, test = np.asarray(fold.train_indices), np.asarray(fold.test_indices)
