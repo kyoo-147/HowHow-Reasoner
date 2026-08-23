@@ -21,6 +21,11 @@ class ArtifactStore:
     def digest(data: bytes) -> str:
         return hashlib.sha256(data).hexdigest()
 
+    @staticmethod
+    def _validate_digest(digest: str) -> None:
+        if len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest):
+            raise ArtifactError(f"invalid artifact digest: {digest}")
+
     def stage(self, source: Path, expected_sha256: str | None = None) -> str:
         data = source.read_bytes()
         digest = self.digest(data)
@@ -36,6 +41,7 @@ class ArtifactStore:
         return digest
 
     def promote(self, digest: str) -> Path:
+        self._validate_digest(digest)
         source = self.project.staging / digest
         if not source.is_file():
             raise ArtifactError(f"staged artifact not found: {digest}")

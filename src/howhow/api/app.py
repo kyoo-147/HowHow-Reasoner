@@ -103,7 +103,15 @@ def create_app(
     @app.middleware("http")
     async def request_limit(request: Request, call_next: Any) -> Any:
         length = request.headers.get("content-length")
-        if length and int(length) > max_body_bytes:
+        try:
+            declared_length = int(length) if length is not None else 0
+        except (TypeError, ValueError):
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=400, content={"detail": "invalid content-length"})
+        if declared_length < 0:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=400, content={"detail": "invalid content-length"})
+        if declared_length > max_body_bytes:
             from fastapi.responses import JSONResponse
 
             return JSONResponse(
@@ -129,13 +137,10 @@ def create_app(
         idempotency_key: str | None = None,
     ) -> EventEnvelope:
         store = EventStore(layout(project_id))
-        events = store.read()
+        event = _event(project_id, aggregate_type, aggregate_id, event_type, payload)
         if idempotency_key:
-            for existing in events:
-                if existing.payload.get("idempotency_key") == idempotency_key:
-                    return existing
-            payload = {**payload, "idempotency_key": idempotency_key}
-        return store.append(_event(project_id, aggregate_type, aggregate_id, event_type, payload))
+            return store.append_idempotent(event, idempotency_key)
+        return store.append(event)
 
     @app.get("/health")
     def health() -> dict[str, Any]:
@@ -247,7 +252,10 @@ def create_app(
 
     @app.get("/projects/{project_id}/evidence/audit")
     def evidence_audit(project_id: str) -> dict[str, Any]:
-        events = EventStore(layout(project_id)).read()
+        try:
+            events = EventStore(layout(project_id)).read()
+        except Exception as exc:
+            return {"events": 0, "verified_chain": False, "error": str(exc), "evidence": []}
         return {
             "events": len(events),
             "verified_chain": True,
