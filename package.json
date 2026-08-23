@@ -1,0 +1,13 @@
+{
+  "name": "howhow-reasoner",
+  "private": true,
+  "workspaces": ["apps/web"],
+  "scripts": {
+    "dev": "pnpm --dir apps/web dev",
+    "build": "pnpm --dir apps/web build",
+    "test": "pnpm --dir apps/web test",
+    "typecheck": "pnpm --dir apps/web typecheck",
+    "lint": "pnpm --dir apps/web lint"
+  },
+  "packageManager": "pnpm@10.33.2"
+}
