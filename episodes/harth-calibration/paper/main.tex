@@ -4,7 +4,6 @@
 \usepackage{lmodern}
 \usepackage{booktabs}
 \usepackage{enumitem}
-\usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{amssymb}
@@ -13,14 +12,18 @@
 \author{HowHow Research}
 \date{Exploratory report v2.1 --- 2026-08-24}
 \begin{document}
+\input{generated/macros}
 \maketitle
 \begin{center}\status{EXPLORATORY / POST-OBSERVATION / INCONCLUSIVE --- NOT A CONFIRMATORY CLAIM}\end{center}
 \begin{abstract}
-We report a custody-released, exploratory analysis of a deterministic CPU nearest-centroid activity-recognition baseline on HARTH. The frozen population contains twenty-two subjects and sixty-six configuration-folds. Nested subject-held-out evaluation compares uncalibrated probabilities with inner-subject temperature scaling for full, back-only, and thigh-only sensor representations. Subject-macro uncertainty uses 2,000 bootstrap replicates; paired sign-flip tests use 200,000 draws. Full-sensor calibrated NLL is generated in Table~\ref{tab:metrics}; the unadjusted paired NLL p-value is generated in the evidence snapshot, but Holm adjustment yields no familywise rejection. Brier and ECE do not establish a consistent calibration benefit. Exploratory support-aware F1 preserves \texttt{NOT\_ESTIMABLE}. This is an inconclusive post-observation report: it makes no novelty, causal, superiority, transferability, or generalization claim.
+We report a custody-released, exploratory analysis of a deterministic CPU nearest-centroid activity-recognition baseline on HARTH~\cite{harth}. The frozen population and all run quantities are generated from the exact result and displayed through macros: \resultSubjects{} subjects, \resultFolds{} lifecycle folds, \bootstrapReplicates{} bootstrap replicates, and \signFlipDraws{} sign-flip draws. Nested subject-held-out evaluation compares uncalibrated probabilities with inner-subject temperature scaling for full, back-only, and thigh-only sensor representations. Full-sensor calibrated NLL is generated in Table~\ref{tab:metrics}; Holm adjustment yields no familywise rejection. Exploratory support-aware F1 preserves \texttt{NOT\_ESTIMABLE}. This inconclusive report makes no novelty, causal, superiority, transferability, or generalization claim.
 \end{abstract}
 
 \section{Introduction}
-Probability quality matters when activity-recognition systems are used to communicate uncertainty, but a held-out-subject estimate is not a deployment guarantee. This report answers a narrow question: how did a frozen deterministic CPU baseline behave under the released HARTH run3 analysis, with and without inner-subject temperature scaling? The analysis is deliberately bounded to a frozen population and declared estimands. It does not estimate clinical utility, real-time safety, or population-wide calibration.
+Probability quality matters when activity-recognition systems communicate uncertainty, but a held-out-subject estimate is not a deployment guarantee. This report answers a narrow question: how did a frozen deterministic CPU baseline behave under the released HARTH run3 analysis, with and without inner-subject temperature scaling? The analysis is bounded to a frozen population and declared estimands. It does not estimate clinical utility, real-time safety, or population-wide calibration.
+
+\section{Related Work}
+HARTH is a public free-living activity-recognition dataset with subject-held-out baseline evaluation and two accelerometer placements~\cite{harth}. Work on confidence-calibrated wearable activity recognition motivates treating probability quality separately from class accuracy~\cite{harcal}. Calibration studies also use proper scoring rules, including NLL and Brier score, while emphasizing that calibration behavior can vary with the evaluation distribution~\cite{proper}. These three references are a bounded, non-systematic literature slice: their metadata and landing-page evidence do not establish transfer to HARTH, novelty, priority, or a literature-wide gap. Accordingly, this paper reports a candidate protocol and preserves the possibility that its observations are dataset- and split-specific.
 
 \section{Research Questions and Claim Boundary}
 \begin{enumerate}[label=RQ\arabic*:]
@@ -28,37 +31,44 @@ Probability quality matters when activity-recognition systems are used to commun
 \item What paired changes accompany inner-subject temperature scaling without using outer-test labels?
 \item What descriptive differences appear for back-only and thigh-only sensor ablations?
 \end{enumerate}
-All results are exploratory and post-observation. The result's custody boundary is \texttt{guarded\_real\_quarantined\_no\_release}; custody acceptance authorizes manuscript generation but does not release \texttt{quarantine.json}. The report preserves negative and inconclusive evidence and does not convert an artifact gate into scientific or reviewer acceptance.
+All results are exploratory and post-observation. The result custody boundary is \texttt{guarded\_real\_quarantined\_no\_release}; custody acceptance authorizes manuscript generation but does not release \texttt{quarantine.json}. The report preserves negative and inconclusive evidence and does not convert an artifact gate into scientific or reviewer acceptance.
+
+\section{Dataset and Attribution}
+The dataset identity is HARTH, attributed to Logacjov, Kongsvold, Bach, Bårdstu, and Mork~\cite{harth}; the repository's data manifest records the dataset DOI and UCI attribution. The analysis uses the frozen subject identifiers supplied by the released result, not a newly selected sample. Raw recordings, annotations, subject identities, and private run directories are not redistributed in this source archive. The paper therefore claims only what the retained aggregate result and custody findings support. Dataset licensing, consent, privacy, and annotation governance remain properties of the upstream dataset and are not reinterpreted here.
 
 \section{Methods}
 \subsection{Design and estimands}
-The primary estimand is the subject-macro expected test loss under leave-one-subject-out evaluation. All windows from a held-out subject remain in that subject's outer fold. The frozen population and three sensor configurations yield sixty-six lifecycle folds. The baseline is deterministic nearest-centroid classification over channel means and standard deviations. Calibration selects a bounded scalar temperature only with inner training-subject validation, then applies it once to the outer test subject.
+The primary estimand is the subject-macro expected test loss under leave-one-subject-out evaluation. All windows from a held-out subject remain in that subject's outer fold. The frozen population and three sensor configurations yield \resultFolds{} lifecycle folds. The baseline is deterministic nearest-centroid classification over channel means and standard deviations. Calibration selects a bounded scalar temperature only with inner training-subject validation, then applies it once to the outer test subject.
 
-\subsection{Metrics and uncertainty}
-NLL, multiclass Brier score, and ten-bin top-label ECE are summarized per subject and then macro-averaged. The generator reads the strict result and emits every displayed numeric cell; no metric is hand-entered in this manuscript. Intervals are percentile subject-cluster bootstrap intervals using 2,000 replicates. The three calibration comparisons use Holm adjustment at the declared familywise threshold. Sign-flip tests use 200,000 PCG64 draws with inclusive ties and unchanged zero handling. Sensor ablations are descriptive.
+\subsection{Metrics, inference, and support}
+NLL, multiclass Brier score, and ten-bin top-label ECE are summarized per subject and then macro-averaged. The generator reads the strict result and emits every displayed numeric cell; no metric or run quantity is hand-entered in this manuscript. Intervals are percentile subject-cluster bootstrap intervals using \bootstrapReplicates{} replicates. The three calibration comparisons use Holm adjustment at the declared familywise threshold. Sign-flip tests use the retained draw count of \signFlipDraws{} with the protocol's tie and zero rules. Sensor ablations are descriptive. F1 is computed only where TP/FP/FN support permits estimation; absent support is retained as \texttt{NOT\_ESTIMABLE}.
+
+\subsection{Version 2.1 support and inference}
+The v2.1 support policy binds each lifecycle fold to a frozen subject and configuration/state pairing, separates calibrated from uncalibrated arms, and records support-aware classwise outcomes. Primary inference is limited to the three paired calibration hypotheses (NLL, Brier, ECE). The generated table reports raw p-values, Holm-adjusted p-values, and decisions; it does not treat a confidence interval crossing zero as a positive or negative proof. Ablation contrasts are outside that primary family and remain descriptive. The prior terminal v2 attempt ended in a support-policy failure and is not merged into these results; v2.1 is a protocol revision, not a claim that the earlier failure was scientifically resolved.
 
 \subsection{Custody and reproducibility contract}
-The builder verifies the exact released result SHA, schema and COMPLETE state, frozen population, exploratory boundary, and custody flags before deriving a self-contained snapshot. It strips source destination and private-path fields, retains result JSON pointers, and binds each derived cell to the result SHA. `--check` compares snapshot, tables, and figures byte-for-byte. Failure on any release, hash, schema, status, value, pointer, or reproducibility drift is intentional.
+The source builder requires explicit result and custody inputs, verifies their exact SHA-256 identities, schema, COMPLETE state, frozen population, exploratory boundary, custody flags, and every retained RFC6901 pointer/value. Public \texttt{--check} and \texttt{--render} consume only the committed snapshot and generated outputs. The public path has no private source default. Snapshot, tables, and figures are byte-checked; failure on release, hash, schema, status, pointer, value, or reproducibility drift is intentional. Result SHA: \resultSHA. Custody findings SHA: \custodySHA.
 
 \section{Results}
-The generated tables report all full, reduced-sensor, calibrated, and uncalibrated estimates with intervals. Figure~\ref{fig:nll-bars} visualizes the full-sensor NLL estimates and Figure~\ref{fig:nll-delta} visualizes their paired contrast. The full-sensor contrast is compatible with a pre-adjustment NLL difference, while the Holm-adjusted family decision is a non-rejection. Brier and ECE contrasts do not provide a consistent calibration pattern. Reduced-sensor NLL increases are descriptive contrasts, not sensor-attribution effects.
+The generated tables report full, reduced-sensor, calibrated, and uncalibrated estimates with intervals, raw and adjusted p-values, and decisions. Figure~\ref{fig:nll-bars} visualizes full-sensor NLL estimates and Figure~\ref{fig:nll-delta} visualizes their paired contrast. The full-sensor contrast is compatible with a pre-adjustment NLL difference, while the Holm-adjusted family decision is a non-rejection. Brier and ECE contrasts do not provide a consistent calibration pattern. Reduced-sensor differences are descriptive contrasts, not sensor-attribution effects.
 
 \input{generated/results}
 \input{generated/figures}
 
 \section{Exploratory F1 and Support}
-Classwise F1 is computed from TP, FP, and FN only when its denominator and support permit estimation. Zero support or zero denominator remains \texttt{NOT\_ESTIMABLE}; it is not a zero, an imputation, or evidence of failure. F1 is secondary exploratory context and is not used to support a calibration claim.
+The generated F1 summary distinguishes estimable and non-estimable class records for each analysis group. Zero support or zero denominator remains \texttt{NOT\_ESTIMABLE}; it is not a zero, an imputation, or evidence of failure. F1 is secondary exploratory context and is not used to support a calibration claim.
 
-\section{Discussion}
-The released evidence is balanced and inconclusive. Temperature scaling coincided with a negative full-sensor NLL contrast, but multiplicity adjustment removed familywise support, and Brier/ECE did not show a consistent benefit. Ablations show larger descriptive NLL differences for reduced representations, but the design cannot attribute those differences causally to a sensor. These observations do not establish novelty, superiority, transferability, or generalization.
+\section{Discussion and Custody Dissent}
+The released evidence is balanced and inconclusive. Temperature scaling coincided with a negative full-sensor NLL contrast, but multiplicity adjustment removed familywise support, and Brier/ECE did not show a consistent benefit. Ablations show descriptive NLL differences for reduced representations, but the design cannot attribute them causally to a sensor. The custody dissent is retained: \texttt{final.json} reports COMPLETE while \texttt{scientific\_metrics=false} and \texttt{completed\_folds=[]}, whereas the completed engine snapshot records \resultFolds{} lifecycle folds. This discrepancy is disclosed rather than reconciled silently. These observations establish no novelty, superiority, transferability, or generalization.
 
-\section{Limitations and Lifecycle Disclosure}
-Only the frozen twenty-two subjects and sixty-six folds are represented. The custody review found that `final.json` says COMPLETE while reporting `scientific\_metrics=false` and `completed\_folds=[]`; the completed engine snapshot records the lifecycle folds. This minor, disclosable metadata defect is not silently reconciled and is not treated as scientific evidence. The retained package lacks subject-level sufficient statistics and sign counts, so exact independent regeneration of every bootstrap interval and paired-test value is unavailable. The initial custody dissent and the limitation are retained in the external adjudication record. `quarantine.json` remains unchanged and is not claimed as released or mutated.
+\section{Ethics}
+This analysis does not add collection, intervention, re-identification, or participant-level disclosure. It relies on the upstream dataset's consent, privacy, and governance arrangements and does not make independent ethical approval claims. The source package excludes raw recordings and private custody artifacts. A future deployment would require a separate assessment of privacy, subgroup performance, calibration harms, and whether uncertainty displays could mislead users; none is answered by this exploratory aggregate analysis.
 
-Stronger evidence would require prospective hypotheses, corrected lifecycle metadata, governed retention of sufficient statistics and sign counts, and independent validation. None is performed here; run3 is not rerun or tuned.
+\section{Limitations}
+Only the frozen \resultSubjects{} subjects and \resultFolds{} folds are represented. Subject-level sufficient statistics and sign counts are not retained, so exact independent regeneration of every bootstrap interval and paired-test value is unavailable. The lifecycle metadata defect and unchanged quarantine flag are not scientific evidence. The bounded references are not a systematic review. Stronger evidence would require prospective hypotheses, corrected lifecycle metadata, governed retention of sufficient statistics and sign counts, and independent validation. None is performed here; run3 is not rerun or tuned.
 
-\section{Provenance and Availability}
-The tracked source manifest excludes raw/private artifacts. The generated snapshot records the immutable result hash and source JSON pointers. Code, protocol, schema, and publication builder remain in the repository; raw data, private custody paths, and the quarantined package are not copied into this paper. MiKTeX compilation is a manuscript-mechanics gate only, not scientific validation.
+\section{Claim--Evidence and Data/Code Availability}
+The claim--evidence matrix in the episode literature directory separates support, contradiction, unknowns, and candidate gaps. The primary claim is supported only by the generated snapshot, whose cells retain source pointers and exact result SHA; custody acceptance is a separate finding and does not release the quarantined package. Code, protocol, schema, publication builder, snapshot, generated tables, and figures are available in this repository. Raw data, private custody paths, and the quarantine package are unavailable from the public source archive. MiKTeX compilation is a manuscript-mechanics gate, not scientific validation.
 
 \bibliographystyle{plain}
 \bibliography{references}

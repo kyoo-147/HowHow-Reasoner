@@ -129,6 +129,7 @@
     "quarantine_release_flag_unchanged": true,
     "release_performance_to_captain": true
   },
+  "custody_sha256": "0b043086a6fb074ae5c3b3508bd27834777d93a26fade5f3a155f9d79b592553",
   "evidence": {
     "ablations:paired_delta|brier|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0": {
       "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",

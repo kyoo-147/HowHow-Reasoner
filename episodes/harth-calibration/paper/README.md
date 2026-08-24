@@ -1,21 +1,25 @@
 # HARTH v2.1 exploratory manuscript package
 
-This paper is a deterministic publication projection of the custody-released run3 result. It is exploratory and post-observation; it is not a rerun, a scientific acceptance, or a release of `quarantine.json`.
+This paper is a deterministic publication projection of the custody-released run3 result. It is exploratory and post-observation; it is not a rerun, scientific acceptance, or release of `quarantine.json`.
 
-## Evidence contract
+## Reproducibility modes
 
-`tools/generate_tables.py` reads the caller-supplied strict result and custody findings from captain-controlled absolute paths. It verifies the exact released result SHA, schema, `COMPLETE` status, frozen population, exploratory boundary, and custody flags. It writes only the derived `generated/evidence-snapshot.json`, `generated/results.tex`, and `generated/figures.tex`; private destinations and raw result fields are not copied. Every derived numeric job carries a JSON pointer and source SHA.
-
-Run:
+Public snapshot-only checks require no private files:
 
 ```text
-python tools/generate_tables.py
 python tools/generate_tables.py --check
+python tools/generate_tables.py --render
 python tools/check_paper.py
 ```
 
-`--check` is a byte-for-byte reproducibility gate and fails closed on source drift or unavailable release. Exact bootstrap/test regeneration is limited because subject-level sufficient statistics and sign counts were not retained. The lifecycle metadata defect and unchanged quarantine flag are disclosed in the paper.
+Explicit source-build mode requires both caller-supplied inputs and fails closed unless their exact SHA-256 identities, schema, state, custody flags, and every retained RFC6901 pointer/value match:
 
-## Evidence boundary
+```text
+python tools/generate_tables.py --result /absolute/result-v2.1.json --custody /absolute/findings.json
+```
 
-The result SHA is recorded in the generated snapshot. The external custody adjudication accepted custody and authorized manuscript generation, but did not mutate or release `quarantine.json`. No raw/private artifacts, run output directories, or project-license metadata belong in an arXiv source archive.
+There are no private path defaults. Source builds atomically write only the snapshot and generated TeX; public checks/render consume only the committed snapshot and generated outputs. The exact result SHA is `2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd`; custody findings SHA is `0b043086a6fb074ae5c3b3508bd27834777d93a26fade5f3a155f9d79b592553`.
+
+## Evidence contract
+
+The snapshot contains sanitized derived values, source pointers, and immutable identities. No raw/private artifacts, run output directories, or project-license metadata belong in an arXiv source archive. Exact bootstrap/test regeneration remains limited because subject-level sufficient statistics and sign counts were not retained. The lifecycle metadata defect and unchanged quarantine flag are disclosed in the paper.
