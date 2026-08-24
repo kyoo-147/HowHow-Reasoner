@@ -20,8 +20,12 @@ The authorization record is validated by `schemas/v2.1/Authorization.json` as an
 JSON object containing a separate `decision_id` and `decision_sha256`,
 `allow_rerun: true`, `allow_resume: false`, `allow_retry: false`,
 `allow_tuning: false`, `one_shot: true`, and exact `main`/`code`/`protocol`/`config`/
-`schema`/`archive`/`vocabulary`/`budgets` hashes. Hashes for tracked artifacts are
-Git-blob identities (LF-independent), not checkout bytes. The consent environment variable is
+`schema`/`archive`/`vocabulary`/`budgets` hashes. `main`, `protocol`, `config`, and
+`schema` are strict current Git object IDs (40 lowercase hex characters); `code`,
+`archive`, `vocabulary`, and `budgets` remain SHA-256 hashes (64 lowercase hex
+characters). Hashes for tracked artifacts are Git-blob identities (LF-independent),
+not checkout bytes. The `main` key is retained for v2.1 compatibility and refers to
+the runner script blob; it is not renamed without a coordinated migration. The consent environment variable is
 required in addition to that record. Preflight rejects stale or current-head/code,
 tracked-dirty, protocol/config/schema/archive/vocabulary/budget, and destination
 mismatches before archive loading. It never resumes or retries and requires an empty
