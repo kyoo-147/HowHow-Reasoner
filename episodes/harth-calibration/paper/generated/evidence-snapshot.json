@@ -1,0 +1,1281 @@
+{
+  "ablations": {
+    "paired_delta|brier|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0": {
+      "ci_95": [
+        0.07750303515237361,
+        0.19887776635348542
+      ],
+      "estimate": 0.13275135546220496,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|brier|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "paired_delta|brier|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        0.0649860262847738,
+        0.21435436350201648
+      ],
+      "estimate": 0.13543855552390174,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|brier|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "paired_delta|brier|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0": {
+      "ci_95": [
+        0.16241011458771645,
+        0.420956395170155
+      ],
+      "estimate": 0.29413006444753836,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|brier|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "paired_delta|brier|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        0.1265002397629357,
+        0.4363331008361831
+      ],
+      "estimate": 0.2947415300640224,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|brier|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "paired_delta|ece|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0": {
+      "ci_95": [
+        -0.06956978243452848,
+        0.09363699817991605
+      ],
+      "estimate": 0.003934877879303662,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|ece|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "paired_delta|ece|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        -0.03731144421595157,
+        0.12101752487942759
+      ],
+      "estimate": 0.035032108977580655,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|ece|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "paired_delta|ece|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0": {
+      "ci_95": [
+        -0.11020086922642491,
+        -0.022129293620666363
+      ],
+      "estimate": -0.0645838177246879,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|ece|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "paired_delta|ece|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        -0.08574984114561915,
+        0.02469745264361891
+      ],
+      "estimate": -0.021981129337745927,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|ece|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "paired_delta|nll|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0": {
+      "ci_95": [
+        0.3095499762852978,
+        0.7121335846159891
+      ],
+      "estimate": 0.5072040551707363,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|nll|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "paired_delta|nll|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        0.1514151519266127,
+        0.5220786331741376
+      ],
+      "estimate": 0.33330241699009516,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|nll|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "paired_delta|nll|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0": {
+      "ci_95": [
+        0.2534956767044137,
+        0.8529982211823182
+      ],
+      "estimate": 0.5673504347778573,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|nll|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "paired_delta|nll|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        -0.07675030656875992,
+        0.8047365901026812
+      ],
+      "estimate": 0.3925022212938279,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|nll|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    }
+  },
+  "bootstrap_replicates": 2000,
+  "claim_boundary": "guarded_real_quarantined_no_release",
+  "custody": {
+    "accept_custody": true,
+    "allow_manuscript_generation": true,
+    "quarantine_release_flag_unchanged": true,
+    "release_performance_to_captain": true
+  },
+  "custody_sha256": "0b043086a6fb074ae5c3b3508bd27834777d93a26fade5f3a155f9d79b592553",
+  "evidence": {
+    "ablations:paired_delta|brier|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|brier|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "ablations:paired_delta|brier|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|brier|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "ablations:paired_delta|brier|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|brier|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "ablations:paired_delta|brier|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|brier|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "ablations:paired_delta|ece|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|ece|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "ablations:paired_delta|ece|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|ece|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "ablations:paired_delta|ece|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|ece|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "ablations:paired_delta|ece|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|ece|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "ablations:paired_delta|nll|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|nll|back_only_vs_full_sensor|back_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "ablations:paired_delta|nll|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|nll|back_only_vs_full_sensor|back_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "ablations:paired_delta|nll|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|nll|thigh_only_vs_full_sensor|thigh_only|calibrated|full_sensor|calibrated|seed=0"
+    },
+    "ablations:paired_delta|nll|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/ablations/protocol-v2.1|bootstrap|paired_delta|nll|thigh_only_vs_full_sensor|thigh_only|uncalibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "metrics:subject_macro|brier|single_arm|back_only|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|back_only|calibrated|seed=0"
+    },
+    "metrics:subject_macro|brier|single_arm|back_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|back_only|uncalibrated|seed=0"
+    },
+    "metrics:subject_macro|brier|single_arm|full_sensor|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|full_sensor|calibrated|seed=0"
+    },
+    "metrics:subject_macro|brier|single_arm|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|full_sensor|uncalibrated|seed=0"
+    },
+    "metrics:subject_macro|brier|single_arm|thigh_only|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|thigh_only|calibrated|seed=0"
+    },
+    "metrics:subject_macro|brier|single_arm|thigh_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|thigh_only|uncalibrated|seed=0"
+    },
+    "metrics:subject_macro|ece|single_arm|back_only|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|back_only|calibrated|seed=0"
+    },
+    "metrics:subject_macro|ece|single_arm|back_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|back_only|uncalibrated|seed=0"
+    },
+    "metrics:subject_macro|ece|single_arm|full_sensor|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|full_sensor|calibrated|seed=0"
+    },
+    "metrics:subject_macro|ece|single_arm|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|full_sensor|uncalibrated|seed=0"
+    },
+    "metrics:subject_macro|ece|single_arm|thigh_only|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|thigh_only|calibrated|seed=0"
+    },
+    "metrics:subject_macro|ece|single_arm|thigh_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|thigh_only|uncalibrated|seed=0"
+    },
+    "metrics:subject_macro|nll|single_arm|back_only|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|back_only|calibrated|seed=0"
+    },
+    "metrics:subject_macro|nll|single_arm|back_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|back_only|uncalibrated|seed=0"
+    },
+    "metrics:subject_macro|nll|single_arm|full_sensor|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|full_sensor|calibrated|seed=0"
+    },
+    "metrics:subject_macro|nll|single_arm|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|full_sensor|uncalibrated|seed=0"
+    },
+    "metrics:subject_macro|nll|single_arm|thigh_only|calibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|thigh_only|calibrated|seed=0"
+    },
+    "metrics:subject_macro|nll|single_arm|thigh_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|thigh_only|uncalibrated|seed=0"
+    },
+    "paired:paired_delta|brier|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|brier|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0"
+    },
+    "paired:paired_delta|brier|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|brier|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "paired:paired_delta|brier|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|brier|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0"
+    },
+    "paired:paired_delta|ece|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|ece|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0"
+    },
+    "paired:paired_delta|ece|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|ece|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "paired:paired_delta|ece|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|ece|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0"
+    },
+    "paired:paired_delta|nll|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|nll|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0"
+    },
+    "paired:paired_delta|nll|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|nll|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "paired:paired_delta|nll|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0": {
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|nll|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0"
+    }
+  },
+  "f1_status": {
+    "back_only/calibrated/S006": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S006"
+    },
+    "back_only/calibrated/S008": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S008"
+    },
+    "back_only/calibrated/S009": {
+      "estimable": 9,
+      "not_estimable": 3,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S009"
+    },
+    "back_only/calibrated/S010": {
+      "estimable": 8,
+      "not_estimable": 4,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S010"
+    },
+    "back_only/calibrated/S012": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S012"
+    },
+    "back_only/calibrated/S013": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S013"
+    },
+    "back_only/calibrated/S014": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S014"
+    },
+    "back_only/calibrated/S015": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S015"
+    },
+    "back_only/calibrated/S016": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S016"
+    },
+    "back_only/calibrated/S017": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S017"
+    },
+    "back_only/calibrated/S018": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S018"
+    },
+    "back_only/calibrated/S019": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S019"
+    },
+    "back_only/calibrated/S020": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S020"
+    },
+    "back_only/calibrated/S021": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S021"
+    },
+    "back_only/calibrated/S022": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S022"
+    },
+    "back_only/calibrated/S023": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S023"
+    },
+    "back_only/calibrated/S024": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S024"
+    },
+    "back_only/calibrated/S025": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S025"
+    },
+    "back_only/calibrated/S026": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S026"
+    },
+    "back_only/calibrated/S027": {
+      "estimable": 9,
+      "not_estimable": 3,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S027"
+    },
+    "back_only/calibrated/S028": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S028"
+    },
+    "back_only/calibrated/S029": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1calibrated~1S029"
+    },
+    "back_only/uncalibrated/S006": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S006"
+    },
+    "back_only/uncalibrated/S008": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S008"
+    },
+    "back_only/uncalibrated/S009": {
+      "estimable": 9,
+      "not_estimable": 3,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S009"
+    },
+    "back_only/uncalibrated/S010": {
+      "estimable": 8,
+      "not_estimable": 4,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S010"
+    },
+    "back_only/uncalibrated/S012": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S012"
+    },
+    "back_only/uncalibrated/S013": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S013"
+    },
+    "back_only/uncalibrated/S014": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S014"
+    },
+    "back_only/uncalibrated/S015": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S015"
+    },
+    "back_only/uncalibrated/S016": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S016"
+    },
+    "back_only/uncalibrated/S017": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S017"
+    },
+    "back_only/uncalibrated/S018": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S018"
+    },
+    "back_only/uncalibrated/S019": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S019"
+    },
+    "back_only/uncalibrated/S020": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S020"
+    },
+    "back_only/uncalibrated/S021": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S021"
+    },
+    "back_only/uncalibrated/S022": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S022"
+    },
+    "back_only/uncalibrated/S023": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S023"
+    },
+    "back_only/uncalibrated/S024": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S024"
+    },
+    "back_only/uncalibrated/S025": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S025"
+    },
+    "back_only/uncalibrated/S026": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S026"
+    },
+    "back_only/uncalibrated/S027": {
+      "estimable": 9,
+      "not_estimable": 3,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S027"
+    },
+    "back_only/uncalibrated/S028": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S028"
+    },
+    "back_only/uncalibrated/S029": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/back_only~1uncalibrated~1S029"
+    },
+    "full_sensor/calibrated/S006": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S006"
+    },
+    "full_sensor/calibrated/S008": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S008"
+    },
+    "full_sensor/calibrated/S009": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S009"
+    },
+    "full_sensor/calibrated/S010": {
+      "estimable": 9,
+      "not_estimable": 3,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S010"
+    },
+    "full_sensor/calibrated/S012": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S012"
+    },
+    "full_sensor/calibrated/S013": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S013"
+    },
+    "full_sensor/calibrated/S014": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S014"
+    },
+    "full_sensor/calibrated/S015": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S015"
+    },
+    "full_sensor/calibrated/S016": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S016"
+    },
+    "full_sensor/calibrated/S017": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S017"
+    },
+    "full_sensor/calibrated/S018": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S018"
+    },
+    "full_sensor/calibrated/S019": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S019"
+    },
+    "full_sensor/calibrated/S020": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S020"
+    },
+    "full_sensor/calibrated/S021": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S021"
+    },
+    "full_sensor/calibrated/S022": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S022"
+    },
+    "full_sensor/calibrated/S023": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S023"
+    },
+    "full_sensor/calibrated/S024": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S024"
+    },
+    "full_sensor/calibrated/S025": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S025"
+    },
+    "full_sensor/calibrated/S026": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S026"
+    },
+    "full_sensor/calibrated/S027": {
+      "estimable": 9,
+      "not_estimable": 3,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S027"
+    },
+    "full_sensor/calibrated/S028": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S028"
+    },
+    "full_sensor/calibrated/S029": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1calibrated~1S029"
+    },
+    "full_sensor/uncalibrated/S006": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S006"
+    },
+    "full_sensor/uncalibrated/S008": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S008"
+    },
+    "full_sensor/uncalibrated/S009": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S009"
+    },
+    "full_sensor/uncalibrated/S010": {
+      "estimable": 9,
+      "not_estimable": 3,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S010"
+    },
+    "full_sensor/uncalibrated/S012": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S012"
+    },
+    "full_sensor/uncalibrated/S013": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S013"
+    },
+    "full_sensor/uncalibrated/S014": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S014"
+    },
+    "full_sensor/uncalibrated/S015": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S015"
+    },
+    "full_sensor/uncalibrated/S016": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S016"
+    },
+    "full_sensor/uncalibrated/S017": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S017"
+    },
+    "full_sensor/uncalibrated/S018": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S018"
+    },
+    "full_sensor/uncalibrated/S019": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S019"
+    },
+    "full_sensor/uncalibrated/S020": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S020"
+    },
+    "full_sensor/uncalibrated/S021": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S021"
+    },
+    "full_sensor/uncalibrated/S022": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S022"
+    },
+    "full_sensor/uncalibrated/S023": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S023"
+    },
+    "full_sensor/uncalibrated/S024": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S024"
+    },
+    "full_sensor/uncalibrated/S025": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S025"
+    },
+    "full_sensor/uncalibrated/S026": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S026"
+    },
+    "full_sensor/uncalibrated/S027": {
+      "estimable": 9,
+      "not_estimable": 3,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S027"
+    },
+    "full_sensor/uncalibrated/S028": {
+      "estimable": 10,
+      "not_estimable": 2,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S028"
+    },
+    "full_sensor/uncalibrated/S029": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/full_sensor~1uncalibrated~1S029"
+    },
+    "thigh_only/calibrated/S006": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S006"
+    },
+    "thigh_only/calibrated/S008": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S008"
+    },
+    "thigh_only/calibrated/S009": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S009"
+    },
+    "thigh_only/calibrated/S010": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S010"
+    },
+    "thigh_only/calibrated/S012": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S012"
+    },
+    "thigh_only/calibrated/S013": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S013"
+    },
+    "thigh_only/calibrated/S014": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S014"
+    },
+    "thigh_only/calibrated/S015": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S015"
+    },
+    "thigh_only/calibrated/S016": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S016"
+    },
+    "thigh_only/calibrated/S017": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S017"
+    },
+    "thigh_only/calibrated/S018": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S018"
+    },
+    "thigh_only/calibrated/S019": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S019"
+    },
+    "thigh_only/calibrated/S020": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S020"
+    },
+    "thigh_only/calibrated/S021": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S021"
+    },
+    "thigh_only/calibrated/S022": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S022"
+    },
+    "thigh_only/calibrated/S023": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S023"
+    },
+    "thigh_only/calibrated/S024": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S024"
+    },
+    "thigh_only/calibrated/S025": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S025"
+    },
+    "thigh_only/calibrated/S026": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S026"
+    },
+    "thigh_only/calibrated/S027": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S027"
+    },
+    "thigh_only/calibrated/S028": {
+      "estimable": 9,
+      "not_estimable": 3,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S028"
+    },
+    "thigh_only/calibrated/S029": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1calibrated~1S029"
+    },
+    "thigh_only/uncalibrated/S006": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S006"
+    },
+    "thigh_only/uncalibrated/S008": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S008"
+    },
+    "thigh_only/uncalibrated/S009": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S009"
+    },
+    "thigh_only/uncalibrated/S010": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S010"
+    },
+    "thigh_only/uncalibrated/S012": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S012"
+    },
+    "thigh_only/uncalibrated/S013": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S013"
+    },
+    "thigh_only/uncalibrated/S014": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S014"
+    },
+    "thigh_only/uncalibrated/S015": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S015"
+    },
+    "thigh_only/uncalibrated/S016": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S016"
+    },
+    "thigh_only/uncalibrated/S017": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S017"
+    },
+    "thigh_only/uncalibrated/S018": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S018"
+    },
+    "thigh_only/uncalibrated/S019": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S019"
+    },
+    "thigh_only/uncalibrated/S020": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S020"
+    },
+    "thigh_only/uncalibrated/S021": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S021"
+    },
+    "thigh_only/uncalibrated/S022": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S022"
+    },
+    "thigh_only/uncalibrated/S023": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S023"
+    },
+    "thigh_only/uncalibrated/S024": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S024"
+    },
+    "thigh_only/uncalibrated/S025": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S025"
+    },
+    "thigh_only/uncalibrated/S026": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S026"
+    },
+    "thigh_only/uncalibrated/S027": {
+      "estimable": 11,
+      "not_estimable": 1,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S027"
+    },
+    "thigh_only/uncalibrated/S028": {
+      "estimable": 9,
+      "not_estimable": 3,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S028"
+    },
+    "thigh_only/uncalibrated/S029": {
+      "estimable": 12,
+      "not_estimable": 0,
+      "source_pointer": "#/exploratory/f1/thigh_only~1uncalibrated~1S029"
+    }
+  },
+  "holm": {
+    "H_BRIER": {
+      "adjusted_p": 1.0,
+      "estimate_source_pointer": "#/paired/paired_delta|brier|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0/estimate",
+      "final_reject": false,
+      "raw_p": 0.7741461292693537,
+      "source_pointer": "#/family/hypotheses"
+    },
+    "H_ECE": {
+      "adjusted_p": 1.0,
+      "estimate_source_pointer": "#/paired/paired_delta|ece|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0/estimate",
+      "final_reject": false,
+      "raw_p": 0.9958200208998955,
+      "source_pointer": "#/family/hypotheses"
+    },
+    "H_NLL": {
+      "adjusted_p": 0.09961450192749036,
+      "estimate_source_pointer": "#/paired/paired_delta|nll|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0/estimate",
+      "final_reject": false,
+      "raw_p": 0.03320483397583012,
+      "source_pointer": "#/family/hypotheses"
+    }
+  },
+  "holm_alpha": 0.05,
+  "lifecycle_folds": 66,
+  "limitations": [
+    "subject-level sufficient statistics and sign counts are not retained; exact interval/test regeneration is unavailable",
+    "final.json reports COMPLETE with scientific_metrics=false and completed_folds=[] while engine completion records 66 folds"
+  ],
+  "metrics": {
+    "subject_macro|brier|single_arm|back_only|calibrated|seed=0": {
+      "ci_95": [
+        0.37625252309352214,
+        0.6444249627738828
+      ],
+      "estimate": 0.5069252325568191,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|back_only|calibrated|seed=0"
+    },
+    "subject_macro|brier|single_arm|back_only|uncalibrated|seed=0": {
+      "ci_95": [
+        0.36242537460219265,
+        0.6417274719703192
+      ],
+      "estimate": 0.4989035779145628,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|back_only|uncalibrated|seed=0"
+    },
+    "subject_macro|brier|single_arm|full_sensor|calibrated|seed=0": {
+      "ci_95": [
+        0.25234341192607196,
+        0.5313565658023601
+      ],
+      "estimate": 0.3741738770946141,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|full_sensor|calibrated|seed=0"
+    },
+    "subject_macro|brier|single_arm|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        0.22139957516769523,
+        0.5356513215865726
+      ],
+      "estimate": 0.3634650223906611,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|full_sensor|uncalibrated|seed=0"
+    },
+    "subject_macro|brier|single_arm|thigh_only|calibrated|seed=0": {
+      "ci_95": [
+        0.5927081844128481,
+        0.7301322504098032
+      ],
+      "estimate": 0.6683039415421524,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|thigh_only|calibrated|seed=0"
+    },
+    "subject_macro|brier|single_arm|thigh_only|uncalibrated|seed=0": {
+      "ci_95": [
+        0.5792624056683159,
+        0.7210625877510402
+      ],
+      "estimate": 0.6582065524546835,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|brier|single_arm|thigh_only|uncalibrated|seed=0"
+    },
+    "subject_macro|ece|single_arm|back_only|calibrated|seed=0": {
+      "ci_95": [
+        0.12671928822760528,
+        0.2614492149612012
+      ],
+      "estimate": 0.18762352220244669,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|back_only|calibrated|seed=0"
+    },
+    "subject_macro|ece|single_arm|back_only|uncalibrated|seed=0": {
+      "ci_95": [
+        0.11107613044134655,
+        0.24787160197511293
+      ],
+      "estimate": 0.17369971090643818,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|back_only|uncalibrated|seed=0"
+    },
+    "subject_macro|ece|single_arm|full_sensor|calibrated|seed=0": {
+      "ci_95": [
+        0.13801044764084297,
+        0.23582211721427446
+      ],
+      "estimate": 0.183688644323143,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|full_sensor|calibrated|seed=0"
+    },
+    "subject_macro|ece|single_arm|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        0.08035870149343742,
+        0.21343936266028013
+      ],
+      "estimate": 0.1386676019288575,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|full_sensor|uncalibrated|seed=0"
+    },
+    "subject_macro|ece|single_arm|thigh_only|calibrated|seed=0": {
+      "ci_95": [
+        0.08520633727985887,
+        0.15510024500452047
+      ],
+      "estimate": 0.11910482659845513,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|thigh_only|calibrated|seed=0"
+    },
+    "subject_macro|ece|single_arm|thigh_only|uncalibrated|seed=0": {
+      "ci_95": [
+        0.08657378547612245,
+        0.1481876663612499
+      ],
+      "estimate": 0.11668647259111159,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|ece|single_arm|thigh_only|uncalibrated|seed=0"
+    },
+    "subject_macro|nll|single_arm|back_only|calibrated|seed=0": {
+      "ci_95": [
+        1.035819720008398,
+        2.0158754164271646
+      ],
+      "estimate": 1.4795947025614824,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|back_only|calibrated|seed=0"
+    },
+    "subject_macro|nll|single_arm|back_only|uncalibrated|seed=0": {
+      "ci_95": [
+        0.9902197796729265,
+        2.0317342132674003
+      ],
+      "estimate": 1.4735324710743924,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|back_only|uncalibrated|seed=0"
+    },
+    "subject_macro|nll|single_arm|full_sensor|calibrated|seed=0": {
+      "ci_95": [
+        0.6564523248820593,
+        1.3464581130008397
+      ],
+      "estimate": 0.9723906473907463,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|full_sensor|calibrated|seed=0"
+    },
+    "subject_macro|nll|single_arm|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        0.6661300848723801,
+        1.7251136205541149
+      ],
+      "estimate": 1.1402300540842976,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|full_sensor|uncalibrated|seed=0"
+    },
+    "subject_macro|nll|single_arm|thigh_only|calibrated|seed=0": {
+      "ci_95": [
+        1.3372792782633296,
+        1.7401757104679214
+      ],
+      "estimate": 1.5397410821686035,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|thigh_only|calibrated|seed=0"
+    },
+    "subject_macro|nll|single_arm|thigh_only|uncalibrated|seed=0": {
+      "ci_95": [
+        1.3258004738778075,
+        1.741854289368656
+      ],
+      "estimate": 1.5327322753781254,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/single_arm/protocol-v2.1|bootstrap|subject_macro|nll|single_arm|thigh_only|uncalibrated|seed=0"
+    }
+  },
+  "paired": {
+    "paired_delta|brier|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0": {
+      "ci_95": [
+        0.002266837563774229,
+        0.013923195809992985
+      ],
+      "estimate": 0.008021654642256262,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|brier|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0"
+    },
+    "paired_delta|brier|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        -0.01718516550032306,
+        0.03400754898887782
+      ],
+      "estimate": 0.010708854703953063,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|brier|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "paired_delta|brier|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0": {
+      "ci_95": [
+        0.006577082046524043,
+        0.014976976289381785
+      ],
+      "estimate": 0.010097389087469004,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|brier|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0"
+    },
+    "paired_delta|ece|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0": {
+      "ci_95": [
+        0.003328100900344483,
+        0.024164683601459475
+      ],
+      "estimate": 0.01392381129600853,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|ece|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0"
+    },
+    "paired_delta|ece|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        0.015256666680436704,
+        0.07144213984292344
+      ],
+      "estimate": 0.045021042394285525,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|ece|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "paired_delta|ece|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0": {
+      "ci_95": [
+        -0.004064603968778639,
+        0.011016410383864885
+      ],
+      "estimate": 0.002418354007343564,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|ece|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0"
+    },
+    "paired_delta|nll|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0": {
+      "ci_95": [
+        -0.019066926213665104,
+        0.029671867791839477
+      ],
+      "estimate": 0.006062231487089968,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|nll|calibrated_vs_uncalibrated|back_only|calibrated|back_only|uncalibrated|seed=0"
+    },
+    "paired_delta|nll|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0": {
+      "ci_95": [
+        -0.3537438454258794,
+        -0.010787248442183428
+      ],
+      "estimate": -0.16783940669355124,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|nll|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0"
+    },
+    "paired_delta|nll|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0": {
+      "ci_95": [
+        -0.008298586612130544,
+        0.02083830347088181
+      ],
+      "estimate": 0.007008806790478061,
+      "replicates": 2000,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/paired/protocol-v2.1|bootstrap|paired_delta|nll|calibrated_vs_uncalibrated|thigh_only|calibrated|thigh_only|uncalibrated|seed=0"
+    }
+  },
+  "pvalues": {
+    "H_BRIER": {
+      "draws": 200000,
+      "p": 0.7741461292693537,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/pvalues/H_BRIER"
+    },
+    "H_ECE": {
+      "draws": 200000,
+      "p": 0.9958200208998955,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/pvalues/H_ECE"
+    },
+    "H_NLL": {
+      "draws": 200000,
+      "p": 0.03320483397583012,
+      "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+      "source_pointer": "#/inference/pvalues/H_NLL"
+    }
+  },
+  "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+  "schema": "howhow-harth-publication-snapshot-v2.1",
+  "sign_flip_draws": 200000,
+  "status": "COMPLETE",
+  "subjects": 22
+}

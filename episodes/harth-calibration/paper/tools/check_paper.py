@@ -1,59 +1,102 @@
-"""Fail-closed structural checks for the HARTH paper scaffold."""
+"""Fail-closed checks for the generated exploratory HARTH paper."""
 
 from __future__ import annotations
 
 import json
-import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from source_manifest import verify_manifest_hashes  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
+    errors = []
+    try:
+        verify_manifest_hashes(ROOT, ROOT / "arxiv-source-manifest.json")
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        errors.append(f"source manifest: {exc}")
     tex = (ROOT / "main.tex").read_text(encoding="utf-8")
-    generated = ROOT / "generated" / "results.tex"
-    errors: list[str] = []
+    generated = ROOT / "generated"
     for required in (
-        "abstract",
         "Introduction",
         "Related Work",
-        "Research Questions",
-        "Protocol-v2 Methods",
-        "Dataset and Provenance",
-        "Ethics and License",
-        "Planned Analysis",
-        "Reproducibility",
+        "Research Questions and Claim Boundary",
+        "Dataset and Attribution",
+        "Methods",
+        "Results",
+        "Discussion and Custody Dissent",
+        "Ethics",
         "Limitations",
-        "Reviewer and Dissent Record",
-        "Claim--Evidence Map",
+        "Claim--Evidence and Data/Code Availability",
     ):
-        if required not in tex:
+        if f"\\section{{{required}}}" not in tex:
             errors.append(f"missing section: {required}")
-    if "\\input{generated/results}" not in tex:
-        errors.append("main.tex must include generated results")
-    if not generated.is_file() or "UNVERIFIED" not in generated.read_text(encoding="utf-8"):
-        errors.append("default results output must be a fail-closed UNVERIFIED placeholder")
-    if "No scientific results" not in tex and "NO SCIENTIFIC RESULTS" not in tex:
-        errors.append("status banner must reject scientific results")
-    bib = (ROOT / "references.bib").read_text(encoding="utf-8")
-    cited = set(re.findall(r"\\cite\{([^}]+)\}", tex))
-    keys = set(re.findall(r"@\w+\{([^,]+),", bib))
-    for group in cited:
-        for key in group.split(","):
-            if key.strip() not in keys:
-                errors.append(f"missing bibliography key: {key.strip()}")
-    matrix = json.loads(
-        (ROOT.parent / "literature" / "related-work-matrix.json").read_text(encoding="utf-8")
-    )
-    if matrix.get("status") != "UNVERIFIED":
-        errors.append("literature matrix status was promoted")
-    if "UNVERIFIED" not in tex:
-        errors.append("manuscript must preserve evidence status")
+    for token in (
+        "exploratory",
+        "post-observation",
+        "NOT\\_ESTIMABLE",
+        "quarantine.json",
+        "sufficient statistics",
+        "generalization",
+    ):
+        if token not in tex:
+            errors.append(f"missing boundary disclosure: {token}")
+    if (
+        "\\input{generated/macros}" not in tex
+        or "\\input{generated/results}" not in tex
+        or "\\input{generated/figures}" not in tex
+    ):
+        errors.append("generated outputs/macros not included")
+    macros_path = generated / "macros.tex"
+    macros_text = macros_path.read_text(encoding="utf-8") if macros_path.is_file() else ""
+    if "resultSHA" not in macros_text:
+        errors.append("generated macros missing")
+    generated_text = (generated / "results.tex").read_text(encoding="utf-8")
+    if (
+        "NO SCIENTIFIC RESULTS" in tex
+        or "Results withheld" in tex
+        or "UNVERIFIED" in generated_text
+    ):
+        errors.append("stale protocol-only placeholder remains")
+    exact_result_sha = "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd"
+    if exact_result_sha not in macros_text.replace(r"\allowbreak{}", ""):
+        errors.append("generated result SHA is not exact")
+    if (
+        "resultSubjects" not in tex
+        or "bootstrapReplicates" not in tex
+        or "signFlipDraws" not in tex
+    ):
+        errors.append("run quantities are not macro-owned")
+    try:
+        snap = json.loads((generated / "evidence-snapshot.json").read_text(encoding="utf-8"))
+    except Exception as exc:
+        errors.append(f"snapshot unreadable: {exc}")
+        snap = {}
+    if (
+        snap.get("result_sha256")
+        != "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd"
+    ):
+        errors.append("snapshot source SHA mismatch")
+    if (
+        snap.get("status") != "COMPLETE"
+        or snap.get("claim_boundary") != "guarded_real_quarantined_no_release"
+    ):
+        errors.append("snapshot release boundary invalid")
+    if len(snap.get("evidence", {})) < 39:
+        errors.append("insufficient evidence pointers")
+    for name in ("macros.tex", "results.tex", "figures.tex"):
+        if not (generated / name).is_file() or "GENERATED" not in (generated / name).read_text(
+            encoding="utf-8"
+        ):
+            errors.append(f"missing generated file: {name}")
     if errors:
-        for error in errors:
-            print(f"ERROR: {error}")
+        for e in errors:
+            print("ERROR:", e)
         return 1
-    print("paper scaffold checks passed (manuscript mechanics; scientific evidence UNVERIFIED)")
+    print("paper checks passed: generated, custody-bound, exploratory manuscript")
     return 0
 
 

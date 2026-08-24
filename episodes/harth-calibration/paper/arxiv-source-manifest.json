@@ -1,0 +1,45 @@
+{
+  "manifest_version": "harth-paper-source-2",
+  "status": "EXPLORATORY_POST_OBSERVATION",
+  "hash_mode": "utf-8-lf-sha256-v1",
+  "result_sha256": "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd",
+  "custody_sha256": "0b043086a6fb074ae5c3b3508bd27834777d93a26fade5f3a155f9d79b592553",
+  "include": [
+    "main.tex",
+    "references.bib",
+    "README.md",
+    "generated/evidence-snapshot.json",
+    "generated/macros.tex",
+    "generated/results.tex",
+    "generated/figures.tex",
+    "tools/check_paper.py",
+    "tools/compile.py",
+    "tools/generate_tables.py",
+    "arxiv-source-manifest.json"
+  ],
+  "exclude": [
+    "raw data",
+    "private custody destinations and paths",
+    "quarantine.json",
+    "run3 package directories",
+    "build logs and PDFs",
+    "LICENSE/project-license metadata"
+  ],
+  "checks": {
+    "public": "generate_tables.py --check and check_paper.py read only committed snapshot/generated outputs; no private source defaults",
+    "source": "generate_tables.py --result RESULT --custody CUSTODY requires both, verifies exact SHA/schema/flags and RFC6901 pointer/value equality, then atomically regenerates snapshot/results/figures",
+    "render": "generate_tables.py --render uses only committed snapshot"
+  },
+  "sha256": {
+    "main.tex": "62390504875b788b3451fd9591d295f53c6b85c7e250fe977c137602d0b862f0",
+    "references.bib": "7756bb52b4efb697f1b7faec1b96532f69ac8ca24ac5135f7a580940559845c2",
+    "README.md": "6fdc3dcec28a19009ecfe24c8c77b641cff24daf1b6e3a21394fc23c84358060",
+    "generated/evidence-snapshot.json": "50895b6e941ec5fd3529886b4b51817f4e506ad8e210c7710498d38e6d8a5724",
+    "generated/macros.tex": "a276c5a26d0b54240f52d157599cb30df623d94306a4e491db1848cd203193d1",
+    "generated/results.tex": "3b52123b946b9f0c3b00bd7adf107e64a82eb17add2be6d843709659c393675d",
+    "generated/figures.tex": "c7dc7c80648fb686780bc052b24fc052a013bfd75388ba138a170fb6ee46970a",
+    "tools/check_paper.py": "01732322ab354bccfae05ddbc9fb32f41a2206ccaa1ca194e2cbec76160b55a6",
+    "tools/compile.py": "3fb759ec3bc096ac2b5998e76c15d98ba3cc851e43c9d677027aad1ce8444807",
+    "tools/generate_tables.py": "cf1651bf40d5d236a0b7f6327f78c980b22937cb5ca0f12fe6554e5613b6ae34"
+  }
+}
