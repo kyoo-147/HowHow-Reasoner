@@ -211,12 +211,13 @@ HARTH is distributed under **CC BY 4.0**. Retain the dataset citation and UCI me
 | npm | `yocto-queue` | `0.1.0` | MIT | PASS |
 | npm | `zod` | `4.4.3` | MIT | PASS |
 | npm | `zod-validation-error` | `4.0.2` | MIT | PASS |
+| pypi | `annotated-doc` | `0.0.5` | MIT | PASS |
 | pypi | `annotated-types` | `0.8.0` | MIT | PASS |
 | pypi | `anyio` | `4.14.2` | MIT | PASS |
 | pypi | `certifi` | `2026.7.22` | MPL-2.0 | PASS |
 | pypi | `click` | `8.4.2` | BSD-3-Clause | PASS |
 | pypi | `colorama` | `0.4.6` | BSD | PASS |
-| pypi | `fastapi` | `0.116.1` | MIT | PASS |
+| pypi | `fastapi` | `0.141.1` | MIT | PASS |
 | pypi | `h11` | `0.16.0` | MIT | PASS |
 | pypi | `howhow` | `0.1.0` | UNKNOWN | UNKNOWN |
 | pypi | `httpcore` | `1.0.9` | BSD | PASS |
@@ -1204,11 +1205,11 @@ HARTH is distributed under **CC BY 4.0**. Retain the dataset citation and UCI me
 | pypi | `pydantic` | `2.11.7` | MIT | PASS |
 | pypi | `pydantic-core` | `2.33.2` | MIT | PASS |
 | pypi | `pygments` | `2.21.0` | BSD-2-Clause | PASS |
-| pypi | `pytest` | `8.4.1` | MIT | PASS |
+| pypi | `pytest` | `9.0.3` | MIT | PASS |
 | pypi | `rich` | `15.0.0` | MIT | PASS |
 | pypi | `ruff` | `0.12.7` | MIT | PASS |
 | pypi | `shellingham` | `1.5.4` | ISC License | PASS |
-| pypi | `starlette` | `0.47.3` | BSD | PASS |
+| pypi | `starlette` | `1.6.0` | BSD-2-Clause | PASS |
 | pypi | `typer` | `0.16.0` | MIT | PASS |
 | pypi | `typing-extensions` | `4.16.0` | PSF-2.0 | PASS |
 | pypi | `typing-inspection` | `0.4.4` | MIT | PASS |

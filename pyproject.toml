@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Provider-neutral evidence-first research contracts"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "fastapi==0.116.1",
+    "fastapi==0.141.1",
     "numpy==2.3.2",
     "pydantic==2.11.7",
     "typer==0.16.0",
@@ -17,7 +17,7 @@ supply-chain-audit = "scripts.audit_supply_chain:main"
 
 [dependency-groups]
 dev = [
-    "pytest==8.4.1",
+    "pytest==9.0.3",
     "ruff==0.12.7",
     "mypy==1.17.1",
     "httpx==0.28.1",
