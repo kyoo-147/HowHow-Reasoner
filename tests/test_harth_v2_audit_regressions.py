@@ -112,3 +112,144 @@ def test_f004_timeout_is_inclusive_at_fixed_deadline(
     guard = RunGuard(tmp_path, input_hash="a" * 64, protocol_hash="b" * 64)
     with pytest.raises(TimeoutError, match="1800"):
         guard.check_timeout()
+
+
+def test_f001_duplicate_frozen_json_keys_fail_closed(tmp_path: Path) -> None:
+    from scripts import harth_v2_run as runner
+
+    path = tmp_path / "duplicate.json"
+    path.write_text('{"protocol_id":"first","protocol_id":"second"}', encoding="utf-8")
+    with pytest.raises(runner.PreflightFailure, match="duplicate JSON key"):
+        runner.load_json(path)
+
+
+def test_f002_complete_validator_approved_artifact_handoff() -> None:
+    import importlib.util
+
+    generator_path = Path("episodes/harth-calibration/paper/tools/generate_tables.py")
+    spec = importlib.util.spec_from_file_location("harth_generator_test", generator_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    text = module.latex(_artifact())
+    for marker in (
+        "tab:results-folds",
+        "tab:results-bootstrap",
+        "tab:results-paired",
+        "tab:results-comparisons",
+        "tab:results-ablations",
+        "tab:results-diagnostics",
+        "NLL",
+        "Brier",
+        "ECE",
+        "Support",
+        "Preserved calibration failures",
+    ):
+        assert marker in text
+
+
+def test_f003_restart_restores_exact_identity_and_completed_folds(tmp_path: Path) -> None:
+    first = RunGuard(tmp_path, input_hash="a" * 64, protocol_hash="b" * 64, code_hash="c" * 64)
+    first.record_fold("S001")
+    first.checkpoint(phase="engine_fold")
+    payload = json.loads((tmp_path / "checkpoint.json").read_text(encoding="utf-8"))
+    resumed = RunGuard(tmp_path, input_hash="a" * 64, protocol_hash="b" * 64, code_hash="c" * 64)
+    resumed.restore_checkpoint(payload)
+    assert resumed.completed_folds == ["S001"]
+    with pytest.raises(Exception, match="immutable"):
+        RunGuard(
+            tmp_path, input_hash="d" * 64, protocol_hash="b" * 64, code_hash="c" * 64
+        ).restore_checkpoint(payload)
+
+
+def _fake_loaded_archive():
+    from howhow.episodes.harth.v2 import LoadedArchive
+
+    windows = tuple(
+        Window(f"S{index:03d}", f"harth/S{index:03d}.csv", "1", (0.0,) * 12, f"S{index}-{part}")
+        for index in range(1, 23)
+        for part in range(2)
+    )
+    subjects = [f"S{index:03d}" for index in range(1, 23)]
+    return LoadedArchive(windows, {"subjects": subjects, "metrics_free": True}, len(windows))
+
+
+@pytest.mark.parametrize("stage", ["loader", "resume", "engine", "schema", "generator", "final"])
+def test_f003_command_boundary_failure_is_stage_guarded(
+    tmp_path: Path, monkeypatch, stage: str
+) -> None:
+    from types import SimpleNamespace
+
+    import howhow.episodes.harth.v2 as v2
+    from scripts import harth_v2_run as runner
+
+    archive = tmp_path / "archive.zip"
+    archive.write_bytes(b"private archive identity")
+    output = tmp_path / stage
+    args = SimpleNamespace(
+        classes=["1", "2", "3", "4", "5", "6", "7", "8", "13", "14", "130", "140"],
+        archive=archive,
+        output=output,
+        protocol=runner.DEFAULT_PROTOCOL,
+        checkpoint=output / "checkpoint.json",
+        resume=stage == "resume",
+    )
+    monkeypatch.setenv(runner.REAL_CONSENT_ENV, "1")
+    source = _fake_loaded_archive()
+    result = SimpleNamespace(status="COMPLETE", folds=[{} for _ in range(66)])
+    monkeypatch.setattr(v2, "load_harth_archive", lambda *unused, **kwargs: source)
+    monkeypatch.setattr(v2, "run_protocol", lambda *unused, **kwargs: result)
+    if stage == "loader":
+        monkeypatch.setattr(
+            v2,
+            "load_harth_archive",
+            lambda *unused, **kwargs: (_ for _ in ()).throw(RuntimeError(stage)),
+        )
+    elif stage == "resume":
+        output.mkdir()
+        (output / "checkpoint.json").write_text(
+            json.dumps({"input_hash": "wrong"}), encoding="utf-8"
+        )
+    elif stage == "engine":
+        monkeypatch.setattr(
+            v2, "run_protocol", lambda *unused, **kwargs: (_ for _ in ()).throw(RuntimeError(stage))
+        )
+    elif stage == "schema":
+        monkeypatch.setattr(
+            v2,
+            "engine_result_to_schema",
+            lambda *unused, **kwargs: (_ for _ in ()).throw(RuntimeError(stage)),
+        )
+    elif stage == "generator":
+        monkeypatch.setattr(v2, "engine_result_to_schema", lambda *unused, **kwargs: _artifact())
+        monkeypatch.setattr(v2, "validate_result", lambda value: value)
+        monkeypatch.setattr(
+            runner, "_validated_tables", lambda value: (_ for _ in ()).throw(RuntimeError(stage))
+        )
+    elif stage == "final":
+        monkeypatch.setattr(v2, "engine_result_to_schema", lambda *unused, **kwargs: _artifact())
+        monkeypatch.setattr(v2, "validate_result", lambda value: value)
+        monkeypatch.setattr(runner, "_validated_tables", lambda value: "synthetic\\n")
+        monkeypatch.setattr(
+            "howhow.episodes.harth.v2.run_guard.RunGuard.final",
+            lambda *unused, **kwargs: (_ for _ in ()).throw(RuntimeError(stage)),
+        )
+    if stage == "resume":
+        with pytest.raises(runner.PreflightFailure, match="immutable"):
+            runner.execute_real(args)
+    else:
+        with pytest.raises(RuntimeError, match=stage):
+            runner.execute_real(args)
+    failure = json.loads((output / "failure.json").read_text(encoding="utf-8"))
+    assert failure["status"] == "FAILED"
+    assert failure["protocol_hash"] == runner.sha256_file(runner.DEFAULT_PROTOCOL)
+    assert failure["code_hash"]
+    expected_stage = {
+        "loader": "loader_start",
+        "resume": "resume_validation",
+        "engine": "engine_start",
+        "schema": "schema_start",
+        "generator": "generator_start",
+        "final": "generator_start",
+    }[stage]
+    assert (output / f"stage-{expected_stage}.json").is_file()

@@ -87,7 +87,7 @@ def test_valid_artifact_generates_only_machine_values(tmp_path: Path) -> None:
     )
     subprocess.run([sys.executable, str(GENERATOR), "--artifact", str(artifact)], check=True)
     text = (PAPER / "generated" / "results.tex").read_text(encoding="utf-8")
-    assert "full_sensor::S1 & 0.250000 & 0.200000--0.300000" in text
+    assert "full\\_sensor::S1 & 0.250000 & [0.200000, 0.300000]" in text
     subprocess.run([sys.executable, str(GENERATOR)], check=True)
 
 

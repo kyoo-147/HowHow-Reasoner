@@ -53,7 +53,7 @@ def atomic_text_write(path: str | Path, value: str) -> None:
 
 
 class RunGuard:
-    """Own every validation, execution, final, and failure artifact."""
+    """Own every validation, execution, stage, final, and failure artifact."""
 
     def __init__(
         self,
@@ -75,6 +75,19 @@ class RunGuard:
         self.completed_folds: list[Any] = []
         self.output.mkdir(parents=True, exist_ok=True)
 
+    def restore_checkpoint(self, payload: Mapping[str, Any]) -> None:
+        expected = {
+            "input_hash": self.input_hash,
+            "protocol_hash": self.protocol_hash,
+            "code_hash": self.code_hash,
+        }
+        if any(payload.get(key) != value for key, value in expected.items()):
+            raise RunGuardFailure("checkpoint immutable identity mismatch")
+        completed = payload.get("completed_folds", [])
+        if not isinstance(completed, list) or len(completed) > MAX_OUTER_FOLDS:
+            raise RunGuardFailure("checkpoint completed-fold progress is invalid")
+        self.completed_folds = list(completed)
+
     def bind_input_hash(self, input_hash: str) -> None:
         if self.completed_folds:
             raise RunGuardFailure("cannot change input identity after execution starts")
@@ -88,6 +101,15 @@ class RunGuard:
             "code_hash": self.code_hash,
             "completed_folds": self.completed_folds,
         }
+
+    def stage(self, phase: str, **extra: Any) -> Path:
+        """Persist a durable stage marker without replacing the resumable checkpoint."""
+        payload = (
+            self._base() | {"status": "RUNNING", "phase": phase, "updated_at": time.time()} | extra
+        )
+        target = self.output / f"stage-{phase}.json"
+        atomic_write(target, payload)
+        return target
 
     def checkpoint(
         self, *, phase: str, hashes: Mapping[str, str] | None = None, **extra: Any

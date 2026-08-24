@@ -386,6 +386,7 @@ def run_protocol(
     monotonic: Callable[[], float] | None = None,
     code_hash: str | None = None,
     fold_callback: Callable[[str], None] | None = None,
+    checkpoint_callback: Callable[[Mapping[str, Any]], None] | None = None,
 ) -> EngineResult:
     """Execute synthetic or explicitly supplied windows under nested LOSO.
 
@@ -460,11 +461,13 @@ def run_protocol(
             result.folds.append(fold_row)
             if configuration == "full_sensor" and fold_callback is not None:
                 fold_callback(fold.test_subject)
-            if checkpoint:
+            if checkpoint_callback is not None:
+                checkpoint_callback(result.to_dict())
+            elif checkpoint:
                 atomic_write(Path(checkpoint), result.to_dict())
     result.comparisons = _comparison_report(result.folds)
     result.status = "COMPLETE"
-    if checkpoint:
+    if checkpoint_callback is None and checkpoint:
         atomic_write(Path(checkpoint), result.to_dict())
     return result
 

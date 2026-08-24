@@ -72,9 +72,20 @@ def _module_version(name: str) -> str:
         return "UNAVAILABLE"
 
 
+def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise PreflightFailure(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
 def load_json(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(
+            path.read_text(encoding="utf-8"), object_pairs_hook=_reject_duplicate_keys
+        )
     except (OSError, json.JSONDecodeError) as exc:
         raise PreflightFailure(f"cannot read JSON input {path}: {exc}") from exc
     if not isinstance(value, dict):
@@ -85,6 +96,15 @@ def load_json(path: Path) -> dict[str, Any]:
 def validate_config(
     config: dict[str, Any], protocol: dict[str, Any], args: argparse.Namespace
 ) -> None:
+    expected_classes = protocol.get("class_vocabulary")
+    if getattr(args, "execute_real", False) and (
+        not isinstance(expected_classes, list) or config.get("class_vocabulary") != expected_classes
+    ):
+        raise PreflightFailure("class vocabulary is not identical in frozen protocol and config")
+    if getattr(args, "execute_real", False) and getattr(args, "classes", []) != expected_classes:
+        raise PreflightFailure(
+            "CLI class vocabulary does not equal frozen protocol/config vocabulary"
+        )
     if config.get("protocol_id") != protocol.get("protocol_id"):
         raise PreflightFailure("config protocol_id does not match frozen protocol")
     if config.get("seed") != args.seed or args.seed != 0:
@@ -228,6 +248,7 @@ def execute_real(args: argparse.Namespace) -> Path:
         code_hash=immutable_code,
     )
     try:
+        guard.stage("loader_start", hashes={"archive_sha256": sha256_file(args.archive)})
         return _execute_guarded(args, guard, protocol_digest, immutable_code)
     except BaseException as exc:
         guard.failure(exc, phase="loader_resume_engine_schema_generator")
@@ -249,6 +270,7 @@ def _execute_guarded(
     source = load_harth_archive(
         args.archive, args.classes, protocol_hash=protocol_digest, code_hash=immutable_code
     )
+    guard.stage("loader_complete", manifest=source.manifest)
     if len(source.manifest.get("subjects", [])) != EXPECTED_SUBJECTS:
         raise PreflightFailure("archive must contain exactly 22 eligible subjects")
     input_digest = input_hash(source.windows)
@@ -259,10 +281,17 @@ def _execute_guarded(
         "code_hash": immutable_code,
     }
     checkpoint = args.checkpoint
+    guard.stage("resume_validation")
     if args.resume and checkpoint.is_file():
         saved = load_json(checkpoint)
         if any(saved.get(key) != value for key, value in identity.items()):
             raise PreflightFailure("checkpoint immutable identity mismatch")
+        guard.restore_checkpoint(saved)
+    guard.stage("engine_start", hashes=identity)
+
+    def checkpoint_callback(payload: dict[str, Any]) -> None:
+        guard.checkpoint(phase="engine_fold", hashes=identity, folds=payload["folds"])
+
     result = run_protocol(
         source.windows,
         args.classes,
@@ -271,15 +300,18 @@ def _execute_guarded(
         timeout_seconds=1800.0,
         code_hash=immutable_code,
         fold_callback=guard.record_fold,
+        checkpoint_callback=checkpoint_callback,
     )
     guard.check_timeout()
     if result.status != "COMPLETE" or len(result.folds) != EXPECTED_SUBJECTS * 3:
         raise PreflightFailure(
             "engine did not produce all declared sensor configurations and folds"
         )
+    guard.stage("schema_start", hashes=identity, folds=result.folds)
     artifact = validate_result(engine_result_to_schema(result, code_hash=immutable_code))
     target = args.output.resolve() / "results-v2.json"
     atomic_write(target, artifact)
+    guard.stage("generator_start", hashes=identity, artifact=str(target))
     atomic_text_write(args.output.resolve() / "results.tex", _validated_tables(artifact))
     guard.check_timeout()
     guard.final(phase="complete", scientific_metrics=True, result_artifact=str(target))
