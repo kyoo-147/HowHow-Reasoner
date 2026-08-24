@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from howhow.episodes.harth.manifest import canonical_lf, verify_manifest
 from howhow.episodes.harth.v21 import (
     APPROVED_DECISION_SHA256,
     APPROVED_PROPOSAL_SHA256,
@@ -23,7 +24,6 @@ from howhow.episodes.harth.v21 import (
     validate_approval_provenance,
     validate_result,
 )
-from scripts.verify_harth_v21_manifest import canonical_lf, verify_manifest
 
 CLASSES = [f"c{i}" for i in range(12)]
 
