@@ -182,10 +182,13 @@ def preflight(args: argparse.Namespace) -> Path:
     args.checkpoint = args.checkpoint.resolve()
     if args.checkpoint.parent != output:
         raise PreflightFailure("checkpoint must be inside the clean output directory")
+    from howhow.episodes.harth.v2.run_guard import atomic_write
+
+    manifest = build_manifest(args, protocol, config, archive)
     manifest = build_manifest(args, protocol, config, archive)
     manifest["duration_seconds"] = time.monotonic() - started
     path = output / "preflight.json"
-    path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    atomic_write(path, manifest)
     return path
 
 
@@ -210,66 +213,75 @@ def parser() -> argparse.ArgumentParser:
 def execute_real(args: argparse.Namespace) -> Path:
     if os.environ.get(REAL_CONSENT_ENV) != "1":
         raise PreflightFailure(f"--execute-real requires {REAL_CONSENT_ENV}=1")
-    from howhow.episodes.harth.v2 import (
-        engine_result_to_schema,
-        load_harth_archive,
-        protocol_hash,
-        run_protocol,
-        validate_result,
-    )
-    from howhow.episodes.harth.v2.run_guard import atomic_write
+    from howhow.episodes.harth.v2 import protocol_hash
+    from howhow.episodes.harth.v2.run_guard import RunGuard
 
     if len(args.classes) != 12:
         raise PreflightFailure("exactly 12 frozen classes must be supplied with --class")
+    output = args.output.resolve()
     protocol_digest = protocol_hash(args.protocol)
+    immutable_code = code_hash()
+    guard = RunGuard(
+        output,
+        input_hash=sha256_file(args.archive),
+        protocol_hash=protocol_digest,
+        code_hash=immutable_code,
+    )
+    try:
+        return _execute_guarded(args, guard, protocol_digest, immutable_code)
+    except BaseException as exc:
+        guard.failure(exc, phase="loader_resume_engine_schema_generator")
+        raise
+
+
+def _execute_guarded(
+    args: argparse.Namespace, guard: Any, protocol_digest: str, immutable_code: str
+) -> Path:
+    from howhow.episodes.harth.v2 import (
+        engine_result_to_schema,
+        input_hash,
+        load_harth_archive,
+        run_protocol,
+        validate_result,
+    )
+    from howhow.episodes.harth.v2.run_guard import atomic_text_write, atomic_write
+
     source = load_harth_archive(
-        args.archive, args.classes, protocol_hash=protocol_digest, code_hash=code_hash()
+        args.archive, args.classes, protocol_hash=protocol_digest, code_hash=immutable_code
     )
     if len(source.manifest.get("subjects", [])) != EXPECTED_SUBJECTS:
         raise PreflightFailure("archive must contain exactly 22 eligible subjects")
-    input_digest = __import__("howhow.episodes.harth.v2", fromlist=["input_hash"]).input_hash(
-        source.windows
-    )
+    input_digest = input_hash(source.windows)
+    guard.bind_input_hash(input_digest)
     identity = {
         "input_hash": input_digest,
         "protocol_hash": protocol_digest,
-        "code_hash": code_hash(),
+        "code_hash": immutable_code,
     }
     checkpoint = args.checkpoint
-    output = args.output.resolve()
-    from howhow.episodes.harth.v2.run_guard import RunGuard
-
     if args.resume and checkpoint.is_file():
         saved = load_json(checkpoint)
         if any(saved.get(key) != value for key, value in identity.items()):
             raise PreflightFailure("checkpoint immutable identity mismatch")
-    guard = RunGuard(
-        output,
-        input_hash=input_digest,
-        protocol_hash=protocol_digest,
-        code_hash=identity["code_hash"],
+    result = run_protocol(
+        source.windows,
+        args.classes,
+        protocol_file=args.protocol,
+        checkpoint=checkpoint,
+        timeout_seconds=1800.0,
+        code_hash=immutable_code,
+        fold_callback=guard.record_fold,
     )
-    try:
-        result = run_protocol(
-            source.windows,
-            args.classes,
-            protocol_file=args.protocol,
-            checkpoint=checkpoint,
-            timeout_seconds=1800.0,
+    guard.check_timeout()
+    if result.status != "COMPLETE" or len(result.folds) != EXPECTED_SUBJECTS * 3:
+        raise PreflightFailure(
+            "engine did not produce all declared sensor configurations and folds"
         )
-        guard.check_timeout()
-        if result.status != "COMPLETE" or len(result.folds) != EXPECTED_SUBJECTS * 3:
-            raise PreflightFailure(
-                "engine did not produce all declared sensor configurations and folds"
-            )
-        artifact = engine_result_to_schema(result, code_hash=identity["code_hash"])
-        artifact = validate_result(artifact)
-    except BaseException as exc:
-        guard.failure(exc, phase="validation_or_execution")
-        raise
-    target = output / "results-v2.json"
+    artifact = validate_result(engine_result_to_schema(result, code_hash=immutable_code))
+    target = args.output.resolve() / "results-v2.json"
     atomic_write(target, artifact)
-    (output / "results.tex").write_text(_validated_tables(artifact), encoding="utf-8")
+    atomic_text_write(args.output.resolve() / "results.tex", _validated_tables(artifact))
+    guard.check_timeout()
     guard.final(phase="complete", scientific_metrics=True, result_artifact=str(target))
     return target
 
@@ -312,9 +324,9 @@ def main() -> int:
                 "error": str(exc),
                 "process": {"pid": os.getpid(), "executable": sys.executable},
             }
-            (output / "failure.json").write_text(
-                json.dumps(failure, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-            )
+            from howhow.episodes.harth.v2.run_guard import atomic_write
+
+            atomic_write(output / "failure.json", failure)
         print(f"RUN BLOCKED: {exc}", file=sys.stderr)
         return 1
 

@@ -52,6 +52,15 @@ def _interval(value: Any, name: str) -> list[float]:
     if low >= high:
         _fail(f"malformed {name} interval")
     return [low, high]
+    return [low, high]
+
+
+def _named_intervals(value: Any, name: str) -> dict[str, list[float]]:
+    if not isinstance(value, Mapping) or set(value) != {"nll", "brier", "ece"}:
+        _fail(f"missing named {name} intervals")
+    return {
+        metric: _interval(value[metric], f"{name}.{metric}") for metric in ("nll", "brier", "ece")
+    }
 
 
 def _metrics(value: Any, name: str) -> dict[str, float]:
@@ -153,7 +162,7 @@ def validate_result(data: object) -> dict[str, Any]:
                 _fail("malformed calibration state")
             row = dict(cast(Mapping[str, Any], row))
             metrics = _metrics(row.get("metrics"), f"{fold_id}.{state}")
-            interval = _interval(row.get("interval"), f"{fold_id}.{state}")
+            uncertainty = _named_intervals(row.get("uncertainty"), f"{fold_id}.{state}")
             support = row.get("class_support")
             if (
                 not isinstance(support, Mapping)
@@ -166,7 +175,7 @@ def validate_result(data: object) -> dict[str, Any]:
             support = cast(Mapping[str, int], support)
             normalized_states[state] = {
                 "metrics": metrics,
-                "interval": interval,
+                "uncertainty": uncertainty,
                 "class_support": dict(support),
             }
         normalized_folds.append(
@@ -183,6 +192,24 @@ def validate_result(data: object) -> dict[str, Any]:
         )
     if {x["fold_id"] for x in normalized_folds} != set(fold_ids):
         _fail("missing or extra fold IDs")
+    analysis = data.get("analysis")
+    if not isinstance(analysis, Mapping) or analysis.get("status") != "COMPLETE":
+        _fail("missing validated analysis")
+        _fail("missing validated analysis")
+    analysis = cast(Mapping[str, Any], analysis)
+    if set(analysis.get("configurations", {})) != set(CONFIGURATIONS):
+        _fail("analysis missing sensor configurations")
+    if not isinstance(analysis.get("primary_calibration"), Mapping):
+        _fail("analysis missing bootstrap calibration comparison")
+    if not isinstance(analysis.get("exploratory_ablation"), Mapping):
+        _fail("analysis missing ablation comparison")
+    diagnostics = analysis.get("diagnostics")
+    if not isinstance(diagnostics, Mapping) or not {
+        "class_support",
+        "window_counts",
+        "failures",
+    } <= set(diagnostics):
+        _fail("analysis missing support/failure diagnostics")
     gates = data.get("gates")
     derived = {
         "provenance": True,
@@ -218,19 +245,31 @@ def engine_result_to_schema(result: Any, *, code_hash: str) -> dict[str, Any]:
             source = row[state][row["test_subject"]]
             metrics = {key: source[key] for key in METRICS}
             metrics.setdefault("accuracy", source.get("accuracy", 0.0))
-            if not isinstance(source.get("interval"), list) or len(source["interval"]) < 6:
+            if not isinstance(source.get("intervals"), Mapping) or set(source["intervals"]) != {
+                "nll",
+                "brier",
+                "ece",
+            }:
                 raise ResultSchemaError("engine did not provide uncertainty")
+            if any(
+                not isinstance(value, list) or len(value) != 2
+                for value in source["intervals"].values()
+            ):
+                raise ResultSchemaError("engine uncertainty intervals are not named pairs")
             if not isinstance(source.get("class_support"), Mapping):
                 raise ResultSchemaError("engine did not provide class support")
             if any(
-                int(source["class_support"].get(str(i), 0)) < 1
+                int(source["class_support"].get(str(i), 0)) < 2
                 for i in range(len(result.class_vocabulary))
             ):
                 raise ResultSchemaError("engine class support is incomplete")
             metrics.setdefault("macro_f1", source.get("macro_f1", 0.0))
             states[state] = {
                 "metrics": metrics,
-                "interval": [float(source["interval"][0]), float(source["interval"][1])],
+                "uncertainty": {
+                    name: [float(value[0]), float(value[1])]
+                    for name, value in source["intervals"].items()
+                },
                 "class_support": {
                     c: int(source["class_support"].get(str(i), 0))
                     for i, c in enumerate(result.class_vocabulary)

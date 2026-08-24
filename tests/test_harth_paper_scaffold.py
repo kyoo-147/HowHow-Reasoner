@@ -39,7 +39,11 @@ def test_valid_artifact_generates_only_machine_values(tmp_path: Path) -> None:
     digest = "a" * 64
     state = {
         "metrics": {"nll": 0.25, "brier": 0.1, "ece": 0.05, "accuracy": 0.5, "macro_f1": 0.4},
-        "interval": [0.2, 0.3],
+        "uncertainty": {
+            "nll": [0.2, 0.3],
+            "brier": [0.08, 0.12],
+            "ece": [0.04, 0.06],
+        },
         "class_support": {"rest": 3, "walk": 3},
     }
     artifact.write_text(
@@ -59,6 +63,13 @@ def test_valid_artifact_generates_only_machine_values(tmp_path: Path) -> None:
                 },
                 "class_vocabulary": ["rest", "walk"],
                 "fold_ids": ["full_sensor::S1"],
+                "analysis": {
+                    "status": "COMPLETE",
+                    "configurations": {"full_sensor": {}, "back_only": {}, "thigh_only": {}},
+                    "primary_calibration": {"adjusted_p": {"nll": 0.5}},
+                    "exploratory_ablation": {"adjusted_p": {"back": 0.5}},
+                    "diagnostics": {"class_support": {}, "window_counts": {}, "failures": []},
+                },
                 "folds": [
                     {
                         "fold_id": "full_sensor::S1",
@@ -76,7 +87,7 @@ def test_valid_artifact_generates_only_machine_values(tmp_path: Path) -> None:
     )
     subprocess.run([sys.executable, str(GENERATOR), "--artifact", str(artifact)], check=True)
     text = (PAPER / "generated" / "results.tex").read_text(encoding="utf-8")
-    assert "full_sensor::S1 & 0.250000 & 0.100000 & 0.050000" in text
+    assert "full_sensor::S1 & 0.250000 & 0.200000--0.300000" in text
     subprocess.run([sys.executable, str(GENERATOR)], check=True)
 
 

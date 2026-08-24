@@ -25,6 +25,11 @@
     "minimum_training_subjects_for_temperature": 2,
     "fixed_sensitivity_cohort": ["S015", "S016", "S017", "S018", "S019", "S020", "S021", "S022"]
   },
+  "timestamp_policy": {
+    "naive_timestamps": "interpret_as_utc",
+    "gap_policy": "split_at_gap",
+    "gap_factor_over_median_cadence": 2.0
+  },
   "data_policy": {
     "default": "all_eligible_rows_and_complete_windows",
     "row_sampling": false,

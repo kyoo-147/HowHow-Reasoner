@@ -21,7 +21,7 @@ from typing import Any, cast
 import numpy as np
 
 from ..metrics import calibration_metrics, discrimination_metrics
-from .run_guard import atomic_write
+from .run_guard import RUN_TIMEOUT_SECONDS, atomic_write
 
 PROTOCOL_ID = "harth-calibration-v2"
 BOOTSTRAP_REPS = 2000
@@ -76,6 +76,7 @@ class EngineResult:
     comparisons: dict[str, Any] = field(default_factory=dict)
     failures: list[str] = field(default_factory=list)
     manifest: dict[str, Any] = field(default_factory=dict)
+    code_hash: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         result = asdict(self)
@@ -292,7 +293,9 @@ def _inner_logits(
     return np.vstack(all_logits), np.concatenate(all_labels)
 
 
-def _uncertainty(probabilities: np.ndarray, labels: np.ndarray, *, seed: int) -> list[float]:
+def _uncertainty(
+    probabilities: np.ndarray, labels: np.ndarray, *, seed: int
+) -> dict[str, list[float]]:
     """Finite observation-level uncertainty for the schema handoff."""
     p = np.asarray(probabilities, dtype=float)
     y = np.asarray(labels, dtype=int)
@@ -305,16 +308,13 @@ def _uncertainty(probabilities: np.ndarray, labels: np.ndarray, *, seed: int) ->
     brier = np.sum((p - np.eye(p.shape[1])[y]) ** 2, axis=1)
     ece_contribution = np.abs(correct - confidence)
     values = (losses, brier, ece_contribution)
-    intervals: list[float] = []
-    for value in values:
+    intervals: dict[str, list[float]] = {}
+    for name, value in zip(("nll", "brier", "ece"), values, strict=True):
         mean = float(np.mean(value))
         half = 1.96 * float(np.std(value, ddof=1)) / np.sqrt(n)
         # Constant finite samples receive a strict representable bound.
         half = max(half, np.finfo(float).eps * max(1.0, abs(mean)))
-        intervals.append(max(0.0, mean - half))
-        intervals.append(mean + half)
-    # The schema's legacy interval is the primary NLL interval; richer intervals
-    # are retained alongside it for all calibration outputs.
+        intervals[name] = [max(0.0, mean - half), mean + half]
     return intervals
 
 
@@ -330,7 +330,7 @@ def _subject_metric_rows(
         metrics["class_support"] = {
             str(cls): int(np.sum(labels[mask] == cls)) for cls in range(len(classes))
         }
-        metrics["interval"] = _uncertainty(probabilities[mask], labels[mask], seed=0)
+        metrics["intervals"] = _uncertainty(probabilities[mask], labels[mask], seed=0)
         result[subject] = metrics
     return result
 
@@ -384,6 +384,8 @@ def run_protocol(
     checkpoint: str | Path | None = None,
     timeout_seconds: float = 1800.0,
     monotonic: Callable[[], float] | None = None,
+    code_hash: str | None = None,
+    fold_callback: Callable[[str], None] | None = None,
 ) -> EngineResult:
     """Execute synthetic or explicitly supplied windows under nested LOSO.
 
@@ -397,7 +399,9 @@ def run_protocol(
     _validate_windows(records, vocabulary)
     ihash, phash = input_hash(records), protocol_hash(protocol_file)
     clock = time.monotonic if monotonic is None else monotonic
-    deadline = clock() + timeout_seconds
+    if timeout_seconds != RUN_TIMEOUT_SECONDS:
+        raise ProtocolFailure("timeout budget is fixed at 1800 seconds")
+    deadline = clock() + RUN_TIMEOUT_SECONDS
     result = EngineResult(
         PROTOCOL_ID,
         "RUNNING",
@@ -405,6 +409,7 @@ def run_protocol(
         phash,
         vocabulary,
         manifest={"real_rerun": False, "claim_boundary": "synthetic_or_supplied_only"},
+        code_hash=code_hash,
     )
     completed: set[tuple[str, str]] = set()
     if checkpoint and Path(checkpoint).exists():
@@ -422,7 +427,7 @@ def run_protocol(
         for fold in folds:
             if (configuration, fold.test_subject) in completed:
                 continue
-            if clock() > deadline:
+            if clock() >= deadline:
                 result.status, result.failures = "FAILED", ["timeout"]
                 raise ProtocolFailure("timeout")
             train, test = np.asarray(fold.train_indices), np.asarray(fold.test_indices)
@@ -453,6 +458,8 @@ def run_protocol(
                 "calibration_state": ["uncalibrated", "calibrated"],
             }
             result.folds.append(fold_row)
+            if configuration == "full_sensor" and fold_callback is not None:
+                fold_callback(fold.test_subject)
             if checkpoint:
                 atomic_write(Path(checkpoint), result.to_dict())
     result.comparisons = _comparison_report(result.folds)

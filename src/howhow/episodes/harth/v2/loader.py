@@ -25,6 +25,9 @@ SENSOR_COLUMNS = ("back_x", "back_y", "back_z", "thigh_x", "thigh_y", "thigh_z")
 DEFAULT_WINDOW_SIZE = 128
 DEFAULT_STRIDE = 64
 _SUBJECT_RE = re.compile(r"^(?:s|subject)[-_ ]?([0-9]+)$", re.IGNORECASE)
+NAIVE_TIMESTAMP_POLICY = "interpret_as_utc"
+GAP_POLICY = "split_at_gap"
+GAP_FACTOR = 2.0
 
 
 class LoaderFailure(ProtocolFailure):
@@ -68,8 +71,28 @@ def _parse_time(value: str) -> datetime:
         except (ValueError, OverflowError, OSError) as exc:
             raise LoaderFailure(f"invalid timestamp: {value!r}") from exc
     if parsed.tzinfo is None:
-        raise LoaderFailure("timestamp must include timezone")
+        parsed = parsed.replace(tzinfo=UTC)
     return parsed.astimezone(UTC)
+
+
+def _split_gap_rows(rows: Sequence[RawRow]) -> tuple[list[list[RawRow]], list[float]]:
+    if len(rows) < 2:
+        return [list(rows)], []
+    deltas = [
+        (right.timestamp - left.timestamp).total_seconds()
+        for left, right in zip(rows[:-1], rows[1:], strict=True)
+    ]
+    positive = [delta for delta in deltas if delta > 0]
+    cadence = sorted(positive)[len(positive) // 2] if positive else 0.0
+    threshold = cadence * GAP_FACTOR if cadence > 0 else float("inf")
+    segments: list[list[RawRow]] = [[rows[0]]]
+    gaps: list[float] = []
+    for row, delta in zip(rows[1:], deltas, strict=True):
+        if delta > threshold:
+            gaps.append(delta)
+            segments.append([])
+        segments[-1].append(row)
+    return segments, gaps
 
 
 def _identity(value: Mapping[str, str], keys: tuple[str, ...], kind: str) -> str:
@@ -166,6 +189,7 @@ def load_harth_archive(
     files: list[dict[str, Any]] = []
     windows: list[Window] = []
     total_rows = 0
+    gap_diagnostics: list[dict[str, Any]] = []
     try:
         with zipfile.ZipFile(path) as bundle:
             members: dict[str, zipfile.ZipInfo] = {}
@@ -193,25 +217,32 @@ def load_harth_archive(
                     with io.TextIOWrapper(binary, encoding="utf-8", newline="") as text:
                         rows = list(_iter_member_rows(text, name))
                 total_rows += len(rows)
-                for start in range(0, max(0, len(rows) - window_size + 1), stride):
-                    chunk = rows[start : start + window_size]
-                    if len(chunk) < window_size:
-                        continue
-                    if len({(row.subject, row.session) for row in chunk}) != 1:
-                        raise LoaderFailure(f"window crosses subject/session boundary in {name}")
-                    labels = {row.label for row in chunk}
-                    if len(labels) != 1 or next(iter(labels)) not in vocabulary:
-                        raise LoaderFailure(f"label outside frozen vocabulary in {name}")
-                    identity = f"{name}:{chunk[0].row_number}-{chunk[-1].row_number}"
-                    windows.append(
-                        Window(
-                            chunk[0].subject,
-                            chunk[0].session,
-                            next(iter(labels)),
-                            _window_features(chunk),
-                            identity,
+                segments, gaps = _split_gap_rows(rows)
+                gap_diagnostics.extend({"member": name, "seconds": gap} for gap in gaps)
+                for segment in segments:
+                    for start in range(0, max(0, len(segment) - window_size + 1), stride):
+                        chunk = segment[start : start + window_size]
+                        if len(chunk) < window_size:
+                            continue
+                        if len({(row.subject, row.session) for row in chunk}) != 1:
+                            raise LoaderFailure(
+                                f"window crosses subject/session boundary in {name}"
+                            )
+                        labels = {row.label for row in chunk}
+                        if any(label not in vocabulary for label in labels):
+                            raise LoaderFailure(f"label outside frozen vocabulary in {name}")
+                        if len(labels) != 1:
+                            continue
+                        identity = f"{name}:{chunk[0].row_number}-{chunk[-1].row_number}"
+                        windows.append(
+                            Window(
+                                chunk[0].subject,
+                                chunk[0].session,
+                                next(iter(labels)),
+                                _window_features(chunk),
+                                identity,
+                            )
                         )
-                    )
                 files.append(
                     {
                         "path": name,
@@ -240,8 +271,13 @@ def load_harth_archive(
         "protocol_hash": protocol_hash,
         "code_hash": code_hash,
         "session_policy": "one_archive_member_per_subject_session",
+        "naive_timestamp_policy": NAIVE_TIMESTAMP_POLICY,
+        "gap_policy": GAP_POLICY,
+        "gap_factor": GAP_FACTOR,
+        "gaps": gap_diagnostics,
         "session_boundaries": [item["path"] for item in files],
         "scientific_metrics": False,
+        "metrics_free": True,
     }
     return LoadedArchive(tuple(windows), manifest, total_rows)
 

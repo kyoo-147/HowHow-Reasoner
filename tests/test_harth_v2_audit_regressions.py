@@ -18,6 +18,7 @@ from howhow.episodes.harth.v2 import (
     run_protocol,
     validate_result,
 )
+from howhow.episodes.harth.v2 import run_guard as run_guard_module
 
 
 def _archive(path: Path) -> None:
@@ -37,6 +38,9 @@ def test_f001_canonical_member_is_the_session_boundary(tmp_path: Path) -> None:
     _archive(archive)
     loaded = load_harth_archive(archive, ["rest", "walk"], window_size=32, stride=32)
     assert loaded.manifest["session_policy"] == "one_archive_member_per_subject_session"
+    assert loaded.manifest["session_policy"] == "one_archive_member_per_subject_session"
+    assert loaded.manifest["metrics_free"] is True
+    assert "metrics" not in loaded.manifest
     assert loaded.manifest["session_boundaries"] == ["harth/S001.csv", "harth/S002.csv"]
     assert {window.session for window in loaded.windows} == {
         "harth/S001.csv",
@@ -56,12 +60,24 @@ def _artifact() -> dict[str, object]:
 def test_f002_schema_rejects_degenerate_uncertainty_and_fake_support() -> None:
     value = _artifact()
     bad = copy.deepcopy(value)
-    bad["folds"][0]["states"]["calibrated"]["interval"] = [1.0, 1.0]  # type: ignore[index]
+    bad["folds"][0]["states"]["calibrated"]["uncertainty"]["nll"] = [1.0, 1.0]  # type: ignore[index]
     with pytest.raises(ResultSchemaError):
         validate_result(bad)
     bad = copy.deepcopy(value)
     bad["folds"][0]["states"]["calibrated"]["class_support"]["rest"] = 1  # type: ignore[index]
     with pytest.raises(ResultSchemaError):
+        validate_result(bad)
+    bad["folds"][0]["states"]["calibrated"]["class_support"]["rest"] = 1  # type: ignore[index]
+    with pytest.raises(ResultSchemaError):
+        validate_result(bad)
+    bad = copy.deepcopy(value)
+    bad.pop("analysis")
+    with pytest.raises(ResultSchemaError, match="analysis"):
+        validate_result(bad)
+    bad = copy.deepcopy(value)
+    state = bad["folds"][0]["states"]["calibrated"]  # type: ignore[index]
+    state["interval"] = state.pop("uncertainty")
+    with pytest.raises(ResultSchemaError, match="named"):
         validate_result(bad)
 
 
@@ -85,3 +101,14 @@ def test_f004_guard_preserves_failure_and_exact_resume_identity(tmp_path: Path) 
     failure = json.loads((tmp_path / "failure.json").read_text())
     assert failure["status"] == "FAILED"
     assert failure["scientific_metrics"] is False
+
+
+@pytest.mark.parametrize("elapsed", [1800.0, 1800.0])
+def test_f004_timeout_is_inclusive_at_fixed_deadline(
+    tmp_path: Path, monkeypatch, elapsed: float
+) -> None:
+    clock = iter((100.0, 100.0 + elapsed))
+    monkeypatch.setattr(run_guard_module.time, "monotonic", lambda: next(clock))
+    guard = RunGuard(tmp_path, input_hash="a" * 64, protocol_hash="b" * 64)
+    with pytest.raises(TimeoutError, match="1800"):
+        guard.check_timeout()
