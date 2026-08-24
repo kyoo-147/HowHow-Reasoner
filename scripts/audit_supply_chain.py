@@ -8,6 +8,7 @@ public output without being reduced to package names, versions, and license data
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -17,7 +18,7 @@ import sysconfig
 import urllib.parse
 import urllib.request
 from datetime import date
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,7 +53,7 @@ def pypi_license(name: str, version: str) -> tuple[str, str]:
 
 
 def installed_license(name: str, version: str) -> tuple[str, str]:
-    """Use the exact locked distribution's shipped license file as provenance."""
+    """Use shipped license metadata without exposing the installation location."""
     from importlib.metadata import distribution
 
     dist = distribution(name)
@@ -78,8 +79,32 @@ def installed_license(name: str, version: str) -> tuple[str, str]:
             license_name = "PSF-2.0"
         else:
             continue
-        return license_name, f"installed:{dist._path.as_posix()}/{file}"
+        relative = PurePosixPath(str(file).replace("\\", "/"))
+        if relative.is_absolute() or ".." in relative.parts:
+            continue
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        normalized_name = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+        return (
+            license_name,
+            f"installed-dist:{normalized_name}/{relative.as_posix()}#sha256={digest}",
+        )
     return "UNKNOWN", ""
+
+
+def stable_registry_source(ecosystem: str, name: str, version: str) -> str:
+    """Return a portable source URL for an existing inventory entry."""
+    if ecosystem == "pypi":
+        return (
+            f"https://pypi.org/pypi/{urllib.parse.quote(name)}/{urllib.parse.quote(version)}/json"
+        )
+    encoded = urllib.parse.quote(name, safe="@")
+    return f"https://registry.npmjs.org/{encoded}/{urllib.parse.quote(version)}"
+
+
+def portable_source(ecosystem: str, source: str) -> bool:
+    return source.startswith(
+        ("https://pypi.org/pypi/", "https://registry.npmjs.org/", "installed-dist:")
+    )
 
 
 def npm_license(name: str, version: str) -> tuple[str, str]:
@@ -247,6 +272,8 @@ def audit(refresh: bool, scans: dict[str, Any] | None = None) -> tuple[dict[str,
         entry = old.get(key, {})
         license_name = entry.get("license", "UNKNOWN")
         source = entry.get("source", "")
+        if source and not portable_source(package["ecosystem"], source):
+            source = stable_registry_source(*key)
         if (refresh and license_name.upper() == "UNKNOWN") or not source:
             try:
                 getter = pypi_license if package["ecosystem"] == "pypi" else npm_license
