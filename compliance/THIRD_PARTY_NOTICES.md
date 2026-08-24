@@ -10,18 +10,6 @@ HARTH is distributed under **CC BY 4.0**. Retain the dataset citation and UCI me
 
 | Ecosystem | Package | Version | License | Status |
 |---|---|---:|---|---|
-| npm | `` | `edge-runtime/vm` | UNKNOWN | UNKNOWN |
-| npm | `` | `opentelemetry/api` | UNKNOWN | UNKNOWN |
-| npm | `` | `rolldown/plugin-babel` | UNKNOWN | UNKNOWN |
-| npm | `` | `types/node` | UNKNOWN | UNKNOWN |
-| npm | `` | `types/node` | UNKNOWN | UNKNOWN |
-| npm | `` | `vitejs/devtools` | UNKNOWN | UNKNOWN |
-| npm | `` | `vitest/browser-playwright` | UNKNOWN | UNKNOWN |
-| npm | `` | `vitest/browser-preview` | UNKNOWN | UNKNOWN |
-| npm | `` | `vitest/browser-webdriverio` | UNKNOWN | UNKNOWN |
-| npm | `` | `vitest/coverage-istanbul` | UNKNOWN | UNKNOWN |
-| npm | `` | `vitest/coverage-v8` | UNKNOWN | UNKNOWN |
-| npm | `` | `vitest/ui` | UNKNOWN | UNKNOWN |
 | npm | `@babel/code-frame` | `7.29.7` | MIT | PASS |
 | npm | `@babel/compat-data` | `7.29.7` | MIT | PASS |
 | npm | `@babel/core` | `7.29.7` | MIT | PASS |
@@ -223,22 +211,22 @@ HARTH is distributed under **CC BY 4.0**. Retain the dataset citation and UCI me
 | npm | `yocto-queue` | `0.1.0` | MIT | PASS |
 | npm | `zod` | `4.4.3` | MIT | PASS |
 | npm | `zod-validation-error` | `4.0.2` | MIT | PASS |
-| pypi | `annotated-types` | `0.8.0` | UNKNOWN | UNKNOWN |
-| pypi | `anyio` | `4.14.2` | UNKNOWN | UNKNOWN |
+| pypi | `annotated-types` | `0.8.0` | MIT | PASS |
+| pypi | `anyio` | `4.14.2` | MIT | PASS |
 | pypi | `certifi` | `2026.7.22` | MPL-2.0 | PASS |
-| pypi | `click` | `8.4.2` | UNKNOWN | UNKNOWN |
-| pypi | `colorama` | `0.4.6` | UNKNOWN | UNKNOWN |
-| pypi | `fastapi` | `0.116.1` | UNKNOWN | UNKNOWN |
+| pypi | `click` | `8.4.2` | BSD-3-Clause | PASS |
+| pypi | `colorama` | `0.4.6` | BSD | PASS |
+| pypi | `fastapi` | `0.116.1` | MIT | PASS |
 | pypi | `h11` | `0.16.0` | MIT | PASS |
 | pypi | `howhow` | `0.1.0` | UNKNOWN | UNKNOWN |
-| pypi | `httpcore` | `1.0.9` | UNKNOWN | UNKNOWN |
+| pypi | `httpcore` | `1.0.9` | BSD | PASS |
 | pypi | `httpx` | `0.28.1` | BSD-3-Clause | PASS |
-| pypi | `idna` | `3.19` | UNKNOWN | UNKNOWN |
-| pypi | `iniconfig` | `2.3.0` | UNKNOWN | UNKNOWN |
-| pypi | `markdown-it-py` | `4.2.0` | UNKNOWN | UNKNOWN |
-| pypi | `mdurl` | `0.1.2` | UNKNOWN | UNKNOWN |
+| pypi | `idna` | `3.19` | BSD-3-Clause | PASS |
+| pypi | `iniconfig` | `2.3.0` | MIT | PASS |
+| pypi | `markdown-it-py` | `4.2.0` | MIT | PASS |
+| pypi | `mdurl` | `0.1.2` | MIT | PASS |
 | pypi | `mypy` | `1.17.1` | MIT | PASS |
-| pypi | `mypy-extensions` | `1.1.0` | UNKNOWN | UNKNOWN |
+| pypi | `mypy-extensions` | `1.1.0` | MIT | PASS |
 | pypi | `numpy` | `2.3.2` | Copyright (c) 2005-2025, NumPy Developers.
          All rights reserved.
          
@@ -1210,20 +1198,20 @@ HARTH is distributed under **CC BY 4.0**. Retain the dataset citation and UCI me
              MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
              Lesser General Public License for more details.
              https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html | REVIEW |
-| pypi | `packaging` | `26.3` | UNKNOWN | UNKNOWN |
-| pypi | `pathspec` | `1.1.1` | UNKNOWN | UNKNOWN |
+| pypi | `packaging` | `26.3` | MIT | PASS |
+| pypi | `pathspec` | `1.1.1` | Mozilla Public License 2.0 (MPL 2.0) | PASS |
 | pypi | `pluggy` | `1.6.0` | MIT | PASS |
-| pypi | `pydantic` | `2.11.7` | UNKNOWN | UNKNOWN |
+| pypi | `pydantic` | `2.11.7` | MIT | PASS |
 | pypi | `pydantic-core` | `2.33.2` | MIT | PASS |
-| pypi | `pygments` | `2.21.0` | UNKNOWN | UNKNOWN |
+| pypi | `pygments` | `2.21.0` | BSD-2-Clause | PASS |
 | pypi | `pytest` | `8.4.1` | MIT | PASS |
 | pypi | `rich` | `15.0.0` | MIT | PASS |
-| pypi | `ruff` | `0.12.7` | UNKNOWN | UNKNOWN |
+| pypi | `ruff` | `0.12.7` | MIT | PASS |
 | pypi | `shellingham` | `1.5.4` | ISC License | PASS |
-| pypi | `starlette` | `0.47.3` | UNKNOWN | UNKNOWN |
-| pypi | `typer` | `0.16.0` | UNKNOWN | UNKNOWN |
-| pypi | `typing-extensions` | `4.16.0` | UNKNOWN | UNKNOWN |
-| pypi | `typing-inspection` | `0.4.4` | UNKNOWN | UNKNOWN |
-| pypi | `uvicorn` | `0.35.0` | UNKNOWN | UNKNOWN |
+| pypi | `starlette` | `0.47.3` | BSD | PASS |
+| pypi | `typer` | `0.16.0` | MIT | PASS |
+| pypi | `typing-extensions` | `4.16.0` | PSF-2.0 | PASS |
+| pypi | `typing-inspection` | `0.4.4` | MIT | PASS |
+| pypi | `uvicorn` | `0.35.0` | BSD | PASS |
 
-Vulnerability status is **BLOCKED** unless `pip-audit` and `pnpm audit` evidence is supplied by CI. UNKNOWN licenses remain review findings and must not be treated as approved.
+Vulnerability status is recorded from machine-readable `uvx pip-audit` and `pnpm audit --json` evidence. Scanner failures remain explicit. UNKNOWN licenses remain review findings and must not be treated as approved.
