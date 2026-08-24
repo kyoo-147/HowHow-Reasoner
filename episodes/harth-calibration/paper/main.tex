@@ -9,85 +9,57 @@
 \usepackage{xcolor}
 \usepackage{amssymb}
 \newcommand{\status}[1]{\textcolor{red}{\textbf{#1}}}
-\title{Exploratory Protocol for Subject-Held-Out Probability Calibration on HARTH\\\large Results withheld until protocol-v2 gates pass}
+\title{Subject-Held-Out Probability Calibration on HARTH: An Exploratory Custody-Released Analysis}
 \author{HowHow Research}
-\date{Protocol version 2 --- 2026-08-23}
+\date{Exploratory report v2.1 --- 2026-08-24}
 \begin{document}
 \maketitle
-\begin{center}\status{EXPLORATORY / PROTOCOL ONLY --- NO SCIENTIFIC RESULTS}\end{center}
+\begin{center}\status{EXPLORATORY / POST-OBSERVATION / INCONCLUSIVE --- NOT A CONFIRMATORY CLAIM}\end{center}
 \begin{abstract}
-This manuscript specifies an exploratory, reproducible protocol for evaluating probability calibration of a deterministic CPU nearest-centroid activity-recognition baseline on the Human Activity Recognition Trondheim (HARTH) dataset. It is not a report of completed experiments. The primary design is nested subject-held-out evaluation, with inner-subject temperature selection, subject-cluster bootstrap uncertainty, and preregistered back-only and thigh-only sensor ablations. Every prospective result is gated on frozen provenance, leakage checks, class coverage, finite metrics, and a validated machine-readable artifact. Until those gates pass, tables and figures render explicit \status{UNVERIFIED} placeholders and no strong claim is permitted. The bounded related-work corpus contains metadata-only evidence and is likewise not sufficient to establish novelty or transfer claims.
+We report a custody-released, exploratory analysis of a deterministic CPU nearest-centroid activity-recognition baseline on HARTH. The frozen population contains twenty-two subjects and sixty-six configuration-folds. Nested subject-held-out evaluation compares uncalibrated probabilities with inner-subject temperature scaling for full, back-only, and thigh-only sensor representations. Subject-macro uncertainty uses 2,000 bootstrap replicates; paired sign-flip tests use 200,000 draws. Full-sensor calibrated NLL is generated in Table~\ref{tab:metrics}; the unadjusted paired NLL p-value is generated in the evidence snapshot, but Holm adjustment yields no familywise rejection. Brier and ECE do not establish a consistent calibration benefit. Exploratory support-aware F1 preserves \texttt{NOT\_ESTIMABLE}. This is an inconclusive post-observation report: it makes no novelty, causal, superiority, transferability, or generalization claim.
 \end{abstract}
 
 \section{Introduction}
-Activity-recognition probabilities are useful only when their uncertainty is interpreted in the population and measurement setting in which they are produced. HARTH is a human-activity dataset recorded with two accelerometer placements; the landed metadata record describes the dataset and its subject-held-out baseline context \cite{harth}. The present episode asks a narrower question: can a frozen, deterministic CPU baseline produce useful held-out-subject probabilities after calibration? This manuscript deliberately separates that question from deployment, clinical, causal, and universal-calibration claims.
+Probability quality matters when activity-recognition systems are used to communicate uncertainty, but a held-out-subject estimate is not a deployment guarantee. This report answers a narrow question: how did a frozen deterministic CPU baseline behave under the released HARTH run3 analysis, with and without inner-subject temperature scaling? The analysis is deliberately bounded to a frozen population and declared estimands. It does not estimate clinical utility, real-time safety, or population-wide calibration.
 
-The title and status banner are intentionally conservative. The current episode is \status{INCONCLUSIVE}; real-data execution is opt-in, raw data are not committed, and protocol adjudication reported no real-data rerun. Thus this paper documents a protocol and manuscript mechanics, not an empirical conclusion.
-
-\section{Related Work and Evidence Boundary}
-The landed literature slice contains a metadata record for HARTH \cite{harth}, a metadata record concerning confidence-calibrated wearable-sensor activity recognition and temperature scaling \cite{harcal}, and a record identifying NLL and Brier score in calibration analysis \cite{proper}. These records are useful for scope and terminology only. Their stored evidence spans are \status{UNVERIFIED}; they do not establish the quoted papers' full methods, a HARTH transfer result, or a literature-wide gap. The related-work matrix therefore labels the proposed combination as a candidate gap rather than a novelty claim.
-
-\section{Research Questions}
+\section{Research Questions and Claim Boundary}
 \begin{enumerate}[label=RQ\arabic*:]
-\item Under nested leave-one-subject-out evaluation, what are the per-window NLL, multiclass Brier score, and ten-bin top-label ECE of the uncalibrated nearest-centroid baseline?
-\item Does inner-subject temperature scaling change those paired subject-level losses without using outer-test labels or probabilities?
-\item As exploratory comparisons, how do pre-registered back-only and thigh-only representations differ from the full two-sensor representation?
+\item What are subject-macro NLL, multiclass Brier score, and ten-bin top-label ECE for the uncalibrated baseline?
+\item What paired changes accompany inner-subject temperature scaling without using outer-test labels?
+\item What descriptive differences appear for back-only and thigh-only sensor ablations?
 \end{enumerate}
+All results are exploratory and post-observation. The result's custody boundary is \texttt{guarded\_real\_quarantined\_no\_release}; custody acceptance authorizes manuscript generation but does not release \texttt{quarantine.json}. The report preserves negative and inconclusive evidence and does not convert an artifact gate into scientific or reviewer acceptance.
 
-\section{Protocol-v2 Methods}
-\subsection{Estimand and split}
-The primary estimand is expected per-window test loss for a new subject drawn from the finite eligible HARTH subject set. Losses are first averaged within subject and then macro-averaged across outer test subjects. A pooled-window summary is descriptive only. The primary split is leave-one-eligible-subject-out; all sessions for a subject remain in that fold, and no window crosses a subject or session boundary.
-
-Eligibility, the subject list, class vocabulary, file manifest, preprocessing version, and protocol hash must be frozen before a result file is opened. Any changed input, ambiguous identifier, invalid provenance, or post-hoc split revision is a hard failure.
-
-\subsection{Model and calibration}
-The sole primary model is the existing deterministic CPU nearest-centroid baseline. The frozen representation uses six accelerometer channels (back and thigh), with per-channel window mean and standard deviation. Back-only and thigh-only features are exactly two pre-registered secondary ablations. Scaling, centroids, and every statistic are fit on outer-training subjects only.
-
-For each outer fold, inner leave-one-subject-out validation on outer-training subjects supplies logits for a bounded scalar temperature fit. The optimizer minimizes inner-validation NLL over $T\in[0.05,20]$, with fixed tolerance and ties resolved toward smaller $T$. The selected temperature is then applied once to the refit outer-training model and outer test subject. If class coverage or inner validation fails, calibration is unavailable for that fold and is recorded as a failure rather than repaired with test data.
+\section{Methods}
+\subsection{Design and estimands}
+The primary estimand is the subject-macro expected test loss under leave-one-subject-out evaluation. All windows from a held-out subject remain in that subject's outer fold. The frozen population and three sensor configurations yield sixty-six lifecycle folds. The baseline is deterministic nearest-centroid classification over channel means and standard deviations. Calibration selects a bounded scalar temperature only with inner training-subject validation, then applies it once to the outer test subject.
 
 \subsection{Metrics and uncertainty}
-NLL, multiclass Brier score, and top-label ECE with ten equal-width bins on $[0,1]$ are primary. Accuracy, macro-F1, recall, and precision are secondary context. Uncertainty uses 2,000 subject-cluster bootstrap resamples with seed 0 and percentile 95\% intervals. Paired calibrated--uncalibrated differences are reported per subject. The three primary comparisons use preregistered Holm correction at family-wise $\alpha=0.05$; ablation p-values are exploratory.
+NLL, multiclass Brier score, and ten-bin top-label ECE are summarized per subject and then macro-averaged. The generator reads the strict result and emits every displayed numeric cell; no metric is hand-entered in this manuscript. Intervals are percentile subject-cluster bootstrap intervals using 2,000 replicates. The three calibration comparisons use Holm adjustment at the declared familywise threshold. Sign-flip tests use 200,000 PCG64 draws with inclusive ties and unchanged zero handling. Sensor ablations are descriptive.
 
-\subsection{Stopping and failure rules}
-The run budget is one nested-LOSO primary run, three sensor configurations, two calibration states, and the required inner fits, capped at 22 eligible outer folds and 30 minutes on the declared CPU environment. Leakage, crossed windows, missing provenance, invalid probabilities, non-finite metrics, failed class coverage, changed frozen input, or timeout stops the run. Failed and inconclusive records remain immutable under \texttt{artifacts/}.
+\subsection{Custody and reproducibility contract}
+The builder verifies the exact released result SHA, schema and COMPLETE state, frozen population, exploratory boundary, and custody flags before deriving a self-contained snapshot. It strips source destination and private-path fields, retains result JSON pointers, and binds each derived cell to the result SHA. `--check` compares snapshot, tables, and figures byte-for-byte. Failure on any release, hash, schema, status, value, pointer, or reproducibility drift is intentional.
 
-\section{Dataset and Provenance}
-The dataset manifest identifies HARTH, UCI dataset 779, the UCI download URL, DOI, and CC BY 4.0 license. No raw dataset blob is committed. A future run must preserve retrieval time, URL, byte count, SHA-256, normalized file manifest, subject eligibility decisions, and the protocol-v2 hash. The manifest's unknown checksum is never promoted to verified provenance. The current paper has no real-data result artifact.
-
-\section{Ethics and License}
-This work uses an existing dataset under the license recorded in the episode manifest. Dataset terms, attribution, and any access restrictions must be rechecked before redistribution. The protocol does not make claims about individuals, health status, clinical utility, or real-time safety. Any future use must follow the dataset provider's terms and the original study's ethics statements; this scaffold does not substitute for an ethics review.
-
-\section{Planned Analysis}
-A validated v2 artifact will contain the frozen configuration, provenance hashes, fold records, calibration diagnostics, metric values, cluster-bootstrap intervals, class support, optimizer convergence, and failure records. The generator in \texttt{tools/generate\_tables.py} accepts only that schema and produces deterministic LaTeX. No metric is typed into this manuscript. Until a validator-approved artifact is supplied, Table~\ref{tab:results-folds} and the diagnostics tables remain closed placeholders.
+\section{Results}
+The generated tables report all full, reduced-sensor, calibrated, and uncalibrated estimates with intervals. Figure~\ref{fig:nll-bars} visualizes the full-sensor NLL estimates and Figure~\ref{fig:nll-delta} visualizes their paired contrast. The full-sensor contrast is compatible with a pre-adjustment NLL difference, while the Holm-adjusted family decision is a non-rejection. Brier and ECE contrasts do not provide a consistent calibration pattern. Reduced-sensor NLL increases are descriptive contrasts, not sensor-attribution effects.
 
 \input{generated/results}
+\input{generated/figures}
 
-\section{Reproducibility}
-The source tree, protocol, landed literature records, generator, validator, and test commands are versioned. Run from this directory with \texttt{python tools/generate\_tables.py --check-only} and \texttt{python tools/check\_paper.py}; use the repository's locked environment for tests. Optional MiKTeX compilation is a mechanics check only: it proves neither real data access nor scientific validity. A future machine-readable artifact must be preserved alongside private build logs, not substituted by hand-edited TeX.
-\section{Limitations}
-This is not a systematic review, a deployment evaluation, or evidence of general calibration. The bounded metadata corpus is incomplete and its evidence spans are UNVERIFIED. Subject count, missing classes, sensor placement, finite-sample uncertainty, ECE sparsity, baseline choice, and the protocol's CPU assumptions constrain interpretation. The legacy S006-to-S015--S022 arrangement is a same-data exploratory diagnostic and cannot become confirmatory through relabeling.
+\section{Exploratory F1 and Support}
+Classwise F1 is computed from TP, FP, and FN only when its denominator and support permit estimation. Zero support or zero denominator remains \texttt{NOT\_ESTIMABLE}; it is not a zero, an imputation, or evidence of failure. F1 is secondary exploratory context and is not used to support a calibration claim.
 
-\appendix
-\section{Reviewer and Dissent Record}
-The protocol adjudication retained dissent about calibration identifiability with one training subject and rejected S006-only as confirmatory. That dissent is preserved in \texttt{protocol/reviewer-dissent.md}. The current scaffold adopts nested subject-held-out calibration and records any future amendment prospectively. A reviewer may reject the paper's status banner or request broader retrieval; neither action authorizes inventing results.
+\section{Discussion}
+The released evidence is balanced and inconclusive. Temperature scaling coincided with a negative full-sensor NLL contrast, but multiplicity adjustment removed familywise support, and Brier/ECE did not show a consistent benefit. Ablations show larger descriptive NLL differences for reduced representations, but the design cannot attribute those differences causally to a sensor. These observations do not establish novelty, superiority, transferability, or generalization.
 
-\section{Claim--Evidence Map}
-\begin{center}
-\begin{tabular}{p{.28\linewidth}p{.25\linewidth}p{.35\linewidth}}
-\toprule
-Claim or statement & Evidence ID & Boundary \\
-\midrule
-HARTH dataset context & \texttt{abstract:crossref:10.3390/s21237853} & UNVERIFIED metadata span; context only \\
-Calibration terminology & \texttt{title:crossref:10.3390/s21196566} & UNVERIFIED metadata span; no transfer claim \\
-Scoring-rule terminology & \texttt{title:crossref:10.1007/s00521-024-09505-4} & UNVERIFIED metadata span; no HARTH result \\
-Protocol and estimand & \texttt{protocol-v2-proposal.md} & Landed protocol artifact, not empirical evidence \\
-Future metrics & \texttt{results-v2.json} & BLOCKED unless schema, provenance, and gates validate \\
-\bottomrule
-\end{tabular}
-\end{center}
+\section{Limitations and Lifecycle Disclosure}
+Only the frozen twenty-two subjects and sixty-six folds are represented. The custody review found that `final.json` says COMPLETE while reporting `scientific\_metrics=false` and `completed\_folds=[]`; the completed engine snapshot records the lifecycle folds. This minor, disclosable metadata defect is not silently reconciled and is not treated as scientific evidence. The retained package lacks subject-level sufficient statistics and sign counts, so exact independent regeneration of every bootstrap interval and paired-test value is unavailable. The initial custody dissent and the limitation are retained in the external adjudication record. `quarantine.json` remains unchanged and is not claimed as released or mutated.
 
-\section{Data and Code Availability}
-The scaffold and protocol are intended for arXiv-compatible source review. Raw data are excluded. A future release should include only permitted derived artifacts and the exact code/protocol identifiers needed to reproduce them.
+Stronger evidence would require prospective hypotheses, corrected lifecycle metadata, governed retention of sufficient statistics and sign counts, and independent validation. None is performed here; run3 is not rerun or tuned.
+
+\section{Provenance and Availability}
+The tracked source manifest excludes raw/private artifacts. The generated snapshot records the immutable result hash and source JSON pointers. Code, protocol, schema, and publication builder remain in the repository; raw data, private custody paths, and the quarantined package are not copied into this paper. MiKTeX compilation is a manuscript-mechanics gate only, not scientific validation.
+
 \bibliographystyle{plain}
 \bibliography{references}
 \end{document}

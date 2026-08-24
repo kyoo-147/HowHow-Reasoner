@@ -1,0 +1,23 @@
+{
+  "manifest_version": "harth-paper-source-1",
+  "status": "EXPLORATORY_POST_OBSERVATION",
+  "include": [
+    "main.tex",
+    "references.bib",
+    "README.md",
+    "generated/evidence-snapshot.json",
+    "generated/results.tex",
+    "generated/figures.tex",
+    "tools/check_paper.py",
+    "tools/compile.py",
+    "tools/generate_tables.py"
+  ],
+  "exclude": [
+    "raw data",
+    "private custody destinations and paths",
+    "quarantine.json",
+    "run3 package directories",
+    "build logs and PDFs",
+    "LICENSE/project-license metadata"
+  ]
+}
