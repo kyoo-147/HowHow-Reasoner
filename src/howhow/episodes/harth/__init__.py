@@ -1,3 +1,4 @@
+from . import v21
 from .baseline import NearestCentroidBaseline
 from .metrics import (
     bootstrap_confidence_interval,
@@ -18,5 +19,6 @@ __all__ = [
     "subject_cluster_bootstrap",
     "SubjectSplit",
     "assert_no_subject_leakage",
+    "v21",
     "subject_held_out_split",
 ] + list(__import__("howhow.episodes.harth.v2", fromlist=["__all__"]).__all__)
