@@ -61,3 +61,38 @@ def test_preexisting_destination_is_refused(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="FRESH_OUTPUT_REQUIRED"):
         run_synthetic("complete", output)
     assert (output / "sentinel").read_text() == "keep"
+
+
+def test_real_cli_rejects_stale_authorization_before_loading(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    archive = tmp_path / "archive.zip"
+    archive.write_bytes(b"not-a-zip")
+    authorization = tmp_path / "authorization.json"
+    authorization.write_text(
+        json.dumps(
+            {
+                "authorization_version": "v2.1",
+                "protocol_version": _MODULE.PROTOCOL_VERSION,
+                "allow_rerun": True,
+                "one_shot": True,
+                "hashes": {
+                    key: "0" * 64
+                    for key in ("protocol", "code", "config", "schema", "archive", "vocabulary")
+                },
+                "budgets": _MODULE.BUDGETS,
+                "destination": str((tmp_path / "out").resolve()),
+                "git_revision": "0" * 40,
+                "vocabulary": _MODULE.CLASSES,
+            }
+        )
+    )
+    output = tmp_path / "out"
+    monkeypatch.setenv(_MODULE.REAL_CONSENT_ENV, "1")
+    monkeypatch.setattr(_MODULE, "_code_identity", lambda: ("1" * 64, "2" * 40))
+    with pytest.raises(V21Error, match="STALE_OR_WRONG_AUTHORIZATION"):
+        _MODULE.run_real(archive, authorization, output)
+    failure = json.loads((output / "failure.json").read_text())
+    assert failure["scientific_metrics"] is False
+    assert "metrics" not in failure["error"].lower()
+    assert not (output / "result-v2.1.json").exists()

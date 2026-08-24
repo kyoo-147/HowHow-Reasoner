@@ -615,7 +615,7 @@ def build_artifact_hashes(
         "protocol_sha256": canonical_hash(protocol),
         "schema_sha256": canonical_hash(schema),
         "config_sha256": canonical_hash(config),
-        "code_sha256": sha256_bytes(code),
+        "code_sha256": code if isinstance(code, str) else sha256_bytes(code),
         "input_sha256": canonical_hash(input_data),
         "vocabulary_sha256": canonical_hash(list(vocabulary)),
         "eligibility_manifest_sha256": canonical_hash(eligibility_manifest)
@@ -824,12 +824,14 @@ def migration_v2_to_v21(
 
 
 def generate_outputs(result: Mapping[str, Any]) -> dict[str, str]:
+    """Render only from the already-validated in-memory result contract."""
     status = str(result.get("status", "UNKNOWN"))
     boundary = "No performance claim; synthetic structural contract only."
     payload = {
         "status": status,
         "claim_boundary": boundary,
         "scientific_status": "UNVERIFIED" if status != "COMPLETE" else "STRUCTURAL_ONLY",
+        "source_result_hash": canonical_hash(result),
     }
     return {
         "generator.json": canonical_bytes(payload).decode("utf-8"),

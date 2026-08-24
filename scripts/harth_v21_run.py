@@ -1,6 +1,7 @@
-"""Synthetic-only executable HARTH protocol-v2.1 integration.
+"""Guarded HARTH protocol-v2.1 runner.
 
-This command is deliberately incapable of opening the HARTH archive or resuming a run.
+Synthetic fixtures are explicit and separate from ``--execute-real``.  Real mode
+requires an independently-created, one-shot authorization record and never resumes.
 """
 
 from __future__ import annotations
@@ -10,13 +11,12 @@ import hashlib
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import zipfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
-
-import numpy as np
 
 from howhow.episodes.harth.v2 import RunGuard, load_harth_archive, run_protocol
 from howhow.episodes.harth.v2.engine import input_hash
@@ -29,12 +29,14 @@ from howhow.episodes.harth.v21 import (
     V21Error,
     atomic_canonical_write,
     build_artifact_hashes,
+    canonical_bytes,
     canonical_hash,
     generate_outputs,
     holm,
     pairing_manifest,
     pvalue,
     support_gate,
+    validate_approval_provenance,
     validate_result,
     window_set_hash,
 )
@@ -44,61 +46,75 @@ PROTOCOL = ROOT / "episodes/harth-calibration/protocol/protocol-v2.1.json"
 CONFIG = ROOT / "episodes/harth-calibration/run-config-v2.1.json"
 SCHEMA = ROOT / "schemas/v2.1/Result.json"
 CLASSES = ["1", "2", "3", "4", "5", "6", "7", "8", "13", "14", "130", "140"]
+REAL_CONSENT_ENV = "HOWHOW_RUN_REAL_HARTH_V21"
+BUDGETS = {"timeout_seconds": 1800, "bootstrap_reps": 2000, "pvalue_draws": 200000}
+CODE_PATHS = (
+    "scripts/harth_v21_run.py",
+    "scripts/harth_v2_run.py",
+    "src/howhow/episodes/harth/v21.py",
+    "src/howhow/episodes/harth/v2/analysis.py",
+    "src/howhow/episodes/harth/v2/engine.py",
+    "src/howhow/episodes/harth/v2/loader.py",
+    "src/howhow/episodes/harth/v2/result_schema.py",
+    "src/howhow/episodes/harth/v2/run_guard.py",
+)
 
 
 def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-REAL_CONSENT_ENV = "HOWHOW_RUN_REAL_HARTH_V21"
-CODE_PATHS = (
-    "scripts/harth_v21_run.py",
-    "scripts/harth_v2_run.py",
-    "src/howhow/episodes/harth/v2",
-    "src/howhow/episodes/harth/v21.py",
-)
-
-
 def _code_identity() -> tuple[str, str]:
-    if subprocess.run(
+    status = subprocess.run(
         ("git", "status", "--porcelain", "--untracked-files=no"),
         cwd=ROOT,
         text=True,
         capture_output=True,
         check=True,
-    ).stdout.strip():
+    ).stdout.strip()
+    if status:
         raise V21Error("DIRTY_TRACKED_SOURCE_REJECTED")
-    listing = subprocess.run(
+    files = subprocess.run(
+        ("git", "ls-files", "--", *CODE_PATHS), cwd=ROOT, text=True, capture_output=True, check=True
+    ).stdout.splitlines()
+    if set(files) != set(CODE_PATHS):
+        raise V21Error("CODE_IDENTITY_MANIFEST_MISMATCH")
+    blobs = subprocess.run(
         ("git", "ls-files", "-s", "--", *CODE_PATHS),
         cwd=ROOT,
         text=True,
         capture_output=True,
         check=True,
     ).stdout.splitlines()
-    entries = [(line.split(maxsplit=3)[3], line.split()[1]) for line in listing if line]
-    if not entries:
-        raise V21Error("CODE_IDENTITY_EMPTY")
-    digest = hashlib.sha256()
-    for path, blob in sorted(entries):
-        digest.update(path.encode())
-        digest.update(b"\\0")
-        digest.update(blob.encode())
-        digest.update(b"\\0")
-    return digest.hexdigest(), subprocess.run(
+    entries = sorted((line.split(maxsplit=3)[3], line.split()[1]) for line in blobs)
+    payload = canonical_bytes({"files": [{"path": p, "blob": b} for p, b in entries]})
+    revision = subprocess.run(
         ("git", "rev-parse", "HEAD"), cwd=ROOT, text=True, capture_output=True, check=True
     ).stdout.strip()
+    return hashlib.sha256(payload).hexdigest(), revision
 
 
-def _load_authorization(
-    path: Path,
-    *,
+def _artifacts(
     archive: Path,
-    output: Path,
-    classes: list[str],
-    protocol: Path,
-    config: Path,
-    schema: Path,
+    code_hash: str,
+    *,
+    eligibility: Any = None,
+    pairing: Any = None,
+    input_data: Any = None,
 ) -> dict[str, Any]:
+    return {
+        "protocol": json.loads(PROTOCOL.read_text()),
+        "schema": json.loads(SCHEMA.read_text()),
+        "config": json.loads(CONFIG.read_text()),
+        "code": code_hash,
+        "input": input_data if input_data is not None else {"archive_sha256": _sha(archive)},
+        "vocabulary": CLASSES,
+        "eligibility_manifest": eligibility,
+        "pairing": pairing,
+    }
+
+
+def _load_authorization(path: Path, *, archive: Path, output: Path) -> dict[str, Any]:
     try:
         auth = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -117,7 +133,7 @@ def _load_authorization(
     if (
         not isinstance(auth, dict)
         or set(auth) != required
-        or auth.get("authorization_version") != "v2.1"
+        or auth["authorization_version"] != "v2.1"
     ):
         raise V21Error("AUTHORIZATION_RECORD_FIELDS_MISMATCH")
     if (
@@ -127,33 +143,53 @@ def _load_authorization(
     ):
         raise V21Error("RERUN_NOT_AUTHORIZED")
     code_hash, revision = _code_identity()
-    expected_hashes = {
-        "protocol": _sha(protocol),
+    expected = {
+        "protocol": _sha(PROTOCOL),
         "code": code_hash,
-        "config": _sha(config),
-        "schema": _sha(schema),
+        "config": _sha(CONFIG),
+        "schema": _sha(SCHEMA),
         "archive": _sha(archive),
-        "vocabulary": canonical_hash(classes),
+        "vocabulary": canonical_hash(CLASSES),
     }
-    if auth["hashes"] != expected_hashes or auth["git_revision"] != revision:
+    if auth["hashes"] != expected or auth["git_revision"] != revision:
         raise V21Error("STALE_OR_WRONG_AUTHORIZATION")
-    if auth["vocabulary"] != classes or auth["destination"] != str(output):
+    if auth["vocabulary"] != CLASSES or auth["destination"] != str(output.resolve()):
         raise V21Error("AUTHORIZATION_BINDING_MISMATCH")
-    budgets = auth["budgets"]
-    if budgets != {"timeout_seconds": 1800, "bootstrap_reps": 2000, "pvalue_draws": 200000}:
+    if auth["budgets"] != BUDGETS:
         raise V21Error("AUTHORIZATION_BUDGET_MISMATCH")
+    # Approval provenance is independently parsed from the record, never copied into it.
+    validate_approval_provenance(
+        {
+            "proposal_sha256": APPROVED_PROPOSAL_SHA256,
+            "decision_sha256": APPROVED_DECISION_SHA256,
+            "review_revision": 4,
+            "allow_code_fix": True,
+            "allow_rerun": False,
+        }
+    )
     return auth
 
 
-def _real_result(
-    engine: Any, windows: tuple[Any, ...], manifest: dict[str, Any], *, code_hash: str
+def _build_result(
+    engine: Any,
+    windows: tuple[Any, ...],
+    manifest: dict[str, Any],
+    code_hash: str,
+    archive: Path,
+    *,
+    claim: str = "synthetic_structural_only_no_performance_claim",
+    forced_status: str | None = None,
 ) -> dict[str, Any]:
     folds = [f for f in engine.folds if f["configuration"] == "full_sensor"]
     subjects = sorted({w.subject for w in windows})
-    records: list[dict[str, Any]] = []
+    held_labels = [w.label for w in windows if w.subject == subjects[0]]
+    train_labels = [w.label for w in windows if w.subject != subjects[0]]
+    held_support = support_gate(held_labels, CLASSES, stage="held_out_test", minimum=2)
+    support_status = "NOT_ESTIMABLE" if held_support["zero_support"] else None
     values: dict[str, dict[str, dict[str, float]]] = {
-        m: {"calibrated": {}, "uncalibrated": {}} for m in ESTIMANDS
+        m: {s: {} for s in ("calibrated", "uncalibrated")} for m in ESTIMANDS
     }
+    records: list[dict[str, Any]] = []
     for fold in folds:
         subject = fold["test_subject"]
         for arm in ("calibrated", "uncalibrated"):
@@ -169,6 +205,7 @@ def _real_result(
             values["nll"][arm][subject] = stats["nll_sum"] / n
             values["brier"][arm][subject] = stats["brier_sum"] / n
             values["ece"][arm][subject] = ece
+            wh = window_set_hash([[w.provenance] for w in windows if w.subject == subject])
             for metric in ESTIMANDS:
                 records.append(
                     {
@@ -177,69 +214,71 @@ def _real_result(
                         "estimand_id": metric,
                         "reason": "",
                         "arm": arm,
-                        "window_set_hash": window_set_hash(
-                            [[w.provenance] for w in windows if w.subject == subject]
-                        ),
+                        "window_set_hash": wh,
                         "population_rule_id": "subject_macro_min_windows_1",
                     }
                 )
     pairing = pairing_manifest(records)
-    pvalues = {
-        "H_" + metric.upper(): pvalue(
-            {
-                s: values[metric]["calibrated"][s] - values[metric]["uncalibrated"][s]
-                for s in subjects
-            },
-            estimand=metric.upper(),
-        ).get("p_value", 1.0)
-        for metric in ESTIMANDS
+    raw = {
+        "H_" + m.upper(): pvalue(
+            {s: values[m]["calibrated"][s] - values[m]["uncalibrated"][s] for s in subjects},
+            estimand=m.upper(),
+        )
+        for m in ESTIMANDS
     }
-    family = holm(pvalues)
-    estimability = {
-        metric: {
-            "status": "ESTIMABLE",
-            "reason": "SUFFICIENT_ELIGIBLE_SUBJECTS",
-            "value": float(np.mean(list(values[metric]["calibrated"].values()))),
-        }
-        for metric in ESTIMANDS
-    }
+    raw_p = {k: row["p_value"] for k, row in raw.items() if row.get("status") == "ESTIMABLE"}
+    family = (
+        holm(raw_p)
+        if len(raw_p) == 3
+        else {"status": "INCOMPLETE_FAMILY", "hypotheses": [], "alpha": 0.05, "m": 3}
+    )
     eligibility = {"subjects": subjects, "rule": "subject_macro_min_windows_1"}
     hashes = build_artifact_hashes(
         protocol=json.loads(PROTOCOL.read_text()),
         schema=json.loads(SCHEMA.read_text()),
         config=json.loads(CONFIG.read_text()),
-        code=Path(__file__).read_bytes(),
+        code=code_hash,
         input_data=manifest,
         vocabulary=CLASSES,
         eligibility_manifest=eligibility,
         pairing=pairing,
     )
-    return {
+    status = (
+        support_status or forced_status or ("COMPLETE" if len(raw_p) == 3 else "INCOMPLETE_FAMILY")
+    )
+    result = {
         "schema_version": SCHEMA_VERSION,
         "protocol_version": PROTOCOL_VERSION,
-        "status": "COMPLETE",
-        "state": "COMPLETE",
+        "status": status,
+        "state": status,
         "scope": "run",
         "provenance": {
             "proposal_sha256": APPROVED_PROPOSAL_SHA256,
             "decision_sha256": APPROVED_DECISION_SHA256,
             "review_revision": 4,
             "allow_code_fix": True,
-            "allow_rerun": True,
+            "allow_rerun": False,
         },
         "hashes": hashes,
         "support": {
-            "training": support_gate(
-                [w.label for w in windows], CLASSES, stage="training", minimum=2
-            ),
+            "training": support_gate(train_labels, CLASSES, stage="training", minimum=2),
             "inner_calibration": support_gate(
-                [w.label for w in windows], CLASSES, stage="inner_calibration", minimum=2
+                train_labels, CLASSES, stage="inner_calibration", minimum=2
             ),
-            "held_out_test": support_gate(
-                [w.label for w in windows], CLASSES, stage="held_out_test", minimum=2
-            ),
+            "held_out_test": held_support,
         },
-        "estimability": estimability,
+        "estimability": {
+            m: (
+                {
+                    "status": "ESTIMABLE",
+                    "reason": "SUFFICIENT_ELIGIBLE_SUBJECTS",
+                    "value": sum(values[m]["calibrated"].values()) / len(subjects),
+                }
+                if m in [k.lower().replace("h_", "") for k in raw_p]
+                else {"status": "NOT_ESTIMABLE", "reason": "INSUFFICIENT_PAIRED_SUBJECTS"}
+            )
+            for m in ESTIMANDS
+        },
         "population": {
             "frozen_subject_ids": subjects,
             "exclusions": [],
@@ -256,11 +295,23 @@ def _real_result(
             "hypotheses": family["hypotheses"],
             "alpha": 0.05,
             "m": 3,
-            "status": "COMPLETE",
+            "status": family["status"],
         },
         "outputs": {"generator": "", "manuscript": ""},
-        "claim_boundary": "synthetic_structural_only_no_performance_claim",
+        "claim_boundary": claim,
     }
+    generated = generate_outputs(result)
+    result["outputs"] = {
+        "generator": generated["generator.json"],
+        "manuscript": generated["manuscript.md"],
+    }
+    validate_result(
+        result,
+        artifacts=_artifacts(
+            archive, code_hash, eligibility=eligibility, pairing=pairing, input_data=manifest
+        ),
+    )
+    return result
 
 
 def _fixture_archive(path: Path, *, subjects: int = 22, missing: str | None = None) -> None:
@@ -278,18 +329,17 @@ def _fixture_archive(path: Path, *, subjects: int = 22, missing: str | None = No
     ]
     with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
         for number in range(1, subjects + 1):
-            subject = f"S{number:03d}"
             rows: list[list[Any]] = [header]
             tick = datetime(2024, 1, 1, tzinfo=UTC)
-            for cls_index, label in enumerate(CLASSES):
+            for ci, label in enumerate(CLASSES):
                 if label == missing and number == 1:
                     continue
                 for i in range(128):
-                    value = float(cls_index * 10 + number / 100 + i / 10000)
+                    value = float(ci * 10 + number / 100 + i / 10000)
                     rows.append(
                         [
                             (tick + timedelta(seconds=len(rows))).isoformat(),
-                            subject,
+                            f"S{number:03d}",
                             "synthetic",
                             label,
                             value,
@@ -300,126 +350,39 @@ def _fixture_archive(path: Path, *, subjects: int = 22, missing: str | None = No
                             value + 5,
                         ]
                     )
-            text = "\n".join(",".join(map(str, row)) for row in rows) + "\n"
-            bundle.writestr(f"{subject}_synthetic.csv", text)
+            bundle.writestr(
+                f"S{number:03d}_synthetic.csv",
+                "\n".join(",".join(map(str, r)) for r in rows) + "\n",
+            )
 
 
 def _fixture_windows(kind: str) -> tuple[tuple[Any, ...], dict[str, Any]]:
-    if kind not in {
-        "complete",
-        "zero-support",
-        "incomplete-family",
-        "schema-failure",
-        "timeout",
-        "dirty-identity",
-    }:
-        raise V21Error(f"unknown synthetic fixture: {kind}")
     with tempfile.TemporaryDirectory(prefix="harth-v21-fixture-") as directory:
         archive = Path(directory) / "synthetic.zip"
         _fixture_archive(archive, missing="140" if kind == "zero-support" else None)
         loaded = load_harth_archive(
             archive, CLASSES, protocol_hash=_sha(PROTOCOL), code_hash=_sha(Path(__file__))
         )
-        # Copy values out before the temporary fixture is removed. Loader is metrics-free.
         return loaded.windows, loaded.manifest
 
 
-def _hypotheses() -> dict[str, Any]:
-    return holm({"H_NLL": 1.0, "H_BRIER": 1.0, "H_ECE": 1.0})
-
-
-def _result(windows: tuple[Any, ...], manifest: dict[str, Any], kind: str) -> dict[str, Any]:
-    subjects = sorted({w.subject for w in windows})
-    held_labels = [w.label for w in windows if w.subject == subjects[0]]
-    training_labels = [w.label for w in windows if w.subject != subjects[0]]
-    support = {
-        "training": support_gate(training_labels, CLASSES, stage="training", minimum=2),
-        "inner_calibration": support_gate(
-            training_labels, CLASSES, stage="inner_calibration", minimum=2
-        ),
-        "held_out_test": support_gate(held_labels, CLASSES, stage="held_out_test", minimum=2),
-    }
-    eligibility = {"subjects": subjects, "rule": "synthetic_all_subjects_complete_windows"}
-    records = []
-    window_hash = window_set_hash([[w.provenance] for w in windows if w.subject == subjects[0]])
-    for estimand in ("nll", "brier", "ece"):
-        for arm in ("calibrated", "uncalibrated"):
-            records.append(
-                {
-                    "subject_id": subjects[0],
-                    "contrast_id": "calibrated_vs_uncalibrated",
-                    "estimand_id": estimand,
-                    "reason": "" if kind != "zero-support" else "ESTIMAND_NOT_ESTIMABLE",
-                    "arm": arm,
-                    "window_set_hash": window_hash,
-                    "population_rule_id": "synthetic_all_subjects_complete_windows",
-                }
-            )
-    pairing = pairing_manifest(records)
-    hashes = build_artifact_hashes(
-        protocol=json.loads(PROTOCOL.read_text()),
-        schema=json.loads(SCHEMA.read_text()),
-        config=json.loads(CONFIG.read_text()),
-        code=Path(__file__).read_bytes(),
-        input_data=manifest,
-        vocabulary=CLASSES,
-        eligibility_manifest=eligibility,
-        pairing=pairing,
+def _publish(output: Path, result: dict[str, Any], guard: RunGuard) -> Path:
+    generated = json.loads(result["outputs"]["generator"])
+    atomic_canonical_write(output / "result-v2.1.json", result)
+    atomic_canonical_write(output / "generator.json", generated)
+    atomic_canonical_write(
+        output / "quarantine.json",
+        {
+            "quarantine": "synthetic_only_no_scientific_claim",
+            "real_data": False,
+            "scientific_metrics": False,
+        },
     )
-    family = _hypotheses()
-    estimable = kind == "complete"
-    status = (
-        "COMPLETE"
-        if estimable
-        else ("INCOMPLETE_FAMILY" if kind == "incomplete-family" else "NOT_ESTIMABLE")
-    )
-    generated = generate_outputs({"status": status})
-    outputs = {"generator": generated["generator.json"], "manuscript": generated["manuscript.md"]}
-    result = {
-        "schema_version": SCHEMA_VERSION,
-        "protocol_version": PROTOCOL_VERSION,
-        "status": status,
-        "state": status,
-        "scope": "run",
-        "provenance": {
-            "proposal_sha256": APPROVED_PROPOSAL_SHA256,
-            "decision_sha256": APPROVED_DECISION_SHA256,
-            "review_revision": 4,
-            "allow_code_fix": True,
-            "allow_rerun": False,
-        },
-        "hashes": hashes,
-        "support": support,
-        "estimability": {
-            metric: (
-                {"status": "ESTIMABLE", "reason": "SUFFICIENT_ELIGIBLE_SUBJECTS", "value": 0.0}
-                if estimable
-                else {"status": "NOT_ESTIMABLE", "reason": "INSUFFICIENT_ELIGIBLE_SUBJECTS"}
-            )
-            for metric in ("nll", "brier", "ece")
-        },
-        "population": {
-            "frozen_subject_ids": subjects,
-            "exclusions": [],
-            "population_rule_id": eligibility["rule"],
-            "eligibility_manifest_hash": canonical_hash(eligibility),
-        },
-        "pairing": {
-            "pairing_manifest_hash": canonical_hash(pairing),
-            "eligible_subject_hash": canonical_hash(subjects),
-            "records": records,
-        },
-        "family": {
-            "family_id": "v2-primary-calibrated-vs-uncalibrated-3",
-            "hypotheses": family["hypotheses"],
-            "alpha": 0.05,
-            "m": 3,
-            "status": "COMPLETE" if kind != "incomplete-family" else "INCOMPLETE_FAMILY",
-        },
-        "outputs": outputs,
-        "claim_boundary": "synthetic_structural_only_no_performance_claim",
-    }
-    return result
+    from howhow.episodes.harth.v2.run_guard import atomic_text_write
+
+    atomic_text_write(output / "manuscript.md", result["outputs"]["manuscript"])
+    guard.final(phase="complete", quarantine="synthetic_only_no_scientific_claim")
+    return output / "result-v2.1.json"
 
 
 def run_real(archive: Path, authorization: Path, output: Path) -> Path:
@@ -428,20 +391,23 @@ def run_real(archive: Path, authorization: Path, output: Path) -> Path:
     if output.exists() and (not output.is_dir() or any(output.iterdir())):
         raise V21Error("FRESH_OUTPUT_REQUIRED")
     output.mkdir(parents=True, exist_ok=True)
-    code_hash, _ = _code_identity()
-    _load_authorization(
-        authorization.resolve(),
-        archive=archive.resolve(),
-        output=output.resolve(),
-        classes=CLASSES,
-        protocol=PROTOCOL,
-        config=CONFIG,
-        schema=SCHEMA,
-    )
-    guard = RunGuard(
-        output, input_hash=_sha(archive), protocol_hash=_sha(PROTOCOL), code_hash=code_hash
-    )
+    # Guard owns preflight, loader, engine, validation, quarantine, failure, and publication.
+    guard = RunGuard(output, input_hash=_sha(archive), protocol_hash=_sha(PROTOCOL), code_hash=None)
     try:
+        _load_authorization(authorization.resolve(), archive=archive.resolve(), output=output)
+        code_hash, revision = _code_identity()
+        guard.code_hash = code_hash
+        protocol_data, config_data, schema_data = (
+            json.loads(PROTOCOL.read_text()),
+            json.loads(CONFIG.read_text()),
+            json.loads(SCHEMA.read_text()),
+        )
+        if (
+            config_data.get("protocol_version") != PROTOCOL_VERSION
+            or protocol_data.get("protocol_version") != PROTOCOL_VERSION
+            or schema_data.get("$id") != SCHEMA_VERSION
+        ):
+            raise V21Error("PROTOCOL_CONFIG_SCHEMA_MISMATCH")
         loaded = load_harth_archive(
             archive, CLASSES, protocol_hash=_sha(PROTOCOL), code_hash=code_hash
         )
@@ -453,50 +419,20 @@ def run_real(archive: Path, authorization: Path, output: Path) -> Path:
             CLASSES,
             protocol_file=PROTOCOL,
             code_hash=code_hash,
-            timeout_seconds=1800.0,
+            timeout_seconds=BUDGETS["timeout_seconds"],
         )
         guard.stage("engine_complete", folds=len(engine.folds))
-        artifact = _real_result(engine, loaded.windows, loaded.manifest, code_hash=code_hash)
-        # Real execution remains quarantined, but every value is computed from engine stats.
-        artifact["provenance"]["allow_rerun"] = False
-        validate_result(artifact)
-        generated = generate_outputs(artifact)
-        artifact["outputs"] = {
-            "generator": generated["generator.json"],
-            "manuscript": generated["manuscript.md"],
-        }
-        validate_result(artifact)
-        atomic_canonical_write(output / "result-v2.1.json", artifact)
-        atomic_canonical_write(output / "generator.json", json.loads(generated["generator.json"]))
-        atomic_canonical_write(
-            output / "quarantine.json",
-            {
-                "quarantine": "synthetic_only_no_scientific_claim",
-                "real_data": False,
-                "scientific_metrics": False,
-            },
-        )
-        (output / "manuscript.md").write_text(
-            generated["manuscript.md"], encoding="utf-8", newline="\n"
-        )
-        guard.final(phase="complete", quarantine="synthetic_only_no_scientific_claim")
-        return output / "result-v2.1.json"
+        result = _build_result(engine, loaded.windows, loaded.manifest, code_hash, archive)
+        return _publish(output, result, guard)
     except BaseException as exc:
-        guard.failure(exc, phase="loader_engine_analysis_schema_generator")
+        guard.failure(exc, phase="preflight_loader_engine_analysis_schema_generator_publication")
         raise
 
 
 def run_synthetic(kind: str, output: Path) -> Path:
-    if output.exists():
-        if not output.is_dir() or any(output.iterdir()):
-            raise V21Error("FRESH_OUTPUT_REQUIRED")
+    if output.exists() and (not output.is_dir() or any(output.iterdir())):
+        raise V21Error("FRESH_OUTPUT_REQUIRED")
     output.mkdir(parents=True, exist_ok=True)
-    protocol_data, config_data = json.loads(PROTOCOL.read_text()), json.loads(CONFIG.read_text())
-    if (
-        config_data.get("protocol_version") != PROTOCOL_VERSION
-        or protocol_data.get("protocol_version") != PROTOCOL_VERSION
-    ):
-        raise V21Error("PROTOCOL_BINDING_MISMATCH")
     windows, manifest = _fixture_windows(kind)
     guard = RunGuard(
         output,
@@ -505,44 +441,29 @@ def run_synthetic(kind: str, output: Path) -> Path:
         code_hash=_sha(Path(__file__)),
     )
     try:
-        guard.stage("loader_complete", manifest=manifest)
         if kind == "dirty-identity":
             raise V21Error("DIRTY_IDENTITY_REJECTED")
         if kind == "timeout":
             raise TimeoutError("fixed 1800s synthetic timeout gate")
-        result = run_protocol(
+        engine = run_protocol(
             windows,
             CLASSES,
             protocol_file=PROTOCOL,
             code_hash=_sha(Path(__file__)),
             timeout_seconds=1800.0,
         )
-        guard.stage("engine_complete", folds=len(result.folds))
-        artifact = _result(windows, manifest, kind)
+        result = _build_result(
+            engine,
+            windows,
+            manifest,
+            hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            Path(__file__),
+            forced_status="INCOMPLETE_FAMILY" if kind == "incomplete-family" else None,
+        )
         if kind == "schema-failure":
-            artifact["unexpected"] = True
-        validate_result(artifact)
-        generated = generate_outputs(artifact)
-        artifact["outputs"] = {
-            "generator": generated["generator.json"],
-            "manuscript": generated["manuscript.md"],
-        }
-        validate_result(artifact)
-        atomic_canonical_write(output / "result-v2.1.json", artifact)
-        atomic_canonical_write(output / "generator.json", json.loads(generated["generator.json"]))
-        atomic_canonical_write(
-            output / "quarantine.json",
-            {
-                "quarantine": "synthetic_only_no_scientific_claim",
-                "real_data": False,
-                "scientific_metrics": False,
-            },
-        )
-        (output / "manuscript.md").write_text(
-            generated["manuscript.md"], encoding="utf-8", newline="\n"
-        )
-        guard.final(phase="complete", quarantine="synthetic_only_no_scientific_claim")
-        return output / "result-v2.1.json"
+            result["unexpected"] = True
+            validate_result(result)
+        return _publish(output, result, guard)
     except BaseException as exc:
         guard.failure(exc, phase="loader_engine_analysis_schema_generator")
         raise
@@ -571,13 +492,12 @@ def main() -> int:
         if args.execute_real:
             if args.archive is None or args.authorization is None:
                 raise V21Error("REAL_ARCHIVE_AND_AUTHORIZATION_REQUIRED")
-            run_real(args.archive.resolve(), args.authorization.resolve(), args.output.resolve())
+            run_real(args.archive, args.authorization, args.output)
             print("V21 PASS: real execution completed")
         else:
-            path = run_synthetic(args.synthetic_fixture, args.output.resolve())
-            print(f"V21 PASS: {path}")
+            print(f"V21 PASS: {run_synthetic(args.synthetic_fixture, args.output)}")
     except BaseException as exc:
-        print(f"V21 BLOCKED: {type(exc).__name__}", file=__import__("sys").stderr)
+        print(f"V21 BLOCKED: {type(exc).__name__}", file=sys.stderr)
         return 1
     return 0
 
