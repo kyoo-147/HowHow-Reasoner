@@ -24,6 +24,34 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWLIST = ROOT / "compliance" / "dependency-allowlist.json"
 NOTICE = ROOT / "compliance" / "THIRD_PARTY_NOTICES.md"
+NUMPY_NOTICE_ROOT = "compliance/numpy-notices"
+NUMPY_UPSTREAM_NOTICES = {
+    "LICENSE.txt": {
+        "url": "https://raw.githubusercontent.com/numpy/numpy/v2.3.2/LICENSE.txt",
+        "sha256": "1be1df33863f97a7bc1c4d67980bd6c69c9a6fef0a5ee76e6ad6cb91e56e8491",
+        "scope": "source-and-wheel",
+    },
+    "LICENSES_bundled.txt": {
+        "url": "https://raw.githubusercontent.com/numpy/numpy/v2.3.2/LICENSES_bundled.txt",
+        "sha256": "7fe52683ce840a3103e9cc82fe92252b2c533061ca4f9b8d6f3d4d835f7c32f9",
+        "scope": "sdist-and-source-only",
+    },
+    "LICENSE_linux.txt": {
+        "url": "https://raw.githubusercontent.com/numpy/numpy/v2.3.2/tools/wheels/LICENSE_linux.txt",
+        "sha256": "a8683fdcd75a8dbd2cf7f638e5b77ada6c61a31f4cb1c8a77e7bfa9f40560442",
+        "scope": "wheel-platform:linux",
+    },
+    "LICENSE_osx.txt": {
+        "url": "https://raw.githubusercontent.com/numpy/numpy/v2.3.2/tools/wheels/LICENSE_osx.txt",
+        "sha256": "c91c24ac6ba9ef8ba13b1707d14107cd82e3397ddb9b78201a6e6d2777680fda",
+        "scope": "wheel-platform:macos",
+    },
+    "LICENSE_win32.txt": {
+        "url": "https://raw.githubusercontent.com/numpy/numpy/v2.3.2/tools/wheels/LICENSE_win32.txt",
+        "sha256": "d2ddbc988223a00e704574ddf9f0b20ae62bfa38fbabf4f06c0d00ac456e1aac",
+        "scope": "wheel-platform:windows",
+    },
+}
 
 SECRET_RE = re.compile(
     r"(?:AKIA[0-9A-Z]{16}|(?:ghp_|github_pat_|xox[baprs]-|sk-)[A-Za-z0-9_\-]{16,}|"
@@ -144,6 +172,59 @@ def locked_packages() -> list[dict[str, str]]:
         version = version.split("(", 1)[0]
         result.append({"ecosystem": "npm", "name": name, "version": version})
     return sorted(result, key=lambda item: (item["ecosystem"], item["name"], item["version"]))
+
+
+def locked_artifacts() -> list[dict[str, str]]:
+    """Return public artifact provenance directly from uv.lock, without registry access."""
+    import tomllib
+
+    artifacts: list[dict[str, str]] = []
+    uv = tomllib.loads((ROOT / "uv.lock").read_text(encoding="utf-8"))
+    for package in uv.get("package", []):
+        if package.get("source", {}).get("editable"):
+            continue
+        if package.get("source", {}).get("registry") != "https://pypi.org/simple":
+            continue
+        for kind, values in (
+            ("sdist", [package.get("sdist", {})]),
+            ("wheel", package.get("wheels", [])),
+        ):
+            for artifact in values:
+                url = artifact.get("url")
+                digest = artifact.get("hash", "")
+                if not url or not digest:
+                    continue
+                filename = url.rsplit("/", 1)[-1]
+                scope = (
+                    "sdist"
+                    if kind == "sdist"
+                    else f"wheel:{filename.split('-', 4)[-1].removesuffix('.whl')}"
+                )
+                item = {
+                    "ecosystem": "pypi",
+                    "package": package["name"],
+                    "version": package["version"],
+                    "artifact": filename,
+                    "url": url,
+                    "sha256": digest.removeprefix("sha256:"),
+                    "scope": scope,
+                }
+                if package["name"] == "numpy":
+                    item["upstream_notices"] = ",".join(numpy_notice_names(scope))
+                artifacts.append(item)
+    return artifacts
+
+
+def numpy_notice_names(scope: str) -> list[str]:
+    if scope == "sdist":
+        return ["LICENSE.txt", "LICENSES_bundled.txt"]
+    if "win" in scope:
+        return ["LICENSE.txt", "LICENSE_win32.txt"]
+    if "linux" in scope:
+        return ["LICENSE.txt", "LICENSE_linux.txt"]
+    if "macosx" in scope:
+        return ["LICENSE.txt", "LICENSE_osx.txt"]
+    return ["LICENSE.txt"]
 
 
 def vulnerability_scan(command: list[str], ecosystem: str) -> dict[str, Any]:
@@ -302,12 +383,17 @@ def audit(refresh: bool, scans: dict[str, Any] | None = None) -> tuple[dict[str,
                 f"license requires review: {package['ecosystem']}:{package['name']}@"
                 f"{package['version']} ({license_name})"
             )
+        if package["name"] == "numpy" and "\n" in license_name:
+            license_name = "BSD-3-Clause with bundled notices (see artifact provenance)"
         inventory.append({**package, "license": license_name, "status": status, "source": source})
+    artifacts = locked_artifacts()
     report = {
         "schema": "howhow.supply-chain.v1",
         "generated": str(date.today()),
         "lockfiles": {"uv.lock": "authoritative", "pnpm-lock.yaml": "authoritative"},
         "packages": inventory,
+        "artifacts": artifacts,
+        "upstream_notices": NUMPY_UPSTREAM_NOTICES,
         "harth": {
             "license": "CC BY 4.0",
             "attribution_verified": True,
@@ -333,30 +419,51 @@ def write_outputs(report: dict[str, Any]) -> None:
     lines = [
         "# Third-party notices",
         "",
-        "Generated from `uv.lock` and `pnpm-lock.yaml`; regenerate with "
-        "`uv run scripts/audit_supply_chain.py --write --refresh`.",
+        "Generated from lockfiles; package metadata and resolved artifacts are recorded separately.",  # noqa: E501
+        "Regenerate with `uv run scripts/audit_supply_chain.py --write --refresh`.",
         "",
         "## HARTH",
         "",
-        "HARTH is distributed under **CC BY 4.0**. Retain the dataset citation "
-        "and UCI metadata link in `episodes/harth-calibration/data/manifest.json`.",
+        "HARTH is **CC BY 4.0**. This dataset attribution is separate from software and dependency licenses; retain the citation and UCI metadata link in `episodes/harth-calibration/data/manifest.json`.",  # noqa: E501
         "",
-        "## Dependencies",
+        "## Dependency summaries",
         "",
-        "| Ecosystem | Package | Version | License | Status |",
+        "| Ecosystem | Package | Version | License summary | Status |",
         "|---|---|---:|---|---|",
     ]
     for p in report["packages"]:
         lines.append(
-            f"| {p['ecosystem']} | `{p['name']}` | `{p['version']}` | "
-            f"{p['license']} | {p['status']} |"
+            f"| {p['ecosystem']} | `{p['name']}` | `{p['version']}` | {p['license'].replace(chr(10), ' ')} | {p['status']} |"  # noqa: E501
         )
     lines += [
         "",
-        "Vulnerability status is recorded from machine-readable `uvx pip-audit` and "
-        "`pnpm audit --json` evidence. Scanner failures remain explicit. "
-        "UNKNOWN licenses remain review findings and "
-        "must not be treated as approved.",
+        "## Resolved artifact provenance",
+        "",
+        "These are lockfile-resolved artifacts, not a claim that every platform artifact is redistributed by HowHow.",  # noqa: E501
+        "",
+        "| Package | Version | Artifact / platform tag | Scope | URL | SHA-256 |",
+        "|---|---:|---|---|---|---|",
+    ]
+    for artifact in report["artifacts"]:
+        lines.append(
+            f"| `{artifact['package']}` | `{artifact['version']}` | `{artifact['artifact']}` | `{artifact['scope']}` | {artifact['url']} | `{artifact['sha256']}` |"  # noqa: E501
+        )
+    lines += [
+        "",
+        "## NumPy 2.3.2 notice attachments",
+        "",
+        "NumPy upstream notices are preserved verbatim under `compliance/numpy-notices/`. Platform applicability is explicit: source/sdist uses the bundled source notice; each wheel uses only the notice matching its wheel platform tag. No platform applicability is inferred.",  # noqa: E501
+        "",
+        "| Attachment | Upstream URL | SHA-256 | Scope |",
+        "|---|---|---|---|",
+    ]
+    for name, notice in report["upstream_notices"].items():
+        lines.append(
+            f"| [`{NUMPY_NOTICE_ROOT}/{name}`]({NUMPY_NOTICE_ROOT}/{name}) | {notice['url']} | `{notice['sha256']}` | `{notice['scope']}` |"  # noqa: E501
+        )
+    lines += [
+        "",
+        "HowHow remains **UNKNOWN** and **OWNER_LICENSE_DECISION_REQUIRED**. This change does not add a LICENSE file or project license metadata. Vulnerability status is retained as structured scanner evidence; UNKNOWN/review findings are never treated as approval.",  # noqa: E501
         "",
     ]
     NOTICE.write_text("\n".join(lines), encoding="utf-8")
