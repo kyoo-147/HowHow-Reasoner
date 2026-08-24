@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -68,6 +71,34 @@ def test_real_auth_schema_rejects_unknown_fields_without_creating_destination(
     assert not output.exists()
 
 
+def test_real_cli_auth_failure_has_no_destination_or_metric_stdout(tmp_path: Path) -> None:
+    archive = tmp_path / "archive.zip"
+    archive.write_bytes(b"not-a-zip")
+    authorization = tmp_path / "authorization.json"
+    authorization.write_text(json.dumps({"authorization_version": "v2.1", "unexpected": True}))
+    output = tmp_path / "out"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).parents[1] / "scripts" / "harth_v21_run.py"),
+            "--execute-real",
+            "--archive",
+            str(archive),
+            "--authorization",
+            str(authorization),
+            "--output",
+            str(output),
+        ],
+        env={**os.environ, _MODULE.REAL_CONSENT_ENV: "1"},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 1
+    assert completed.stdout == ""
+    assert not output.exists()
+
+
 def test_real_generator_is_quarantined_and_unverified() -> None:
     generated = _MODULE.generate_outputs(
         {"status": "COMPLETE", "claim_boundary": "guarded_real_quarantined_no_release"}
@@ -122,7 +153,4 @@ def test_real_cli_rejects_stale_authorization_before_loading(
     monkeypatch.setattr(_MODULE, "_code_identity", lambda: ("1" * 64, "2" * 40))
     with pytest.raises(V21Error, match="STALE_OR_WRONG_AUTHORIZATION"):
         _MODULE.run_real(archive, authorization, output)
-    failure = json.loads((output / "failure.json").read_text())
-    assert failure["scientific_metrics"] is False
-    assert "metrics" not in failure["error"].lower()
-    assert not (output / "result-v2.1.json").exists()
+    assert not output.exists()

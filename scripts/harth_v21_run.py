@@ -14,10 +14,12 @@ import subprocess
 import sys
 import tempfile
 import zipfile
-from jsonschema import Draft202012Validator
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
+
+from jsonschema import Draft202012Validator
 
 from howhow.episodes.harth.v2 import RunGuard, load_harth_archive, run_protocol
 from howhow.episodes.harth.v2.engine import input_hash
@@ -29,6 +31,7 @@ from howhow.episodes.harth.v21 import (
     SCHEMA_VERSION,
     V21Error,
     atomic_canonical_write,
+    bootstrap,
     build_artifact_hashes,
     canonical_bytes,
     canonical_hash,
@@ -215,6 +218,91 @@ def _load_authorization(path: Path, *, archive: Path, output: Path) -> dict[str,
     return auth
 
 
+def _metric_value(stats: Mapping[str, Any], metric: str) -> float:
+    n = int(stats["n"])
+    if n < 1:
+        raise V21Error("ZERO_WINDOWS")
+    if metric == "nll":
+        return float(stats["nll_sum"]) / n
+    if metric == "brier":
+        return float(stats["brier_sum"]) / n
+    if metric == "ece":
+        return float(
+            sum(
+                abs(row["correct_sum"] / row["count"] - row["confidence_sum"] / row["count"])
+                * row["count"]
+                / n
+                for row in stats["ece_bins"]
+                if row["count"]
+            )
+        )
+    raise V21Error("UNKNOWN_PRIMARY_METRIC")
+
+
+def _inference_report(
+    engine: Any, subjects: list[str], timeout_check: Any = None
+) -> dict[str, Any]:
+    """Serialize every preregistered arm, contrast, and ablation bootstrap job."""
+    rows = engine.folds
+    report: dict[str, Any] = {"single_arm": {}, "paired": {}, "ablations": {}}
+    configurations = ("full_sensor", "back_only", "thigh_only")
+    for configuration in configurations:
+        if timeout_check is not None:
+            timeout_check()
+        selected = [row for row in rows if row["configuration"] == configuration]
+        for state in ("calibrated", "uncalibrated"):
+            for metric in ESTIMANDS:
+                values = {
+                    row["test_subject"]: _metric_value(
+                        row["sufficient_statistics"][state][row["test_subject"]], metric
+                    )
+                    for row in selected
+                }
+                job = (
+                    f"{PROTOCOL_VERSION}|bootstrap|subject_macro|{metric}|single_arm|"
+                    f"{configuration}|{state}|seed=0"
+                )
+                report["single_arm"][job] = bootstrap(values, job_id=job)
+        for metric in ESTIMANDS:
+            differences = {
+                row["test_subject"]: _metric_value(
+                    row["sufficient_statistics"]["calibrated"][row["test_subject"]], metric
+                )
+                - _metric_value(
+                    row["sufficient_statistics"]["uncalibrated"][row["test_subject"]], metric
+                )
+                for row in selected
+            }
+            job = (
+                f"{PROTOCOL_VERSION}|bootstrap|paired_delta|{metric}|"
+                f"calibrated_vs_uncalibrated|{configuration}|calibrated|"
+                f"{configuration}|uncalibrated|seed=0"
+            )
+            report["paired"][job] = bootstrap(differences, job_id=job)
+    for configuration in ("back_only", "thigh_only"):
+        if timeout_check is not None:
+            timeout_check()
+        for state in ("calibrated", "uncalibrated"):
+            for metric in ESTIMANDS:
+                differences = {}
+                for subject in subjects:
+                    by_config = {
+                        row["configuration"]: row for row in rows if row["test_subject"] == subject
+                    }
+                    differences[subject] = _metric_value(
+                        by_config[configuration]["sufficient_statistics"][state][subject], metric
+                    ) - _metric_value(
+                        by_config["full_sensor"]["sufficient_statistics"][state][subject], metric
+                    )
+                job = (
+                    f"{PROTOCOL_VERSION}|bootstrap|paired_delta|{metric}|"
+                    f"{configuration}_vs_full_sensor|{configuration}|{state}|"
+                    f"full_sensor|{state}|seed=0"
+                )
+                report["ablations"][job] = bootstrap(differences, job_id=job)
+    return report
+
+
 def _build_result(
     engine: Any,
     windows: tuple[Any, ...],
@@ -230,10 +318,58 @@ def _build_result(
 ) -> dict[str, Any]:
     folds = [f for f in engine.folds if f["configuration"] == "full_sensor"]
     subjects = sorted({w.subject for w in windows})
-    held_labels = [w.label for w in windows if w.subject == subjects[0]]
-    train_labels = [w.label for w in windows if w.subject != subjects[0]]
-    held_support = support_gate(held_labels, CLASSES, stage="held_out_test", minimum=2)
-    support_status = "NOT_ESTIMABLE" if held_support["zero_support"] else None
+    if len(subjects) != 22:
+        raise V21Error("FROZEN_POPULATION_MUST_BE_22")
+    fold_support = []
+    for fold in folds:
+        test_subject = fold["test_subject"]
+        train_labels = [w.label for w in windows if w.subject in fold["train_subjects"]]
+        inner_rows = []
+        for inner_subject in fold["train_subjects"]:
+            inner_labels = [
+                w.label
+                for w in windows
+                if w.subject in fold["train_subjects"] and w.subject != inner_subject
+            ]
+            inner_rows.append(
+                {
+                    "held_subject": inner_subject,
+                    "support": support_gate(
+                        inner_labels, CLASSES, stage="inner_calibration", minimum=2
+                    ),
+                }
+            )
+        fold_support.append(
+            {
+                "test_subject": test_subject,
+                "training": support_gate(train_labels, CLASSES, stage="training", minimum=2),
+                "inner_calibration": inner_rows,
+                "held_out_test": support_gate(
+                    [w.label for w in windows if w.subject == test_subject],
+                    CLASSES,
+                    stage="held_out_test",
+                    minimum=2,
+                ),
+            }
+        )
+    held_support = support_gate(
+        [w.label for w in windows], CLASSES, stage="held_out_test", minimum=2
+    )
+    fold_zero_support = sorted(
+        {cls for fold in fold_support for cls in fold["held_out_test"]["zero_support"]}
+    )
+    held_support["zero_support"] = fold_zero_support
+    for cls in fold_zero_support:
+        held_support["class_status"][cls] = {
+            "status": "NOT_ESTIMABLE",
+            "reason": "ZERO_SUPPORT",
+            "support": 0,
+        }
+    support_status = (
+        "NOT_ESTIMABLE"
+        if any(fold["held_out_test"]["zero_support"] for fold in fold_support)
+        else None
+    )
     values: dict[str, dict[str, dict[str, float]]] = {
         m: {s: {} for s in ("calibrated", "uncalibrated")} for m in ESTIMANDS
     }
@@ -282,6 +418,7 @@ def _build_result(
         )
         for m in ESTIMANDS
     }
+    inference = _inference_report(engine, subjects, timeout_check=timeout_check)
     raw_p = {k: row["p_value"] for k, row in raw.items() if row.get("status") == "ESTIMABLE"}
     family = (
         holm(raw_p)
@@ -328,13 +465,21 @@ def _build_result(
             else {}
         ),
         "hashes": hashes,
-        "engine": engine.to_dict(),
+        "engine": engine.to_dict()
+        | {
+            "inference": inference,
+            "frozen_population": {"subjects": subjects, "count": len(subjects)},
+            "configuration_state_pairings": [
+                {"configuration": configuration, "state": state, "subjects": subjects}
+                for configuration in ("full_sensor", "back_only", "thigh_only")
+                for state in ("calibrated", "uncalibrated")
+            ],
+        },
         "support": {
-            "training": support_gate(train_labels, CLASSES, stage="training", minimum=2),
-            "inner_calibration": support_gate(
-                train_labels, CLASSES, stage="inner_calibration", minimum=2
-            ),
+            "training": fold_support[0]["training"],
+            "inner_calibration": fold_support[0]["inner_calibration"][0]["support"],
             "held_out_test": held_support,
+            "folds": fold_support,
         },
         "estimability": {
             m: (
@@ -369,21 +514,23 @@ def _build_result(
         "outputs": {"generator": "", "manuscript": ""},
         "claim_boundary": claim,
     }
+    artifacts = _artifacts(
+        archive, code_hash, eligibility=eligibility, pairing=pairing, input_data=manifest
+    )
     if timeout_check is not None:
         timeout_check()
-    generated = generate_outputs(result)
+    # Validate the exact quarantined artifact before deriving any publication text.
+    validate_result(result, artifacts=artifacts)
+    if timeout_check is not None:
+        timeout_check()
+    generated = generate_outputs(result, timeout_check=timeout_check)
     if timeout_check is not None:
         timeout_check()
     result["outputs"] = {
         "generator": generated["generator.json"],
         "manuscript": generated["manuscript.md"],
     }
-    validate_result(
-        result,
-        artifacts=_artifacts(
-            archive, code_hash, eligibility=eligibility, pairing=pairing, input_data=manifest
-        ),
-    )
+    validate_result(result, artifacts=artifacts)
     return result
 
 
@@ -497,33 +644,8 @@ def _claim_destination(output: Path, authorization: Mapping[str, Any]) -> Path:
 def run_real(archive: Path, authorization: Path, output: Path) -> Path:
     if os.environ.get(REAL_CONSENT_ENV) != "1":
         raise V21Error(f"--execute-real requires {REAL_CONSENT_ENV}=1")
-    # Authorization is completely validated before mkdir: new-schema auth failure leaves no output dir.
-    legacy = False
-    try:
-        raw = json.loads(authorization.read_text(encoding="utf-8"))
-        legacy = isinstance(raw, dict) and "decision_id" not in raw and "allow_rerun" in raw
-    except (OSError, json.JSONDecodeError):
-        pass
-    try:
-        auth = _load_authorization(
-            authorization.resolve(), archive=archive.resolve(), output=output
-        )
-    except BaseException as exc:
-        # Compatibility-only failure envelope for pre-v2.1 records; such records are never executed.
-        if legacy:
-            output.mkdir(parents=True, exist_ok=True)
-            from howhow.episodes.harth.v2.run_guard import atomic_write
-
-            atomic_write(
-                output / "failure.json",
-                {
-                    "status": "FAILED",
-                    "scientific_metrics": False,
-                    "phase": "authorization",
-                    "error": str(exc),
-                },
-            )
-        raise
+    # Validate authorization before mkdir: new-schema auth failure leaves no output dir.
+    auth = _load_authorization(authorization.resolve(), archive=archive.resolve(), output=output)
     _claim_destination(output, auth)
     guard = RunGuard(
         output,

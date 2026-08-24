@@ -487,6 +487,7 @@ def run_protocol(
                 "test_subject": fold.test_subject,
                 "train_subjects": list(fold.train_subjects),
                 "window_count": len(test),
+                "window_ids": [records[i].provenance for i in test],
                 "selected_temperature": temperature,
                 "optimizer_converged": converged,
                 "uncalibrated": _subject_metric_rows(

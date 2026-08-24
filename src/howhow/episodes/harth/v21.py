@@ -703,6 +703,12 @@ def validate_result(
     }.items():
         value = data.get(section)
         if not isinstance(value, Mapping) or set(value) != expected_keys:
+            if (
+                section == "support"
+                and isinstance(value, Mapping)
+                and set(value) == expected_keys | {"folds"}
+            ):
+                continue
             raise V21Error(f"{section.upper()}_FIELD_MATRIX_MISMATCH")
     hashes = data.get("hashes")
     required = set(_HASHES)
@@ -824,12 +830,14 @@ def migration_v2_to_v21(
     return report
 
 
-def generate_outputs(result: Mapping[str, Any]) -> dict[str, str]:
+def generate_outputs(result: Mapping[str, Any], *, timeout_check: Any = None) -> dict[str, str]:
     """Render only from the already-validated in-memory result contract.
 
     The result's claim boundary is authoritative; this function never invents a
     performance claim and is called only after artifact-bound validation.
     """
+    if timeout_check is not None:
+        timeout_check()
     status = str(result.get("status", "UNKNOWN"))
     boundary = str(result.get("claim_boundary", "UNVERIFIED"))
     real = boundary == "guarded_real_quarantined_no_release"
@@ -842,10 +850,16 @@ def generate_outputs(result: Mapping[str, Any]) -> dict[str, str]:
         "release": False,
         "source_result_hash": canonical_hash(result),
     }
-    return {
+    rendered = {
         "generator.json": canonical_bytes(payload).decode("utf-8"),
-        "manuscript.md": f"HARTH protocol-v2.1 status: {status}. No performance claim. Scientific status: UNVERIFIED; release: false.\n",
+        "manuscript.md": (
+            f"HARTH protocol-v2.1 status: {status}. No performance claim. "
+            "Scientific status: UNVERIFIED; release: false.\n"
+        ),
     }
+    if timeout_check is not None:
+        timeout_check()
+    return rendered
 
 
 def render_generator_output(result: Mapping[str, Any]) -> str:
