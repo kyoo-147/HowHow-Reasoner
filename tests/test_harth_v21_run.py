@@ -20,6 +20,29 @@ _MODULE = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_MODULE)
 run_synthetic = _MODULE.run_synthetic
 V21Error = _MODULE.V21Error
+
+
+def _real_publish_inputs() -> tuple[dict[str, object], list[str]]:
+    generated = _MODULE.generate_outputs(
+        {"status": "COMPLETE", "claim_boundary": "guarded_real_quarantined_no_release"}
+    )
+    subjects = [f"S{subject:03d}" for subject in range(1, 23)]
+    result = {
+        "claim_boundary": "guarded_real_quarantined_no_release",
+        "frozen_population": {"subjects": subjects},
+        "outputs": {
+            "generator": generated["generator.json"],
+            "manuscript": generated["manuscript.md"],
+        },
+    }
+    completed = [
+        f"{configuration}::{subject}"
+        for configuration in ("full_sensor", "back_only", "thigh_only")
+        for subject in subjects
+    ]
+    return result, completed
+
+
 validate_result = _MODULE.validate_result
 
 
@@ -33,6 +56,7 @@ def test_real_mode_completion_guard_records_canonical_fold_metadata_without_metr
     )
     result = {
         "claim_boundary": "guarded_real_quarantined_no_release",
+        "frozen_population": {"subjects": [f"S{subject:03d}" for subject in range(1, 23)]},
         "outputs": {
             "generator": generated["generator.json"],
             "manuscript": generated["manuscript.md"],
@@ -51,6 +75,28 @@ def test_real_mode_completion_guard_records_canonical_fold_metadata_without_metr
     assert final["completed_configuration_folds"] == completed
     assert final["completed_configuration_fold_count"] == 66
     assert capsys.readouterr().out == ""
+
+
+@pytest.mark.parametrize("mutation", ["empty", "duplicate", "missing", "unknown"])
+def test_invalid_real_completion_metadata_is_fail_closed(tmp_path: Path, mutation: str) -> None:
+    result, completed = _real_publish_inputs()
+    if mutation == "empty":
+        invalid: list[str] = []
+    elif mutation == "duplicate":
+        invalid = completed[:-1] + [completed[0]]
+    elif mutation == "missing":
+        invalid = completed[:-1]
+    else:
+        invalid = completed[:-1] + ["full_sensor::S999"]
+    output = tmp_path / mutation
+    guard = _MODULE.RunGuard(output, input_hash="i", protocol_hash="p")
+    with pytest.raises(V21Error, match="REAL_COMPLETION_FOLD_METADATA"):
+        _MODULE._publish(output, result, guard, completed_fold_ids=invalid)
+    assert not output.exists() or not any(
+        (output / name).exists()
+        for name in ("package-manifest.json", "result-v2.1.json", "final.json")
+    )
+    assert not (output / ".staging").exists()
 
 
 def test_fold_scopes_keep_v2_outer_limit_and_v21_configuration_limit(tmp_path: Path) -> None:

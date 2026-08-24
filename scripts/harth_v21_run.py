@@ -674,6 +674,41 @@ def _fixture_windows(kind: str) -> tuple[tuple[Any, ...], dict[str, Any]]:
         return loaded.windows, loaded.manifest
 
 
+def _validate_completion_fold_ids(
+    result: Mapping[str, Any], completed_fold_ids: list[str] | None
+) -> list[str]:
+    """Require the engine's exact canonical 3 x 22 completion population."""
+    if completed_fold_ids is None:
+        raise V21Error("REAL_COMPLETION_FOLD_METADATA_INCOMPLETE")
+    subjects = result.get("frozen_population", {}).get("subjects")
+    configurations = ("full_sensor", "back_only", "thigh_only")
+    if (
+        not isinstance(subjects, list)
+        or not all(isinstance(subject, str) for subject in subjects)
+        or len(subjects) != 22
+        or len(set(subjects)) != 22
+    ):
+        raise V21Error("REAL_COMPLETION_FROZEN_SUBJECTS_INVALID")
+    expected = {
+        f"{configuration}::{subject}" for configuration in configurations for subject in subjects
+    }
+    if (
+        not all(isinstance(fold_id, str) for fold_id in completed_fold_ids)
+        or len(completed_fold_ids) != len(expected)
+        or len(set(completed_fold_ids)) != len(completed_fold_ids)
+        or set(completed_fold_ids) != expected
+        or any(
+            not isinstance(fold_id, str)
+            or fold_id.count("::") != 1
+            or fold_id.split("::", 1)[0] not in configurations
+            or fold_id.split("::", 1)[1] not in subjects
+            for fold_id in completed_fold_ids
+        )
+    ):
+        raise V21Error("REAL_COMPLETION_FOLD_METADATA_INVALID")
+    return completed_fold_ids
+
+
 def _publish(
     output: Path,
     result: dict[str, Any],
@@ -682,6 +717,10 @@ def _publish(
     completed_fold_ids: list[str] | None = None,
 ) -> Path:
     """Stage all package members and publish the completion manifest last."""
+    real_completion = result.get("claim_boundary") == "guarded_real_quarantined_no_release"
+    if real_completion:
+        for fold_id in _validate_completion_fold_ids(result, completed_fold_ids):
+            guard.record_configuration_fold(fold_id)
     generated = json.loads(result["outputs"]["generator"])
     staging = output / ".staging"
     staging.mkdir(exist_ok=False)
@@ -737,12 +776,6 @@ def _publish(
     guard.check_timeout()
     (staging / "package-quarantine.json").unlink(missing_ok=True)
     staging.rmdir()
-    real_completion = result.get("claim_boundary") == "guarded_real_quarantined_no_release"
-    if real_completion:
-        if completed_fold_ids is None or len(completed_fold_ids) != 66:
-            raise V21Error("REAL_COMPLETION_FOLD_METADATA_INCOMPLETE")
-        for fold_id in completed_fold_ids:
-            guard.record_configuration_fold(fold_id)
     guard.final(
         phase="complete",
         scientific_metrics=real_completion,
