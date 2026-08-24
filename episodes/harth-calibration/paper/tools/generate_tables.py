@@ -1,7 +1,12 @@
 """Build the tracked HARTH v2.1 evidence snapshot and all numeric TeX."""
 
 from __future__ import annotations
-import argparse, hashlib, json, os, tempfile
+
+import argparse
+import hashlib
+import json
+import os
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,18 +16,129 @@ MANIFEST = ROOT / "arxiv-source-manifest.json"
 SNAPSHOT = ROOT / "generated" / "evidence-snapshot.json"
 RESULTS = ROOT / "generated" / "results.tex"
 FIGURES = ROOT / "generated" / "figures.tex"
+
+MANIFEST_VERSION = "harth-paper-source-2"
+MANIFEST_STATUS = "EXPLORATORY_POST_OBSERVATION"
+REQUIRED_INCLUDE = (
+    "main.tex",
+    "references.bib",
+    "README.md",
+    "generated/evidence-snapshot.json",
+    "generated/macros.tex",
+    "generated/results.tex",
+    "generated/figures.tex",
+    "tools/check_paper.py",
+    "tools/compile.py",
+    "tools/generate_tables.py",
+    "arxiv-source-manifest.json",
+)
+REQUIRED_HASHES = frozenset(item for item in REQUIRED_INCLUDE if item != MANIFEST.name)
+REQUIRED_EXCLUDE = (
+    "raw data",
+    "private custody destinations and paths",
+    "quarantine.json",
+    "run3 package directories",
+    "build logs and PDFs",
+    "LICENSE/project-license metadata",
+)
+REQUIRED_CHECKS = {
+    "public": (
+        "generate_tables.py --check and check_paper.py read only committed "
+        "snapshot/generated outputs; no private source defaults"
+    ),
+    "source": (
+        "generate_tables.py --result RESULT --custody CUSTODY requires both, verifies exact "
+        "SHA/schema/flags and RFC6901 pointer/value equality, then atomically regenerates "
+        "snapshot/results/figures"
+    ),
+    "render": "generate_tables.py --render uses only committed snapshot",
+}
 MACROS = ROOT / "generated" / "macros.tex"
 
 
 def fail(message: str) -> None:
     raise RuntimeError(message)
-def verify_public_manifest(snapshot_raw: bytes, snapshot: dict) -> None:
-    """Validate the public snapshot against the committed source manifest."""
-    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+
+
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def atomic_write(path: Path, content: str) -> None:
+    """Replace one publication file only after its complete bytes are durable."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary_name = tempfile.mkstemp(prefix=path.name + ".", dir=path.parent)
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def validate_source_manifest(manifest: object) -> dict:
+    """Validate immutable archive metadata and scope before publication writes."""
+    if not isinstance(manifest, dict):
+        fail("source manifest is invalid")
+    if manifest.get("manifest_version") != MANIFEST_VERSION:
+        fail("unsupported source manifest")
+    if manifest.get("status") != MANIFEST_STATUS:
+        fail("source manifest status mismatch")
     if manifest.get("result_sha256") != SHA or manifest.get("custody_sha256") != CUSTODY_SHA:
         fail("source manifest identity mismatch")
-    if manifest.get("manifest_version") != "harth-paper-source-2":
-        fail("unsupported source manifest")
+    if manifest.get("include") != list(REQUIRED_INCLUDE):
+        fail("source manifest include scope mismatch")
+    if manifest.get("exclude") != list(REQUIRED_EXCLUDE):
+        fail("source manifest exclude scope mismatch")
+    if manifest.get("checks") != REQUIRED_CHECKS:
+        fail("source manifest checks metadata mismatch")
+    hashes = manifest.get("sha256")
+    if not isinstance(hashes, dict) or set(hashes) != REQUIRED_HASHES:
+        fail("source manifest hash scope mismatch")
+    if any(
+        not isinstance(digest, str)
+        or len(digest) != 64
+        or any(character not in "0123456789abcdef" for character in digest)
+        for digest in hashes.values()
+    ):
+        fail("source manifest hash metadata is invalid")
+    return manifest
+
+
+def manifest_hashes() -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for relative in (item for item in REQUIRED_INCLUDE if item != MANIFEST.name):
+        path = ROOT / relative
+        if not path.is_file():
+            fail(f"source manifest file is unavailable: {relative}")
+        hashes[relative] = file_sha256(path)
+    return hashes
+
+
+def write_source_build(expected: dict[Path, str]) -> None:
+    """Validate first, publish atomic outputs, then publish their final hashes."""
+    manifest = validate_source_manifest(json.loads(MANIFEST.read_text(encoding="utf-8")))
+    required_outputs = {SNAPSHOT, MACROS, RESULTS, FIGURES}
+    if set(expected) != required_outputs or not all(
+        isinstance(content, str) for content in expected.values()
+    ):
+        fail("source build output set is invalid")
+    for path, content in expected.items():
+        atomic_write(path, content)
+    manifest["sha256"] = manifest_hashes()
+    atomic_write(MANIFEST, json.dumps(manifest, indent=2) + "\n")
+
+
+def verify_public_manifest(snapshot_raw: bytes, snapshot: dict) -> None:
+    """Validate the public snapshot against the committed source manifest."""
+    manifest = validate_source_manifest(json.loads(MANIFEST.read_text(encoding="utf-8")))
+    recorded_hashes = manifest.get("sha256")
+    actual_hashes = manifest_hashes()
+    if recorded_hashes != actual_hashes:
+        fail("source manifest file hash mismatch")
     expected = manifest.get("sha256", {}).get("generated/evidence-snapshot.json")
     if not expected or hashlib.sha256(snapshot_raw).hexdigest() != expected:
         fail("public snapshot hash mismatch")
@@ -96,6 +212,25 @@ def pointer(category: str, key: str, suffix: str = "") -> str:
     return f"#/inference/{category}/{escaped}{suffix}"
 
 
+def snapshot_pointer(category: str, key: str, suffix: str = "") -> str:
+    escaped = key.replace("~", "~0").replace("/", "~1")
+    return f"#/{category}/{escaped}{suffix}"
+
+
+def result_paired_key_for_hypothesis(hypothesis: str) -> str:
+    return "protocol-v2.1|bootstrap|" + paired_key_for_hypothesis(hypothesis)
+
+
+def paired_key_for_hypothesis(hypothesis: str) -> str:
+    metric = {"H_NLL": "nll", "H_BRIER": "brier", "H_ECE": "ece"}.get(hypothesis)
+    if metric is None:
+        fail(f"unsupported inference hypothesis: {hypothesis}")
+    return (
+        f"paired_delta|{metric}|calibrated_vs_uncalibrated|full_sensor|calibrated|"
+        "full_sensor|uncalibrated|seed=0"
+    )
+
+
 def snapshot(result: dict, custody: dict, source_sha: str) -> dict:
     inf = result["inference"]
     bootstrap_replicates = {
@@ -123,6 +258,9 @@ def snapshot(result: dict, custody: dict, source_sha: str) -> dict:
                 "adjusted_p": item["adjusted_p"],
                 "final_reject": item["final_reject"],
                 "source_pointer": "#/family/hypotheses",
+                "estimate_source_pointer": snapshot_pointer(
+                    "paired", paired_key_for_hypothesis(item["identifier"]), "/estimate"
+                ),
             }
             for item in result["family"]["hypotheses"]
         },
@@ -204,11 +342,34 @@ def snapshot(result: dict, custody: dict, source_sha: str) -> dict:
             or data["holm"][item["identifier"]]["adjusted_p"] != item["adjusted_p"]
         ):
             fail(f"snapshot Holm mismatch for {item['identifier']}")
+        estimate_pointer = data["holm"][item["identifier"]]["estimate_source_pointer"]
+        snapshot_estimate = resolve_pointer(data, estimate_pointer)
+        source_key = result_paired_key_for_hypothesis(item["identifier"])
+        source_estimate = resolve_pointer(result, pointer("paired", source_key, "/estimate"))
+        if snapshot_estimate != source_estimate:
+            fail(f"snapshot primary estimate mismatch for {item['identifier']}")
     return data
 
 
 def tex_num(x: float) -> str:
     return f"{x:.4f}"
+
+
+def paired_estimate_for_hypothesis(snapshot_data: dict, hypothesis: str) -> float:
+    """Return the exact full-sensor paired estimate for a primary hypothesis."""
+    try:
+        estimate_pointer = snapshot_data["holm"][hypothesis]["estimate_source_pointer"]
+    except KeyError:
+        fail(f"missing paired estimate for {hypothesis}")
+    expected_pointer = snapshot_pointer(
+        "paired", paired_key_for_hypothesis(hypothesis), "/estimate"
+    )
+    if estimate_pointer != expected_pointer:
+        fail(f"primary estimate pointer mismatch for {hypothesis}")
+    estimate = resolve_pointer(snapshot_data, estimate_pointer)
+    if isinstance(estimate, bool) or not isinstance(estimate, int | float):
+        fail(f"invalid paired estimate for {hypothesis}")
+    return estimate
 
 
 def ci(x: list[float]) -> str:
@@ -217,6 +378,11 @@ def ci(x: list[float]) -> str:
 
 def esc(x: str) -> str:
     return x.replace("_", r"\_").replace("%", r"\%")
+
+
+def tex_sha(digest: str) -> str:
+    chunks = [digest[index : index + 8] for index in range(0, len(digest), 8)]
+    return r"\texttt{" + r"\allowbreak{}".join(chunks) + "}"
 
 
 def render(s: dict) -> tuple[str, str, str]:
@@ -228,8 +394,8 @@ def render(s: dict) -> tuple[str, str, str]:
                 f"\\newcommand{{\\resultFolds}}{{{s['lifecycle_folds']}}}",
                 f"\\newcommand{{\\bootstrapReplicates}}{{{s['bootstrap_replicates']}}}",
                 f"\\newcommand{{\\signFlipDraws}}{{{s['sign_flip_draws']}}}",
-                f"\\newcommand{{\\resultSHA}}{{\\texttt{{{s['result_sha256']}}}}}",
-                f"\\newcommand{{\\custodySHA}}{{\\texttt{{{s['custody_sha256']}}}}}",
+                f"\\newcommand{{\\resultSHA}}{{{tex_sha(s['result_sha256'])}}}",
+                f"\\newcommand{{\\custodySHA}}{{{tex_sha(s['custody_sha256'])}}}",
                 r"\newcommand{\claimBoundary}{exploratory/post-observation}",
             ]
         )
@@ -239,7 +405,7 @@ def render(s: dict) -> tuple[str, str, str]:
         r"% GENERATED FILE: do not edit; every numeric cell is snapshot-derived.",
         r"\section{Generated Results}",
         r"\begin{table}[ht]\centering\caption{Subject-macro estimates and 95\% bootstrap intervals.}\label{tab:metrics}",
-        r"\begin{tabular}{llccc}\toprule Configuration & State & NLL & Brier & ECE\\\midrule",
+        r"\small\setlength{\tabcolsep}{3pt}\begin{tabular}{llccc}\toprule Configuration & State & NLL & Brier & ECE\\\midrule",
     ]
     for config in ("full_sensor", "back_only", "thigh_only"):
         for state in ("calibrated", "uncalibrated"):
@@ -247,7 +413,11 @@ def render(s: dict) -> tuple[str, str, str]:
             for metric in ("nll", "brier", "ece"):
                 k = f"subject_macro|{metric}|single_arm|{config}|{state}|seed=0"
                 vals.append(
-                    f"{tex_num(s['metrics'][k]['estimate'])} {ci(s['metrics'][k]['ci_95'])}"
+                    r"\shortstack{"
+                    f"{tex_num(s['metrics'][k]['estimate'])}"
+                    r"\\{\scriptsize "
+                    f"{ci(s['metrics'][k]['ci_95'])}"
+                    r"}}"
                 )
             lines.append(
                 "{} & {} & {}".format(esc(config), state, " & ".join(vals)) + " " + chr(92) * 2
@@ -255,7 +425,7 @@ def render(s: dict) -> tuple[str, str, str]:
     lines += [
         r"\bottomrule\end{tabular}\end{table}",
         r"\begin{table}[ht]\centering\caption{Paired calibration deltas (calibrated minus uncalibrated), with Holm decisions.}\label{tab:paired}",
-        r"\begin{tabular}{llrr}\toprule Configuration & Metric & Delta & 95\% CI\\\midrule",
+        r"\small\setlength{\tabcolsep}{4pt}\begin{tabular}{llrr}\toprule Configuration & Metric & Delta & 95\% CI\\\midrule",
     ]
     for config in ("full_sensor", "back_only", "thigh_only"):
         for metric in ("nll", "brier", "ece"):
@@ -271,16 +441,10 @@ def render(s: dict) -> tuple[str, str, str]:
     lines += [
         r"\bottomrule\end{tabular}\end{table}",
         r"\begin{table}[ht]\centering\caption{Primary sign-flip inference with raw and Holm-adjusted p-values.}\label{tab:inference}",
-        r"\begin{tabular}{lrrrr}\toprule Hypothesis & Estimate & Raw p & Holm p & Decision\\\midrule",
+        r"\small\setlength{\tabcolsep}{3pt}\begin{tabular}{llrrl}\toprule Hypothesis & Estimate & Raw p & Holm p & Decision\\\midrule",
     ]
     for key, h in sorted(s["holm"].items()):
-        estimate = (
-            s["paired"][
-                "paired_delta|nll|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0"
-            ]["estimate"]
-            if key == "H_NLL"
-            else 0.0
-        )
+        estimate = paired_estimate_for_hypothesis(s, key)
         decision = "reject" if h["final_reject"] else "do not reject"
         lines.append(
             f"{esc(key)} & {tex_num(estimate)} & {tex_num(h['raw_p'])} & {tex_num(h['adjusted_p'])} & {decision} "
@@ -289,7 +453,7 @@ def render(s: dict) -> tuple[str, str, str]:
     lines += [
         r"\bottomrule\end{tabular}\end{table}",
         r"\begin{table}[ht]\centering\caption{Sensor-ablation contrasts relative to full sensor; descriptive only.}\label{tab:ablations}",
-        r"\begin{tabular}{llrr}\toprule Configuration & State & NLL difference & 95\% CI\\\midrule",
+        r"\small\setlength{\tabcolsep}{4pt}\begin{tabular}{llrr}\toprule Configuration & State & NLL difference & 95\% CI\\\midrule",
     ]
     for config in ("back_only", "thigh_only"):
         for state in ("calibrated", "uncalibrated"):
@@ -304,12 +468,12 @@ def render(s: dict) -> tuple[str, str, str]:
             )
     lines += [
         r"\bottomrule\end{tabular}\end{table}",
-        r"\paragraph{Inference.} The full-sensor NLL sign-flip p value and all raw/Holm values are generated in Table~\\ref{tab:inference}; primary decisions are non-rejections.",
-        r"\paragraph{F1 status.} Exploratory support-aware classwise F1 retains \\texttt{NOT\_ESTIMABLE} rather than imputing zero; these values are not used as calibration evidence.",
+        r"\paragraph{Inference.} The full-sensor NLL sign-flip p value and all raw/Holm values are generated in Table~\ref{tab:inference}; primary decisions are non-rejections.",
+        r"\paragraph{F1 status.} Exploratory support-aware classwise F1 retains \texttt{NOT\_ESTIMABLE} rather than imputing zero; these values are not used as calibration evidence.",
     ]
     # Two generated, self-contained bar/interval figures; widths are derived from snapshot values.
     lines += [
-        r"\\paragraph{Generated Holm summary.} Raw/adjusted values are",
+        r"\paragraph{Generated Holm summary.} Raw/adjusted values are",
         ", ".join(
             f"{esc(k)}: {tex_num(v['raw_p'])}/{tex_num(v['adjusted_p'])}"
             for k, v in sorted(s["holm"].items())
@@ -390,12 +554,11 @@ def main() -> int:
         )
     if not args.render and not source_mode:
         ap.error("choose --check, --render, or source-build mode with --result and --custody")
-    for p, content in expected.items():
-        p.parent.mkdir(parents=True, exist_ok=True)
-        fd, tmp = tempfile.mkstemp(prefix=p.name + ".", dir=p.parent)
-        os.close(fd)
-        Path(tmp).write_text(content, encoding="utf-8", newline="\n")
-        os.replace(tmp, p)
+    if source_mode:
+        write_source_build(expected)
+    else:
+        for p, content in expected.items():
+            atomic_write(p, content)
     print(f"generated deterministic public snapshot; {len(snap['evidence'])} evidence pointers")
     return 0
 

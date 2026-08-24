@@ -1,6 +1,7 @@
 """Fail-closed checks for the generated exploratory HARTH paper."""
 
 from __future__ import annotations
+
 import json
 from pathlib import Path
 
@@ -41,9 +42,9 @@ def main() -> int:
         or "\\input{generated/figures}" not in tex
     ):
         errors.append("generated outputs/macros not included")
-    if not (generated / "macros.tex").is_file() or "resultSHA" not in (
-        generated / "macros.tex"
-    ).read_text(encoding="utf-8"):
+    macros_path = generated / "macros.tex"
+    macros_text = macros_path.read_text(encoding="utf-8") if macros_path.is_file() else ""
+    if "resultSHA" not in macros_text:
         errors.append("generated macros missing")
     generated_text = (generated / "results.tex").read_text(encoding="utf-8")
     if (
@@ -52,9 +53,8 @@ def main() -> int:
         or "UNVERIFIED" in generated_text
     ):
         errors.append("stale protocol-only placeholder remains")
-    if "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd" not in (
-        generated / "macros.tex"
-    ).read_text(encoding="utf-8"):
+    exact_result_sha = "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd"
+    if exact_result_sha not in macros_text.replace(r"\allowbreak{}", ""):
         errors.append("generated result SHA is not exact")
     if (
         "resultSubjects" not in tex

@@ -953,18 +953,21 @@
   "holm": {
     "H_BRIER": {
       "adjusted_p": 1.0,
+      "estimate_source_pointer": "#/paired/paired_delta|brier|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0/estimate",
       "final_reject": false,
       "raw_p": 0.7741461292693537,
       "source_pointer": "#/family/hypotheses"
     },
     "H_ECE": {
       "adjusted_p": 1.0,
+      "estimate_source_pointer": "#/paired/paired_delta|ece|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0/estimate",
       "final_reject": false,
       "raw_p": 0.9958200208998955,
       "source_pointer": "#/family/hypotheses"
     },
     "H_NLL": {
       "adjusted_p": 0.09961450192749036,
+      "estimate_source_pointer": "#/paired/paired_delta|nll|calibrated_vs_uncalibrated|full_sensor|calibrated|full_sensor|uncalibrated|seed=0/estimate",
       "final_reject": false,
       "raw_p": 0.03320483397583012,
       "source_pointer": "#/family/hypotheses"

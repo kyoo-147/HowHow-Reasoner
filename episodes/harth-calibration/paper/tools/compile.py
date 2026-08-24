@@ -40,8 +40,23 @@ def main() -> int:
     )
     final_output = final.stdout + final.stderr
     (staging / "final-pdflatex.log").write_text(final_output, encoding="utf-8")
-    forbidden = ("undefined", "No file name", "Fatal error", "Emergency stop")
-    resolved = not any(marker.lower() in final_output.lower() for marker in forbidden)
+    final_forbidden = (
+        "overfull \\hbox",
+        "undefined",
+        "empty `thebibliography'",
+        "empty bibliography",
+        "no file name",
+        "fatal error",
+        "emergency stop",
+    )
+    bibliography_forbidden = ("to sort, need author or key", "empty author")
+    found = [marker for marker in final_forbidden if marker in final_output.lower()]
+    found.extend(
+        marker
+        for marker in bibliography_forbidden
+        if marker in (build.stdout + build.stderr).lower()
+    )
+    resolved = not found
     pdf = staging / "main.pdf"
     if (
         build.returncode
@@ -52,7 +67,7 @@ def main() -> int:
     ):
         print(
             "compile failed: "
-            f"latexmk={build.returncode} pdflatex={final.returncode} resolved={resolved}"
+            f"latexmk={build.returncode} pdflatex={final.returncode} forbidden={found}"
         )
         return 1
     print(f"compile passed: pdf={pdf} bytes={pdf.stat().st_size} staging={staging}")
