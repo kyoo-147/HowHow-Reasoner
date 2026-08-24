@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 MAX_OUTER_FOLDS = 22
+MAX_CONFIGURATION_FOLDS = 66
 RUN_TIMEOUT_SECONDS = 1800.0
 T = TypeVar("T")
 
@@ -73,6 +74,7 @@ class RunGuard:
         self.timeout_seconds = RUN_TIMEOUT_SECONDS
         self.started = time.monotonic()
         self.completed_folds: list[Any] = []
+        self.completed_configuration_folds: list[Any] = []
         self.output.mkdir(parents=True, exist_ok=True)
 
     def restore_checkpoint(self, payload: Mapping[str, Any]) -> None:
@@ -86,10 +88,17 @@ class RunGuard:
         completed = payload.get("completed_folds", [])
         if not isinstance(completed, list) or len(completed) > MAX_OUTER_FOLDS:
             raise RunGuardFailure("checkpoint completed-fold progress is invalid")
+        configuration_completed = payload.get("completed_configuration_folds", [])
+        if (
+            not isinstance(configuration_completed, list)
+            or len(configuration_completed) > MAX_CONFIGURATION_FOLDS
+        ):
+            raise RunGuardFailure("checkpoint configuration-fold progress is invalid")
         self.completed_folds = list(completed)
+        self.completed_configuration_folds = list(configuration_completed)
 
     def bind_input_hash(self, input_hash: str) -> None:
-        if self.completed_folds:
+        if self.completed_folds or self.completed_configuration_folds:
             raise RunGuardFailure("cannot change input identity after execution starts")
         self.input_hash = input_hash
 
@@ -100,6 +109,8 @@ class RunGuard:
             "protocol_hash": self.protocol_hash,
             "code_hash": self.code_hash,
             "completed_folds": self.completed_folds,
+            "completed_configuration_folds": self.completed_configuration_folds,
+            "completed_configuration_fold_count": len(self.completed_configuration_folds),
         }
 
     def stage(self, phase: str, **extra: Any) -> Path:
@@ -170,6 +181,11 @@ class RunGuard:
         if len(self.completed_folds) >= MAX_OUTER_FOLDS:
             raise RunGuardFailure("maximum 22 outer folds exceeded")
         self.completed_folds.append(fold)
+
+    def record_configuration_fold(self, fold: Any) -> None:
+        if len(self.completed_configuration_folds) >= MAX_CONFIGURATION_FOLDS:
+            raise RunGuardFailure("maximum 66 configuration-folds exceeded")
+        self.completed_configuration_folds.append(fold)
 
     def execute(self, operation: Callable[[], T], *, phase: str = "execution") -> T:
         try:

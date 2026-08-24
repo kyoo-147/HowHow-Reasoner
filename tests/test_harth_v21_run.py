@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+from howhow.episodes.harth.v2 import RunGuardFailure
+
 _SPEC = importlib.util.spec_from_file_location(
     "harth_v21_run", Path(__file__).parents[1] / "scripts" / "harth_v21_run.py"
 )
@@ -18,7 +20,100 @@ _MODULE = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_MODULE)
 run_synthetic = _MODULE.run_synthetic
 V21Error = _MODULE.V21Error
+
+
+def _real_publish_inputs() -> tuple[dict[str, object], list[str]]:
+    generated = _MODULE.generate_outputs(
+        {"status": "COMPLETE", "claim_boundary": "guarded_real_quarantined_no_release"}
+    )
+    subjects = [f"S{subject:03d}" for subject in range(1, 23)]
+    result = {
+        "claim_boundary": "guarded_real_quarantined_no_release",
+        "frozen_population": {"subjects": subjects},
+        "outputs": {
+            "generator": generated["generator.json"],
+            "manuscript": generated["manuscript.md"],
+        },
+    }
+    completed = [
+        f"{configuration}::{subject}"
+        for configuration in ("full_sensor", "back_only", "thigh_only")
+        for subject in subjects
+    ]
+    return result, completed
+
+
 validate_result = _MODULE.validate_result
+
+
+def test_real_mode_completion_guard_records_canonical_fold_metadata_without_metric_stdout(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    output = tmp_path / "real"
+    guard = _MODULE.RunGuard(output, input_hash="i", protocol_hash="p")
+    generated = _MODULE.generate_outputs(
+        {"status": "COMPLETE", "claim_boundary": "guarded_real_quarantined_no_release"}
+    )
+    result = {
+        "claim_boundary": "guarded_real_quarantined_no_release",
+        "frozen_population": {"subjects": [f"S{subject:03d}" for subject in range(1, 23)]},
+        "outputs": {
+            "generator": generated["generator.json"],
+            "manuscript": generated["manuscript.md"],
+        },
+    }
+    completed = [
+        f"{configuration}::S{subject:03d}"
+        for configuration in ("full_sensor", "back_only", "thigh_only")
+        for subject in range(1, 23)
+    ]
+    _MODULE._publish(output, result, guard, completed_fold_ids=completed)
+    final = json.loads((output / "final.json").read_text())
+    assert final["scientific_metrics"] is True
+    assert final["performance_bearing"] is True
+    assert final["completed_folds"] == []
+    assert final["completed_configuration_folds"] == completed
+    assert final["completed_configuration_fold_count"] == 66
+    assert capsys.readouterr().out == ""
+
+
+@pytest.mark.parametrize("mutation", ["empty", "duplicate", "missing", "unknown"])
+def test_invalid_real_completion_metadata_is_fail_closed(tmp_path: Path, mutation: str) -> None:
+    result, completed = _real_publish_inputs()
+    if mutation == "empty":
+        invalid: list[str] = []
+    elif mutation == "duplicate":
+        invalid = completed[:-1] + [completed[0]]
+    elif mutation == "missing":
+        invalid = completed[:-1]
+    else:
+        invalid = completed[:-1] + ["full_sensor::S999"]
+    output = tmp_path / mutation
+    guard = _MODULE.RunGuard(output, input_hash="i", protocol_hash="p")
+    with pytest.raises(V21Error, match="REAL_COMPLETION_FOLD_METADATA"):
+        _MODULE._publish(output, result, guard, completed_fold_ids=invalid)
+    assert not output.exists() or not any(
+        (output / name).exists()
+        for name in ("package-manifest.json", "result-v2.1.json", "final.json")
+    )
+    assert not (output / ".staging").exists()
+
+
+def test_fold_scopes_keep_v2_outer_limit_and_v21_configuration_limit(tmp_path: Path) -> None:
+    guard = _MODULE.RunGuard(tmp_path, input_hash="i", protocol_hash="p")
+    for fold in range(22):
+        guard.record_fold(f"S{fold:03d}")
+    with pytest.raises(RunGuardFailure, match="maximum 22 outer folds exceeded"):
+        guard.record_fold("S022")
+
+    configuration_guard = _MODULE.RunGuard(
+        tmp_path / "configuration", input_hash="i", protocol_hash="p"
+    )
+    for fold in range(66):
+        configuration_guard.record_configuration_fold(f"configuration-{fold}")
+    assert len(configuration_guard.completed_configuration_folds) == 66
+    with pytest.raises(RunGuardFailure, match="maximum 66 configuration-folds exceeded"):
+        configuration_guard.record_configuration_fold("configuration-66")
 
 
 def test_complete_fixture_publishes_quarantined_truthful_artifacts(tmp_path: Path) -> None:
@@ -59,6 +154,7 @@ def test_stage_failures_are_atomic_and_metrics_free(tmp_path: Path, fixture: str
         run_synthetic(fixture, output)
     failure = json.loads((output / "failure.json").read_text())
     assert failure["scientific_metrics"] is False
+    assert failure.get("performance_bearing", False) is False
     assert failure["phase"] == "loader_engine_analysis_schema_generator"
     assert not (output / "result-v2.1.json").exists()
 
