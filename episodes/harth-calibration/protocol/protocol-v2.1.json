@@ -2,17 +2,28 @@
   "protocol_version": "protocol-v2.1",
   "result_schema_version": "result-schema-v2.1",
   "primary_population": "subject_macro",
-  "metrics": ["NLL", "multiclass Brier", "top-label ECE"],
+  "estimands": ["nll", "brier", "ece"],
   "p_floor": "1e-12",
-  "sum_tolerance": "1e-12",
+  "probability_sum_tolerance": "1e-12",
   "ece_bins": 10,
-  "bootstrap_replicates": 2000,
-  "bootstrap_min_valid_replicates": 1900,
-  "pvalue_draws": 200000,
-  "min_paired_subjects": 20,
-  "rng": "PCG64",
-  "seed": 0,
-  "holm_family": ["H_NLL", "H_BRIER", "H_ECE"],
-  "checkpoint_metrics_consumed": false,
+  "bootstrap": {
+    "replicates": 2000,
+    "min_valid_replicates": 1900,
+    "generator": "PCG64",
+    "seed": 0,
+    "single_arm_job_id": "protocol-v2.1|bootstrap|subject_macro|<estimand>|single_arm|<configuration>|<state>|seed=0",
+    "paired_delta_job_id": "protocol-v2.1|bootstrap|paired_delta|<estimand>|<contrast_id>|<arm_a_configuration>|<arm_a_state>|<arm_b_configuration>|<arm_b_state>|seed=0"
+  },
+  "pvalue": {
+    "draws": 200000,
+    "min_paired_subjects": 20,
+    "job_id": "protocol-v2.1|pvalue|<estimand>|calibrated_vs_uncalibrated|seed=0",
+    "alternative": "calibrated_lower"
+  },
+  "holm_family": {"identifiers": ["H_NLL", "H_BRIER", "H_ECE"], "alpha": 0.05, "m": 3},
+  "state_scopes": ["run", "configuration", "state", "subject", "fold", "estimand", "family"],
+  "canonical_hash_algorithm": "SHA-256",
+  "artifact_hash_manifest": "episodes/harth-calibration/protocol/v2.1-artifact-hashes.json",
+  "checkpoint_metric_fields_consumed": false,
   "rerun_authorized": false
 }

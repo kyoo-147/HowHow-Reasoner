@@ -2,13 +2,24 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "result-schema-v2.1",
   "type": "object",
-  "required": ["schema_version", "protocol_version", "status", "hashes", "state"],
+  "additionalProperties": false,
+  "required": ["schema_version", "protocol_version", "status", "state", "scope", "hashes", "support", "estimability", "population", "pairing", "family", "outputs", "claim_boundary"],
   "properties": {
     "schema_version": {"const": "result-schema-v2.1"},
     "protocol_version": {"const": "protocol-v2.1"},
     "status": {"enum": ["COMPLETE", "FAILED", "NOT_ESTIMABLE", "INCOMPLETE_FAMILY"]},
-    "state": {"type": "string"},
-    "hashes": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+    "state": {"enum": ["DECLARED", "PREFLIGHT_PASS", "LOADED", "TRAINING_PASS", "INNER_CALIBRATION_PASS", "OUTER_TEST_OBSERVED", "METRICS_READY", "AGGREGATED", "INFERENTIAL_READY", "COMPLETE", "FAILED", "NOT_ESTIMABLE", "INCOMPLETE_FAMILY"]},
+    "scope": {"enum": ["run", "configuration", "state", "subject", "fold", "estimand", "family"]},
+    "reason": {"type": "string"},
+    "required_fields_missing": {"type": "array", "items": {"type": "string"}},
+    "hashes": {"type": "object", "additionalProperties": false, "required": ["protocol_sha256", "schema_sha256", "config_sha256", "code_sha256", "input_sha256", "vocabulary_sha256", "eligibility_manifest_sha256", "pairing_manifest_sha256"], "properties": {"protocol_sha256": {"$ref": "#/$defs/hash"}, "schema_sha256": {"$ref": "#/$defs/hash"}, "config_sha256": {"$ref": "#/$defs/hash"}, "code_sha256": {"$ref": "#/$defs/hash"}, "input_sha256": {"$ref": "#/$defs/hash"}, "vocabulary_sha256": {"$ref": "#/$defs/hash"}, "eligibility_manifest_sha256": {"$ref": "#/$defs/hash"}, "pairing_manifest_sha256": {"$ref": "#/$defs/hash"}}},
+    "support": {"type": "object", "additionalProperties": false, "required": ["training", "inner_calibration", "held_out_test"], "properties": {"training": {"type": "object"}, "inner_calibration": {"type": "object"}, "held_out_test": {"type": "object"}}},
+    "estimability": {"type": "object", "additionalProperties": false, "required": ["nll", "brier", "ece"], "properties": {"nll": {"type": "object"}, "brier": {"type": "object"}, "ece": {"type": "object"}}},
+    "population": {"type": "object", "additionalProperties": false, "required": ["frozen_subject_ids", "exclusions", "population_rule_id", "eligibility_manifest_hash"], "properties": {"frozen_subject_ids": {"type": "array", "items": {"type": "string"}}, "exclusions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["subject_id", "reason"], "properties": {"subject_id": {"type": "string"}, "reason": {"type": "string"}}}}, "population_rule_id": {"type": "string"}, "eligibility_manifest_hash": {"$ref": "#/$defs/hash"}}},
+    "pairing": {"type": "object", "additionalProperties": false, "required": ["pairing_manifest_hash", "eligible_subject_hash", "records"], "properties": {"pairing_manifest_hash": {"$ref": "#/$defs/hash"}, "eligible_subject_hash": {"$ref": "#/$defs/hash"}, "records": {"type": "array", "items": {"type": "object"}}}},
+    "family": {"type": "object", "additionalProperties": false, "required": ["family_id", "hypotheses", "alpha", "m", "status"], "properties": {"family_id": {"const": "v2-primary-calibrated-vs-uncalibrated-3"}, "hypotheses": {"type": "array", "minItems": 3, "maxItems": 3}, "alpha": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1}, "m": {"const": 3}, "status": {"enum": ["COMPLETE", "INCOMPLETE_FAMILY"]}}},
+    "outputs": {"type": "object", "additionalProperties": false, "required": ["generator", "manuscript"], "properties": {"generator": {"type": "string"}, "manuscript": {"type": "string"}}},
+    "claim_boundary": {"const": "synthetic_structural_only_no_performance_claim"}
   },
-  "additionalProperties": true
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
 }
