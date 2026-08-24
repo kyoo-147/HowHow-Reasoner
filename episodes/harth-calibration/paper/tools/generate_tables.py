@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SHA = "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd"
 CUSTODY_SHA = "0b043086a6fb074ae5c3b3508bd27834777d93a26fade5f3a155f9d79b592553"
+MANIFEST = ROOT / "arxiv-source-manifest.json"
 SNAPSHOT = ROOT / "generated" / "evidence-snapshot.json"
 RESULTS = ROOT / "generated" / "results.tex"
 FIGURES = ROOT / "generated" / "figures.tex"
@@ -15,6 +16,20 @@ MACROS = ROOT / "generated" / "macros.tex"
 
 def fail(message: str) -> None:
     raise RuntimeError(message)
+def verify_public_manifest(snapshot_raw: bytes, snapshot: dict) -> None:
+    """Validate the public snapshot against the committed source manifest."""
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    if manifest.get("result_sha256") != SHA or manifest.get("custody_sha256") != CUSTODY_SHA:
+        fail("source manifest identity mismatch")
+    if manifest.get("manifest_version") != "harth-paper-source-2":
+        fail("unsupported source manifest")
+    expected = manifest.get("sha256", {}).get("generated/evidence-snapshot.json")
+    if not expected or hashlib.sha256(snapshot_raw).hexdigest() != expected:
+        fail("public snapshot hash mismatch")
+    if snapshot.get("schema") != "howhow-harth-publication-snapshot-v2.1":
+        fail("public snapshot schema mismatch")
+    if snapshot.get("result_sha256") != SHA or snapshot.get("custody_sha256") != CUSTODY_SHA:
+        fail("public snapshot source identity mismatch")
 
 
 def resolve_pointer(document: object, pointer_value: str) -> object:
@@ -351,9 +366,9 @@ def main() -> int:
             result, custody, digest, _custody_digest = load_and_verify(args.result, args.custody)
             snap = snapshot(result, custody, digest)
         else:
-            snap = json.loads(SNAPSHOT.read_text(encoding="utf-8"))
-            if snap.get("result_sha256") != SHA or snap.get("custody_sha256") != CUSTODY_SHA:
-                fail("public snapshot identity mismatch")
+            snapshot_raw = SNAPSHOT.read_bytes()
+            snap = json.loads(snapshot_raw.decode("utf-8"))
+            verify_public_manifest(snapshot_raw, snap)
             # Public mode is intentionally independent of private source files.
             snap = dict(snap)
         macros, tex, fig = render(snap)

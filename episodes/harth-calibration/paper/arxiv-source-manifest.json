@@ -39,6 +39,6 @@
     "generated/figures.tex": "c7dc7c80648fb686780bc052b24fc052a013bfd75388ba138a170fb6ee46970a",
     "tools/check_paper.py": "338ee0012d5bfa866772c3e72980ed86bf2ecef20f249619ea067ff6b36d29da",
     "tools/compile.py": "67fba942d3cebe55eb28c0a1d717fa95633427e148c98810424ea0d53a0c341e",
-    "tools/generate_tables.py": "5d9b0e18cb2231166ffdfe149d837b8e1d1f8d0600d569bc8406f40f9595f9b9"
+    "tools/generate_tables.py": "e40394f3a5ef07c419fd149e0c20429e5de290afbae7294073f6527c29a9fc27"
   }
 }

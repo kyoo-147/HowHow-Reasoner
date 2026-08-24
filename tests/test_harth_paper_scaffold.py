@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 PAPER = Path(__file__).resolve().parents[1] / "episodes" / "harth-calibration" / "paper"
 GENERATOR = PAPER / "tools" / "generate_tables.py"
 CHECKER = PAPER / "tools" / "check_paper.py"
@@ -68,3 +70,65 @@ def test_generated_outputs_have_figures_and_no_placeholder():
     assert "resultSHA" in (PAPER / "generated/macros.tex").read_text()
     assert figures.count("\\begin{figure}") == 2
     assert "No validator-approved" not in results
+
+
+@pytest.mark.parametrize(
+    ("label", "needle", "replacement"),
+    [
+        ("snapshot", '"schema": "howhow-harth-publication-snapshot-v2.1"', '"schema": "tampered"'),
+        ("pointer", '"source_pointer": "#/inference/', '"source_pointer": "#/inference/tampered/'),
+        ("numeric", '"bootstrap_replicates": 2000', '"bootstrap_replicates": 2001'),
+    ],
+)
+def test_public_snapshot_tamper_classes_fail_closed(
+    tmp_path: Path, label: str, needle: str, replacement: str
+):
+    copied = tmp_path / label
+    import shutil
+
+    shutil.copytree(PAPER, copied)
+    snapshot = copied / "generated/evidence-snapshot.json"
+    text = snapshot.read_text(encoding="utf-8")
+    assert needle in text
+    snapshot.write_text(text.replace(needle, replacement, 1), encoding="utf-8")
+    assert (
+        subprocess.run(
+            [sys.executable, str(copied / "tools/generate_tables.py"), "--check"], check=False
+        ).returncode
+        != 0
+    )
+
+
+def test_output_and_custody_hash_tamper_fail_closed(tmp_path: Path):
+    import shutil
+
+    copied = tmp_path / "paper"
+    shutil.copytree(PAPER, copied)
+    output = copied / "generated/results.tex"
+    output.write_text(
+        output.read_text(encoding="utf-8").replace("0.0332", "0.0333", 1), encoding="utf-8"
+    )
+    assert (
+        subprocess.run(
+            [sys.executable, str(copied / "tools/generate_tables.py"), "--check"], check=False
+        ).returncode
+        != 0
+    )
+    fake_result = tmp_path / "result.json"
+    fake_custody = tmp_path / "custody.json"
+    fake_result.write_text("{}", encoding="utf-8")
+    fake_custody.write_text("{}", encoding="utf-8")
+    assert (
+        subprocess.run(
+            [
+                sys.executable,
+                str(copied / "tools/generate_tables.py"),
+                "--result",
+                str(fake_result),
+                "--custody",
+                str(fake_custody),
+            ],
+            check=False,
+        ).returncode
+        != 0
+    )
