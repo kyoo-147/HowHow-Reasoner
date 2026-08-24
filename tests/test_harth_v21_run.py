@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -178,6 +179,118 @@ def test_independent_decision_binds_exact_bytes_and_package_hashes(tmp_path: Pat
     decision.write_bytes(decision.read_bytes().replace(b"rerun-2026-08-24", b"tampered-2026-08-24"))
     with pytest.raises(V21Error, match="DECISION_HASH_MISMATCH"):
         _MODULE._load_decision(decision, authorization=auth)
+
+
+def _synthetic_authorization(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> tuple[Path, Path, Path, dict[str, object]]:
+    blobs = subprocess.run(
+        ["git", "ls-files", "-s", "--", *_MODULE.CODE_PATHS],
+        cwd=_MODULE.ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.splitlines()
+    entries = sorted((line.split(maxsplit=3)[3], line.split()[1]) for line in blobs)
+    code_hash = hashlib.sha256(
+        _MODULE.canonical_bytes({"files": [{"path": p, "blob": b} for p, b in entries]})
+    ).hexdigest()
+    revision = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=_MODULE.ROOT, check=True, capture_output=True, text=True
+    ).stdout.strip()
+    monkeypatch.setattr(_MODULE, "_code_identity", lambda: (code_hash, revision))
+    archive = tmp_path / "archive.zip"
+    archive.write_bytes(b"synthetic archive bytes; no members are loaded")
+    output = tmp_path / "out"
+    decision = {
+        "decision_id": "synthetic-independent-decision",
+        "protocol_version": _MODULE.PROTOCOL_VERSION,
+        "allow_rerun": True,
+        "allow_resume": False,
+        "allow_retry": False,
+        "allow_tuning": False,
+        "one_shot": True,
+        "hashes": {
+            "main": _MODULE._git_blob(_MODULE.PACKAGE_PATHS["main"]),
+            "code": _MODULE._code_identity()[0],
+            "protocol": _MODULE._git_blob(_MODULE.PACKAGE_PATHS["protocol"]),
+            "config": _MODULE._git_blob(_MODULE.PACKAGE_PATHS["config"]),
+            "schema": _MODULE._git_blob(_MODULE.PACKAGE_PATHS["schema"]),
+            "archive": _MODULE._sha(archive),
+            "vocabulary": _MODULE.canonical_hash(_MODULE.CLASSES),
+            "budgets": _MODULE.canonical_hash(_MODULE.BUDGETS),
+        },
+        "budgets": _MODULE.BUDGETS,
+        "destination": str(output.resolve()),
+        "git_revision": _MODULE._code_identity()[1],
+        "vocabulary": _MODULE.CLASSES,
+    }
+    decision_path = tmp_path / "decision.json"
+    decision_path.write_bytes(_MODULE.canonical_bytes(decision))
+    authorization = {
+        "authorization_version": "v2.1",
+        **decision,
+        "decision_sha256": hashlib.sha256(decision_path.read_bytes()).hexdigest(),
+    }
+    authorization_path = tmp_path / "authorization.json"
+    authorization_path.write_bytes(_MODULE.canonical_bytes(authorization))
+    return archive, authorization_path, decision_path, authorization
+
+
+def test_valid_synthetic_authorization_and_decision_load_without_destination_or_archive_members(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    archive, authorization_path, decision_path, authorization = _synthetic_authorization(
+        tmp_path, monkeypatch
+    )
+    loaded = _MODULE._load_authorization(
+        authorization_path, archive=archive, output=tmp_path / "out"
+    )
+    assert (
+        _MODULE._load_decision(decision_path, authorization=loaded)["decision_id"]
+        == authorization["decision_id"]
+    )
+    assert not (tmp_path / "out").exists()
+
+
+def test_authorization_identity_types_and_decision_hash_fail_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    archive, authorization_path, decision_path, authorization = _synthetic_authorization(
+        tmp_path, monkeypatch
+    )
+    pristine = json.loads(json.dumps(authorization))
+    for field, value in (("main", "a" * 64), ("protocol", 7), ("code", "b" * 40)):
+        mutated = json.loads(json.dumps(pristine))
+        mutated["hashes"][field] = value
+        authorization_path.write_bytes(_MODULE.canonical_bytes(mutated))
+        with pytest.raises(V21Error, match="AUTHORIZATION_SCHEMA_INVALID"):
+            _MODULE._load_authorization(
+                authorization_path, archive=archive, output=tmp_path / "out"
+            )
+    authorization_path.write_bytes(_MODULE.canonical_bytes(pristine))
+    valid = json.loads(authorization_path.read_text())
+    decision_path.write_bytes(decision_path.read_bytes().replace(b"independent", b"tampered___"))
+    with pytest.raises(V21Error, match="DECISION_HASH_MISMATCH"):
+        _MODULE._load_decision(decision_path, authorization=valid)
+
+
+def test_authorization_and_decision_crlf_bytes_remain_portable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    archive, authorization_path, decision_path, authorization = _synthetic_authorization(
+        tmp_path, monkeypatch
+    )
+    authorization_path.write_bytes(authorization_path.read_bytes().replace(b"\n", b"\r\n"))
+    loaded = _MODULE._load_authorization(
+        authorization_path, archive=archive, output=tmp_path / "out"
+    )
+    decision_bytes = decision_path.read_bytes().replace(b"\n", b"\r\n")
+    decision_path.write_bytes(decision_bytes)
+    loaded["decision_sha256"] = hashlib.sha256(decision_bytes).hexdigest()
+    assert _MODULE._load_decision(decision_path, authorization=loaded)["one_shot"] is True
+    assert len(loaded["hashes"]["main"]) == 40
+    assert len(loaded["hashes"]["code"]) == 64
 
 
 def test_preexisting_destination_is_refused(tmp_path: Path) -> None:
