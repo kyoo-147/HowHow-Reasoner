@@ -1625,7 +1625,7 @@
       "ecosystem": "pypi",
       "license": "MIT",
       "name": "annotated-doc",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/annotated_doc-0.0.5.dist-info/annotated_doc-0.0.5.dist-info/licenses/LICENSE",
+      "source": "https://pypi.org/pypi/annotated-doc/0.0.5/json",
       "status": "PASS",
       "version": "0.0.5"
     },
@@ -1641,7 +1641,7 @@
       "ecosystem": "pypi",
       "license": "MIT",
       "name": "anyio",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/anyio-4.14.2.dist-info/anyio-4.14.2.dist-info/licenses/LICENSE",
+      "source": "https://pypi.org/pypi/anyio/4.14.2/json",
       "status": "PASS",
       "version": "4.14.2"
     },
@@ -1657,7 +1657,7 @@
       "ecosystem": "pypi",
       "license": "BSD-3-Clause",
       "name": "click",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/click-8.4.2.dist-info/click-8.4.2.dist-info/licenses/LICENSE.txt",
+      "source": "https://pypi.org/pypi/click/8.4.2/json",
       "status": "PASS",
       "version": "8.4.2"
     },
@@ -1673,7 +1673,7 @@
       "ecosystem": "pypi",
       "license": "MIT",
       "name": "fastapi",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/fastapi-0.141.1.dist-info/fastapi-0.141.1.dist-info/licenses/LICENSE",
+      "source": "https://pypi.org/pypi/fastapi/0.141.1/json",
       "status": "PASS",
       "version": "0.141.1"
     },
@@ -1713,7 +1713,7 @@
       "ecosystem": "pypi",
       "license": "BSD-3-Clause",
       "name": "idna",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/idna-3.19.dist-info/idna-3.19.dist-info/licenses/LICENSE.md",
+      "source": "https://pypi.org/pypi/idna/3.19/json",
       "status": "PASS",
       "version": "3.19"
     },
@@ -1721,7 +1721,7 @@
       "ecosystem": "pypi",
       "license": "MIT",
       "name": "iniconfig",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/iniconfig-2.3.0.dist-info/iniconfig-2.3.0.dist-info/licenses/LICENSE",
+      "source": "https://pypi.org/pypi/iniconfig/2.3.0/json",
       "status": "PASS",
       "version": "2.3.0"
     },
@@ -1753,7 +1753,7 @@
       "ecosystem": "pypi",
       "license": "MIT",
       "name": "mypy-extensions",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/mypy_extensions-1.1.0.dist-info/mypy_extensions-1.1.0.dist-info/licenses/LICENSE",
+      "source": "https://pypi.org/pypi/mypy-extensions/1.1.0/json",
       "status": "PASS",
       "version": "1.1.0"
     },
@@ -1769,7 +1769,7 @@
       "ecosystem": "pypi",
       "license": "MIT",
       "name": "packaging",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/packaging-26.3.dist-info/packaging/licenses/__init__.py",
+      "source": "https://pypi.org/pypi/packaging/26.3/json",
       "status": "PASS",
       "version": "26.3"
     },
@@ -1809,7 +1809,7 @@
       "ecosystem": "pypi",
       "license": "BSD-2-Clause",
       "name": "pygments",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/pygments-2.21.0.dist-info/pygments-2.21.0.dist-info/licenses/LICENSE",
+      "source": "https://pypi.org/pypi/pygments/2.21.0/json",
       "status": "PASS",
       "version": "2.21.0"
     },
@@ -1817,7 +1817,7 @@
       "ecosystem": "pypi",
       "license": "MIT",
       "name": "pytest",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/pytest-9.0.3.dist-info/pytest-9.0.3.dist-info/licenses/LICENSE",
+      "source": "https://pypi.org/pypi/pytest/9.0.3/json",
       "status": "PASS",
       "version": "9.0.3"
     },
@@ -1849,7 +1849,7 @@
       "ecosystem": "pypi",
       "license": "BSD-2-Clause",
       "name": "starlette",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/starlette-1.6.0.dist-info/starlette-1.6.0.dist-info/licenses/LICENSE.md",
+      "source": "https://pypi.org/pypi/starlette/1.6.0/json",
       "status": "PASS",
       "version": "1.6.0"
     },
@@ -1865,7 +1865,7 @@
       "ecosystem": "pypi",
       "license": "PSF-2.0",
       "name": "typing-extensions",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/typing_extensions-4.16.0.dist-info/typing_extensions-4.16.0.dist-info/licenses/LICENSE",
+      "source": "https://pypi.org/pypi/typing-extensions/4.16.0/json",
       "status": "PASS",
       "version": "4.16.0"
     },
@@ -1873,7 +1873,7 @@
       "ecosystem": "pypi",
       "license": "MIT",
       "name": "typing-inspection",
-      "source": "installed:C:/Users/hoang/.treehouse/HowHow-Reasoner-4deda3/3/HowHow-Reasoner/.venv/Lib/site-packages/typing_inspection-0.4.4.dist-info/typing_inspection-0.4.4.dist-info/licenses/LICENSE",
+      "source": "https://pypi.org/pypi/typing-inspection/0.4.4/json",
       "status": "PASS",
       "version": "0.4.4"
     },

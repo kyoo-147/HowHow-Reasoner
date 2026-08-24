@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import json
+import re
+from pathlib import Path
+
 from scripts.audit_supply_chain import audit, locked_packages
 
 
@@ -27,3 +31,16 @@ def test_vulnerability_scan_status_is_structured() -> None:
     report, _ = audit(refresh=False)
     assert report["vulnerability_scan"]["status"] == "NOT_APPLICABLE"
     assert report["vulnerability_scan"]["schema"].endswith("vulnerability-scan.v1")
+
+
+def test_public_compliance_artifacts_reject_private_paths() -> None:
+    root = Path(__file__).parents[1] / "compliance"
+    private_path = re.compile(
+        r"(?:(?<![A-Za-z0-9])[A-Za-z]:[\\/]|/(?:Users|home|tmp)/|(?:\.treehouse|\.venv|worktree))",
+        re.IGNORECASE,
+    )
+    for path in (*root.glob("*.json"), *root.glob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        assert not private_path.search(text), path
+        if path.suffix == ".json":
+            json.loads(text)
