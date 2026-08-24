@@ -23,6 +23,7 @@ from howhow.episodes.harth.v21 import (
     validate_approval_provenance,
     validate_result,
 )
+from scripts.verify_harth_v21_manifest import canonical_lf, verify_manifest
 
 CLASSES = [f"c{i}" for i in range(12)]
 
@@ -299,3 +300,8 @@ def test_all_bootstrap_job_templates_and_holm_ties():
     )
     assert tied["hypotheses"][2]["stop_rank"] == 3
     assert tied["hypotheses"][0]["adjusted_p"] == tied["hypotheses"][1]["adjusted_p"]
+
+
+def test_manifest_canonicalizes_line_endings_and_verifies_index():
+    assert canonical_lf(b"a\r\nb\r\nc") == b"a\nb\nc"
+    assert verify_manifest() == 0
