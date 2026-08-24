@@ -25,6 +25,7 @@
   "state_scopes": ["run", "configuration", "state", "subject", "fold", "estimand", "family"],
   "canonical_hash_algorithm": "SHA-256",
   "artifact_hash_manifest": "episodes/harth-calibration/protocol/v2.1-artifact-hashes.json",
+  "authorization_schema": "schemas/v2.1/Authorization.json",
   "checkpoint_metric_fields_consumed": false,
   "rerun_authorized": false
 }

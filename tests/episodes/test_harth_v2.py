@@ -116,6 +116,15 @@ def test_ablation_channels_and_fold_determinism() -> None:
     }
     assert len(result.folds) == 9
     assert all(row["calibration_state"] == ["uncalibrated", "calibrated"] for row in result.folds)
+    for row in result.folds:
+        assert set(row["sufficient_statistics"]) == {"uncalibrated", "calibrated"}
+        for state in row["sufficient_statistics"].values():
+            stats = next(iter(state.values()))
+            assert {"n", "nll_sum", "brier_sum", "ece_bins", "classification"} == set(stats)
+            assert len(stats["ece_bins"]) == 10
+            assert all(
+                {"TP", "FP", "FN", "support"} <= set(item) for item in stats["classification"]
+            )
 
 
 def test_paired_cluster_bootstrap_and_holm_are_deterministic() -> None:

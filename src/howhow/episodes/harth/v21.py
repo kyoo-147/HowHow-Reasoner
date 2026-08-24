@@ -21,7 +21,6 @@ from jsonschema import Draft202012Validator
 from jsonschema import ValidationError as JsonSchemaValidationError
 
 PROTOCOL_VERSION = "protocol-v2.1"
-PROTOCOL_VERSION = "protocol-v2.1"
 APPROVED_PROPOSAL_SHA256 = "17cfe84a5096ce1025f13cce779e34a55ab459f408168c899b2de05b2c339b08"
 APPROVED_DECISION_SHA256 = "7469a71ac40a002595a0e2a5d241a62ddd8278cb5bb507a529a2fb579d12061c"
 SCHEMA_VERSION = "result-schema-v2.1"
@@ -435,9 +434,16 @@ def pvalue(differences: Mapping[str, float], *, estimand: str) -> dict[str, Any]
     if len(d) < MIN_PAIRED_SUBJECTS:
         return {
             "job_id": job_id,
+            "hash": digest,
+            "seed": seed,
+            "generator": "PCG64",
+            "T_obs": None,
+            "draws": PVALUE_DRAWS,
+            "p": None,
+            "tie": "inclusive_leq",
+            "zero": "unchanged",
             "status": "NOT_ESTIMABLE",
-            "reason": "INSUFFICIENT_PAIRED_SUBJECTS",
-            "eligible_subject_count": len(d),
+            "eligible_count": len(d),
         }
     rng = np.random.Generator(np.random.PCG64(seed))
     signs = rng.choice(np.array([-1.0, 1.0]), size=(PVALUE_DRAWS, len(d)))
@@ -445,16 +451,16 @@ def pvalue(differences: Mapping[str, float], *, estimand: str) -> dict[str, Any]
     count = int(np.sum((signs * d).mean(axis=1) <= observed))
     return {
         "job_id": job_id,
-        "job_sha256": digest,
-        "unsigned_seed": seed,
+        "hash": digest,
+        "seed": seed,
         "generator": "PCG64",
         "T_obs": observed,
         "draws": PVALUE_DRAWS,
-        "p_value": (1 + count) / (PVALUE_DRAWS + 1),
+        "p": (1 + count) / (PVALUE_DRAWS + 1),
+        "tie": "inclusive_leq",
+        "zero": "unchanged",
         "status": "ESTIMABLE",
-        "alternative": "calibrated_lower",
-        "tie_rule": "inclusive_leq",
-        "zero_difference_rule": "unchanged",
+        "eligible_count": len(d),
     }
 
 
@@ -615,7 +621,7 @@ def build_artifact_hashes(
         "protocol_sha256": canonical_hash(protocol),
         "schema_sha256": canonical_hash(schema),
         "config_sha256": canonical_hash(config),
-        "code_sha256": sha256_bytes(code),
+        "code_sha256": code if isinstance(code, str) else sha256_bytes(code),
         "input_sha256": canonical_hash(input_data),
         "vocabulary_sha256": canonical_hash(list(vocabulary)),
         "eligibility_manifest_sha256": canonical_hash(eligibility_manifest)
@@ -667,6 +673,7 @@ def validate_result(
         "state",
         "scope",
         "provenance",
+        "execution_authorization",
         "reason",
         "required_fields_missing",
         "hashes",
@@ -674,6 +681,8 @@ def validate_result(
         "estimability",
         "population",
         "pairing",
+        "inference",
+        "exploratory",
         "family",
         "outputs",
         "claim_boundary",
@@ -686,6 +695,10 @@ def validate_result(
         or data.get("scope") not in SCOPES
     ):
         raise V21Error("INVALID_RESULT_STATE")
+    # A deliberately incomplete terminal artifact has no inference payload;
+    # it remains structurally valid while carrying NOT_ESTIMABLE truth.
+    if data.get("status") == "NOT_ESTIMABLE" and "inference" not in data:
+        return cast(dict[str, Any], json.loads(json.dumps(dict(data), ensure_ascii=False)))
     hashes = data.get("hashes")
     for section, expected_keys in {
         "support": {"training", "inner_calibration", "held_out_test"},
@@ -697,11 +710,18 @@ def validate_result(
             "eligibility_manifest_hash",
         },
         "pairing": {"pairing_manifest_hash", "eligible_subject_hash", "records"},
+        "inference": {"single_arm", "paired", "ablations", "pvalues"},
         "family": {"family_id", "hypotheses", "alpha", "m", "status"},
         "outputs": {"generator", "manuscript"},
     }.items():
         value = data.get(section)
         if not isinstance(value, Mapping) or set(value) != expected_keys:
+            if (
+                section == "support"
+                and isinstance(value, Mapping)
+                and set(value) == expected_keys | {"folds"}
+            ):
+                continue
             raise V21Error(f"{section.upper()}_FIELD_MATRIX_MISMATCH")
     hashes = data.get("hashes")
     required = set(_HASHES)
@@ -731,6 +751,94 @@ def validate_result(
     for hypothesis in family["hypotheses"]:
         if not isinstance(hypothesis, Mapping) or set(hypothesis) != hypothesis_fields:
             raise V21Error("HOLM_HYPOTHESIS_FIELD_MATRIX_MISMATCH")
+    inference = cast(Mapping[str, Any], data["inference"])
+    pvalues = inference["pvalues"]
+    if set(pvalues) != {f"H_{metric.upper()}" for metric in ESTIMANDS}:
+        raise V21Error("PVALUE_FAMILY_FIELD_MATRIX_MISMATCH")
+    pvalue_fields = {
+        "job_id",
+        "hash",
+        "seed",
+        "generator",
+        "T_obs",
+        "draws",
+        "p",
+        "tie",
+        "zero",
+        "status",
+        "eligible_count",
+    }
+    for artifact in pvalues.values():
+        if not isinstance(artifact, Mapping) or set(artifact) != pvalue_fields:
+            raise V21Error("PVALUE_ARTIFACT_FIELD_MATRIX_MISMATCH")
+        if artifact["hash"] != hashlib.sha256(str(artifact["job_id"]).encode("utf-8")).hexdigest():
+            raise V21Error("PVALUE_JOB_HASH_MISMATCH")
+        if artifact["status"] == "ESTIMABLE" and (
+            artifact["p"] is None or artifact["T_obs"] is None
+        ):
+            raise V21Error("ESTIMABLE_PVALUE_MISSING_VALUE")
+        if artifact["status"] == "NOT_ESTIMABLE" and artifact["p"] is not None:
+            raise V21Error("NONESTIMABLE_PVALUE_HAS_VALUE")
+    for hypothesis in family["hypotheses"]:
+        artifact = pvalues.get(hypothesis["identifier"])
+        if artifact is None or artifact["p"] != hypothesis["raw_p"]:
+            raise V21Error("FAMILY_PVALUE_BINDING_MISMATCH")
+    pairing = cast(Mapping[str, Any], data["pairing"])
+    pairing_records = pairing["records"]
+    if pairing["pairing_manifest_hash"] != canonical_hash(pairing_records):
+        raise V21Error("PAIRING_MANIFEST_HASH_MISMATCH")
+    for job_id in inference["ablations"]:
+        parts = job_id.split("|")
+        if len(parts) < 6 or parts[4] not in {
+            "back_only_vs_full_sensor",
+            "thigh_only_vs_full_sensor",
+        }:
+            raise V21Error("ABLATION_JOB_CONTRAST_MISMATCH")
+        contrast, metric = parts[4], parts[3]
+        matching = [
+            r
+            for r in pairing_records
+            if r["contrast_id"] == contrast and r["estimand_id"] == metric
+        ]
+        if not matching or {r["arm"] for r in matching} != {"calibrated", "uncalibrated"}:
+            raise V21Error("ABLATION_PAIRING_MISSING")
+    exploratory = cast(Mapping[str, Any], data["exploratory"])
+    for report in exploratory["f1"].values():
+        for row in report["class_records"]:
+            tp, fp, fn = row["TP"], row["FP"], row["FN"]
+            if row["support"] != tp + fn:
+                raise V21Error("F1_SUPPORT_MISMATCH")
+            for key, denominator, numerator, reason in (
+                ("precision", tp + fp, tp, "ZERO_PREDICTED_POSITIVES"),
+                ("recall", tp + fn, tp, "ZERO_TRUE_SUPPORT"),
+            ):
+                cell = row[key]
+                expected = (
+                    {"status": "ESTIMABLE", "value": numerator / denominator}
+                    if denominator
+                    else {"status": "NOT_ESTIMABLE", "reason": reason}
+                )
+                if dict(cell) != expected:
+                    raise V21Error("F1_COMPONENT_MISMATCH")
+            denom = 2 * tp + fp + fn
+            expected_f1 = (
+                {"status": "ESTIMABLE", "value": 2 * tp / denom}
+                if denom
+                else {"status": "NOT_ESTIMABLE", "reason": "ZERO_F1_DENOMINATOR"}
+            )
+            if dict(row["f1"]) != expected_f1:
+                raise V21Error("F1_VALUE_MISMATCH")
+    support = cast(Mapping[str, Any], data["support"])
+    held = cast(Mapping[str, Any], support["held_out_test"])
+    for cls, count in held["counts"].items():
+        status = held["class_status"].get(cls)
+        if not isinstance(status, Mapping) or status["support"] != count:
+            raise V21Error("AGGREGATE_SUPPORT_CONTRADICTION")
+    if "folds" in support:
+        for fold in support["folds"]:
+            for cls in fold["held_out_test"]["zero_support"]:
+                if fold["held_out_test"]["counts"].get(cls) != 0:
+                    raise V21Error("FOLD_ZERO_SUPPORT_CONTRADICTION")
     if data.get("status") == "COMPLETE" and data.get("state") != "COMPLETE":
         raise V21Error("COMPLETE_STATE_MISMATCH")
     if data.get("status") != "FAILED" and data.get("required_fields_missing"):
@@ -823,18 +931,36 @@ def migration_v2_to_v21(
     return report
 
 
-def generate_outputs(result: Mapping[str, Any]) -> dict[str, str]:
+def generate_outputs(result: Mapping[str, Any], *, timeout_check: Any = None) -> dict[str, str]:
+    """Render only from the already-validated in-memory result contract.
+
+    The result's claim boundary is authoritative; this function never invents a
+    performance claim and is called only after artifact-bound validation.
+    """
+    if timeout_check is not None:
+        timeout_check()
     status = str(result.get("status", "UNKNOWN"))
-    boundary = "No performance claim; synthetic structural contract only."
+    boundary = str(result.get("claim_boundary", "UNVERIFIED"))
+    real = boundary == "guarded_real_quarantined_no_release"
     payload = {
         "status": status,
         "claim_boundary": boundary,
-        "scientific_status": "UNVERIFIED" if status != "COMPLETE" else "STRUCTURAL_ONLY",
+        "scientific_status": "UNVERIFIED",
+        "real_data": real,
+        "performance_bearing": real,
+        "release": False,
+        "source_result_hash": canonical_hash(result),
     }
-    return {
+    rendered = {
         "generator.json": canonical_bytes(payload).decode("utf-8"),
-        "manuscript.md": f"HARTH protocol-v2.1 status: {status}. {boundary}\n",
+        "manuscript.md": (
+            f"HARTH protocol-v2.1 status: {status}. No performance claim. "
+            "Scientific status: UNVERIFIED; release: false.\n"
+        ),
     }
+    if timeout_check is not None:
+        timeout_check()
+    return rendered
 
 
 def render_generator_output(result: Mapping[str, Any]) -> str:

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "authorization-schema-v2.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["authorization_version", "protocol_version", "decision_id", "decision_sha256", "allow_rerun", "allow_resume", "allow_retry", "allow_tuning", "one_shot", "hashes", "budgets", "destination", "git_revision", "vocabulary"],
+  "properties": {
+    "authorization_version": {"const": "v2.1"},
+    "protocol_version": {"const": "protocol-v2.1"},
+    "decision_id": {"type": "string", "minLength": 1},
+    "decision_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "allow_rerun": {"const": true},
+    "allow_resume": {"const": false},
+    "allow_retry": {"const": false},
+    "allow_tuning": {"const": false},
+    "one_shot": {"const": true},
+    "hashes": {
+      "type": "object", "additionalProperties": false,
+      "required": ["main", "code", "protocol", "config", "schema", "archive", "vocabulary", "budgets"],
+      "properties": {
+        "main": {"$ref": "#/$defs/hash"}, "code": {"$ref": "#/$defs/hash"},
+        "protocol": {"$ref": "#/$defs/hash"}, "config": {"$ref": "#/$defs/hash"},
+        "schema": {"$ref": "#/$defs/hash"}, "archive": {"$ref": "#/$defs/hash"},
+        "vocabulary": {"$ref": "#/$defs/hash"}, "budgets": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "budgets": {"type": "object", "additionalProperties": false, "required": ["timeout_seconds", "bootstrap_reps", "pvalue_draws"], "properties": {"timeout_seconds": {"const": 1800}, "bootstrap_reps": {"const": 2000}, "pvalue_draws": {"const": 200000}}},
+    "destination": {"type": "string", "minLength": 1},
+    "git_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "vocabulary": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}
