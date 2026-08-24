@@ -1,0 +1,18 @@
+{
+  "protocol_version": "protocol-v2.1",
+  "result_schema_version": "result-schema-v2.1",
+  "primary_population": "subject_macro",
+  "metrics": ["NLL", "multiclass Brier", "top-label ECE"],
+  "p_floor": "1e-12",
+  "sum_tolerance": "1e-12",
+  "ece_bins": 10,
+  "bootstrap_replicates": 2000,
+  "bootstrap_min_valid_replicates": 1900,
+  "pvalue_draws": 200000,
+  "min_paired_subjects": 20,
+  "rng": "PCG64",
+  "seed": 0,
+  "holm_family": ["H_NLL", "H_BRIER", "H_ECE"],
+  "checkpoint_metrics_consumed": false,
+  "rerun_authorized": false
+}
