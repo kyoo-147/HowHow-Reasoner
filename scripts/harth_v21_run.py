@@ -279,7 +279,7 @@ def _inference_report(
 ) -> dict[str, Any]:
     """Serialize every preregistered arm, contrast, and ablation bootstrap job."""
     rows = engine.folds
-    report: dict[str, Any] = {"single_arm": {}, "paired": {}, "ablations": {}}
+    report: dict[str, Any] = {"single_arm": {}, "paired": {}, "ablations": {}, "pvalues": {}}
     configurations = ("full_sensor", "back_only", "thigh_only")
     for configuration in configurations:
         if timeout_check is not None:
@@ -338,6 +338,29 @@ def _inference_report(
     return report
 
 
+def _exact_f1_record(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Derive and serialize precision/recall/F1 from confusion counts."""
+    tp, fp, fn = (int(row[key]) for key in ("TP", "FP", "FN"))
+    support = tp + fn
+    precision = (
+        {"status": "ESTIMABLE", "value": tp / (tp + fp)}
+        if tp + fp
+        else {"status": "NOT_ESTIMABLE", "reason": "ZERO_PREDICTED_POSITIVES"}
+    )
+    recall = (
+        {"status": "ESTIMABLE", "value": tp / support}
+        if support
+        else {"status": "NOT_ESTIMABLE", "reason": "ZERO_TRUE_SUPPORT"}
+    )
+    denominator = 2 * tp + fp + fn
+    f1 = (
+        {"status": "ESTIMABLE", "value": 2 * tp / denominator}
+        if denominator
+        else {"status": "NOT_ESTIMABLE", "reason": "ZERO_F1_DENOMINATOR"}
+    )
+    return {**dict(row), "support": support, "precision": precision, "recall": recall, "f1": f1}
+
+
 def _build_result(
     engine: Any,
     windows: tuple[Any, ...],
@@ -390,16 +413,8 @@ def _build_result(
     held_support = support_gate(
         [w.label for w in windows], CLASSES, stage="held_out_test", minimum=2
     )
-    fold_zero_support = sorted(
-        {cls for fold in fold_support for cls in fold["held_out_test"]["zero_support"]}
-    )
-    held_support["zero_support"] = fold_zero_support
-    for cls in fold_zero_support:
-        held_support["class_status"][cls] = {
-            "status": "NOT_ESTIMABLE",
-            "reason": "ZERO_SUPPORT",
-            "support": 0,
-        }
+    # Aggregate held-out support is population-only.  Fold-local zero support
+    # remains under support.folds and must not rewrite aggregate counts/status.
     # Held-out support is descriptive: macro NLL/Brier/ECE remain estimable.
     # Only class-specific exploratory cells carry NOT_ESTIMABLE state.
     values: dict[str, dict[str, dict[str, float]]] = {
@@ -442,6 +457,25 @@ def _build_result(
                         "population_rule_id": "subject_macro_min_windows_1",
                     }
                 )
+    # Bind every ablation contrast/state used by bootstrap to the same frozen
+    # subject/window population.  Each metric gets its own pairing records.
+    for configuration in ("back_only", "thigh_only"):
+        for state in ("calibrated", "uncalibrated"):
+            contrast = f"{configuration}_vs_full_sensor"
+            for subject in subjects:
+                wh = window_set_hash([[w.provenance] for w in windows if w.subject == subject])
+                for metric in ESTIMANDS:
+                    records.append(
+                        {
+                            "subject_id": subject,
+                            "contrast_id": contrast,
+                            "estimand_id": metric,
+                            "reason": "",
+                            "arm": state,
+                            "window_set_hash": wh,
+                            "population_rule_id": "subject_macro_min_windows_1",
+                        }
+                    )
     pairing = pairing_manifest(records)
     raw = {
         "H_" + m.upper(): pvalue(
@@ -451,7 +485,10 @@ def _build_result(
         for m in ESTIMANDS
     }
     inference = _inference_report(engine, subjects, timeout_check=timeout_check)
-    raw_p = {k: row["p_value"] for k, row in raw.items() if row.get("status") == "ESTIMABLE"}
+    # Keep the exact sign-flip artifacts in the validated inference section;
+    # they are the source for family correction, never an ephemeral intermediate.
+    inference["pvalues"] = raw
+    raw_p = {k: row["p"] for k, row in raw.items() if row["status"] == "ESTIMABLE"}
     family = (
         holm(raw_p)
         if len(raw_p) == 3
@@ -505,8 +542,11 @@ def _build_result(
             ],
             "f1": {
                 f"{fold['configuration']}/{state}/{fold['test_subject']}": {
-                    "class_records": fold["sufficient_statistics"][state][fold["test_subject"]][
-                        "classification"
+                    "class_records": [
+                        _exact_f1_record(row)
+                        for row in fold["sufficient_statistics"][state][fold["test_subject"]][
+                            "classification"
+                        ]
                     ],
                     "class_status": {
                         row["class"]: (
@@ -548,8 +588,8 @@ def _build_result(
             "eligibility_manifest_hash": canonical_hash(eligibility),
         },
         "pairing": {
-            "pairing_manifest_hash": canonical_hash(pairing),
-            "eligible_subject_hash": canonical_hash(subjects),
+            "pairing_manifest_hash": pairing["pairing_manifest_hash"],
+            "eligible_subject_hash": pairing["eligible_subject_hash"],
             "records": records,
         },
         "family": {
@@ -635,14 +675,21 @@ def _fixture_windows(kind: str) -> tuple[tuple[Any, ...], dict[str, Any]]:
 
 
 def _publish(output: Path, result: dict[str, Any], guard: RunGuard) -> Path:
+    """Stage all package members and publish the completion manifest last."""
     generated = json.loads(result["outputs"]["generator"])
+    staging = output / ".staging"
+    staging.mkdir(exist_ok=False)
+    atomic_canonical_write(
+        staging / "package-quarantine.json",
+        {"status": "STAGED_NOT_CONSUMABLE", "completion_manifest": False},
+    )
     guard.check_timeout()
-    atomic_canonical_write(output / "result-v2.1.json", result)
+    atomic_canonical_write(staging / "result-v2.1.json", result)
     guard.check_timeout()
-    atomic_canonical_write(output / "generator.json", generated)
+    atomic_canonical_write(staging / "generator.json", generated)
     guard.check_timeout()
     atomic_canonical_write(
-        output / "quarantine.json",
+        staging / "quarantine.json",
         (
             {
                 "quarantine": "guarded_real_unverified",
@@ -664,8 +711,26 @@ def _publish(output: Path, result: dict[str, Any], guard: RunGuard) -> Path:
     from howhow.episodes.harth.v2.run_guard import atomic_text_write
 
     guard.check_timeout()
-    atomic_text_write(output / "manuscript.md", result["outputs"]["manuscript"])
+    atomic_text_write(staging / "manuscript.md", result["outputs"]["manuscript"])
     guard.check_timeout()
+    package_files = ["result-v2.1.json", "generator.json", "quarantine.json", "manuscript.md"]
+    package_hashes = {name: _sha(staging / name) for name in package_files}
+    # Move members before, but expose no completion signal until every member is
+    # durable and the immutable manifest is written last.
+    for name in package_files:
+        guard.check_timeout()
+        os.replace(staging / name, output / name)
+    guard.check_timeout()
+    manifest = {
+        "manifest_version": "v2.1-package-1",
+        "status": "COMPLETE",
+        "immutable": True,
+        "files": package_hashes,
+    }
+    atomic_canonical_write(output / "package-manifest.json", manifest)
+    guard.check_timeout()
+    (staging / "package-quarantine.json").unlink(missing_ok=True)
+    staging.rmdir()
     guard.final(
         phase="complete",
         quarantine=(

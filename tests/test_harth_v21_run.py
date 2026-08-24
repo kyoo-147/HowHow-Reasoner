@@ -17,6 +17,7 @@ _MODULE = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_MODULE)
 run_synthetic = _MODULE.run_synthetic
 V21Error = _MODULE.V21Error
+validate_result = _MODULE.validate_result
 
 
 def test_complete_fixture_publishes_quarantined_truthful_artifacts(tmp_path: Path) -> None:
@@ -45,7 +46,8 @@ def test_support_and_family_failures_are_preserved(tmp_path: Path) -> None:
     assert all(
         zero["estimability"][metric]["status"] == "ESTIMABLE" for metric in ("nll", "brier", "ece")
     )
-    assert "140" in zero["support"]["held_out_test"]["zero_support"]
+    assert "140" not in zero["support"]["held_out_test"]["zero_support"]
+    assert any("140" in fold["held_out_test"]["zero_support"] for fold in zero["support"]["folds"])
     assert incomplete["status"] == "INCOMPLETE_FAMILY"
 
 
@@ -58,6 +60,42 @@ def test_stage_failures_are_atomic_and_metrics_free(tmp_path: Path, fixture: str
     assert failure["scientific_metrics"] is False
     assert failure["phase"] == "loader_engine_analysis_schema_generator"
     assert not (output / "result-v2.1.json").exists()
+
+
+def test_strict_cross_field_mutations_are_rejected(tmp_path: Path) -> None:
+    payload = json.loads(run_synthetic("complete", tmp_path / "out").read_text())
+    mutated = json.loads(json.dumps(payload))
+    mutated["inference"]["pvalues"]["H_NLL"]["p"] = 0.5
+    with pytest.raises(V21Error):
+        validate_result(mutated)
+    mutated = json.loads(json.dumps(payload))
+    mutated["support"]["held_out_test"]["class_status"]["1"]["support"] += 1
+    with pytest.raises(V21Error, match="AGGREGATE_SUPPORT_CONTRADICTION"):
+        validate_result(mutated)
+    mutated = json.loads(json.dumps(payload))
+    f1 = next(iter(mutated["exploratory"]["f1"].values()))["class_records"][0]
+    f1["f1"] = {"status": "ESTIMABLE", "value": 0.0}
+    with pytest.raises(V21Error, match="F1_VALUE_MISMATCH"):
+        validate_result(mutated)
+    mutated = json.loads(json.dumps(payload))
+    mutated["pairing"]["records"] = mutated["pairing"]["records"][1:]
+    with pytest.raises(V21Error):
+        validate_result(mutated)
+
+
+def test_completion_manifest_is_last_and_binds_staged_package(tmp_path: Path) -> None:
+    result = run_synthetic("complete", tmp_path / "out")
+    package = result.parent / "package-manifest.json"
+    manifest = json.loads(package.read_text())
+    assert manifest["status"] == "COMPLETE"
+    assert manifest["immutable"] is True
+    assert not (result.parent / ".staging").exists()
+    assert set(manifest["files"]) == {
+        "result-v2.1.json",
+        "generator.json",
+        "quarantine.json",
+        "manuscript.md",
+    }
 
 
 def test_real_auth_schema_rejects_unknown_fields_without_creating_destination(

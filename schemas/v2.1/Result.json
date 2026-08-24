@@ -763,7 +763,8 @@
       "required": [
         "single_arm",
         "paired",
-        "ablations"
+        "ablations",
+        "pvalues"
       ],
       "properties": {
         "single_arm": {
@@ -795,7 +796,36 @@
             }
           },
           "additionalProperties": false
+        },
+        "pvalues": {
+          "type": "object",
+          "minProperties": 3,
+          "maxProperties": 3,
+          "patternProperties": {
+            "^H_(NLL|BRIER|ECE)$": {
+              "$ref": "#/$defs/pvalue"
+            }
+          },
+          "additionalProperties": false
         }
+      }
+    },
+    "pvalue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job_id", "hash", "seed", "generator", "T_obs", "draws", "p", "tie", "zero", "status", "eligible_count"],
+      "properties": {
+        "job_id": {"type": "string", "minLength": 1},
+        "hash": {"$ref": "#/$defs/hash"},
+        "seed": {"type": "integer", "minimum": 0},
+        "generator": {"const": "PCG64"},
+        "T_obs": {"type": ["number", "null"]},
+        "draws": {"const": 200000},
+        "p": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "tie": {"const": "inclusive_leq"},
+        "zero": {"const": "unchanged"},
+        "status": {"enum": ["ESTIMABLE", "NOT_ESTIMABLE"]},
+        "eligible_count": {"type": "integer", "minimum": 0}
       }
     },
     "class_record": {
@@ -806,7 +836,10 @@
         "TP",
         "FP",
         "FN",
-        "support"
+        "support",
+        "precision",
+        "recall",
+        "f1"
       ],
       "properties": {
         "class": {
@@ -828,7 +861,10 @@
         "support": {
           "type": "integer",
           "minimum": 0
-        }
+        },
+        "precision": {"$ref": "#/$defs/estimability"},
+        "recall": {"$ref": "#/$defs/estimability"},
+        "f1": {"$ref": "#/$defs/estimability"}
       }
     },
     "exploratory": {
