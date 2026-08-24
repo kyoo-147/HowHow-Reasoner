@@ -2,9 +2,59 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 from scripts import harth_v2_run as runner
+
+
+def _git(cwd: Path, *args: str) -> None:
+    subprocess.run(("git", *args), cwd=cwd, check=True, capture_output=True)
+
+
+def _identity_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "identity-repo"
+    (repo / "scripts").mkdir(parents=True)
+    (repo / "src/howhow/episodes/harth/v2").mkdir(parents=True)
+    (repo / "scripts/harth_v2_run.py").write_bytes(b"#!/usr/bin/env python3\nvalue = 1\n")
+    (repo / "src/howhow/episodes/harth/v2/engine.py").write_bytes(b"value = 2\n")
+    _git(repo, "init", "--quiet")
+    _git(repo, "config", "user.email", "test@example.invalid")
+    _git(repo, "config", "user.name", "Test")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "--quiet", "-m", "identity fixture")
+    return repo
+
+
+def test_code_hash_is_stable_across_checkout_line_endings(tmp_path, monkeypatch) -> None:
+    repo = _identity_repo(tmp_path)
+    monkeypatch.setattr(runner, "ROOT", repo)
+    lf_hash = runner.code_hash()
+    (repo / "scripts/harth_v2_run.py").write_bytes(b"#!/usr/bin/env python3\r\nvalue = 1\r\n")
+    crlf_hash = runner.code_hash()
+    assert crlf_hash == lf_hash
+
+
+def test_code_hash_is_stable_across_same_commit_worktrees(tmp_path, monkeypatch) -> None:
+    repo = _identity_repo(tmp_path)
+    other = tmp_path / "other-worktree"
+    _git(repo, "worktree", "add", "--quiet", str(other), "HEAD")
+    monkeypatch.setattr(runner, "ROOT", repo)
+    first = runner.code_hash()
+    monkeypatch.setattr(runner, "ROOT", other)
+    assert runner.code_hash() == first
+
+
+def test_dirty_modified_and_untracked_source_are_rejected(tmp_path, monkeypatch) -> None:
+    repo = _identity_repo(tmp_path)
+    monkeypatch.setattr(runner, "ROOT", repo)
+    (repo / "scripts/harth_v2_run.py").write_bytes(b"modified\n")
+    assert runner.git("status", "--porcelain")
+    _git(repo, "checkout", "--", ".")
+    (repo / "src/howhow/episodes/harth/v2/new.py").write_bytes(b"untracked\n")
+    assert runner.git("status", "--porcelain")
+    (repo / "src/howhow/episodes/harth/v2/engine.py").unlink()
+    assert runner.git("status", "--porcelain")
 
 
 def inputs(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
