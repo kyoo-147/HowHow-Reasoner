@@ -3,13 +3,21 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from source_manifest import verify_manifest_hashes  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
     errors = []
+    try:
+        verify_manifest_hashes(ROOT, ROOT / "arxiv-source-manifest.json")
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        errors.append(f"source manifest: {exc}")
     tex = (ROOT / "main.tex").read_text(encoding="utf-8")
     generated = ROOT / "generated"
     for required in (

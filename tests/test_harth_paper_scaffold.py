@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import importlib.util
 import json
 import re
@@ -12,6 +11,10 @@ from pathlib import Path
 import pytest
 
 PAPER = Path(__file__).resolve().parents[1] / "episodes" / "harth-calibration" / "paper"
+TOOLS = PAPER / "tools"
+sys.path.insert(0, str(TOOLS))
+from source_manifest import canonical_sha256  # noqa: E402, I001
+
 GENERATOR = PAPER / "tools" / "generate_tables.py"
 CHECKER = PAPER / "tools" / "check_paper.py"
 
@@ -123,12 +126,43 @@ def test_source_build_finalizes_hashes_and_stale_manifest_fails(tmp_path: Path):
         "generated/results.tex",
         "generated/figures.tex",
     ):
-        assert (
-            manifest["sha256"][relative]
-            == hashlib.sha256((copied / relative).read_bytes()).hexdigest()
-        )
+        assert manifest["sha256"][relative] == canonical_sha256((copied / relative).read_bytes())
     manifest["sha256"]["generated/results.tex"] = "0" * 64
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    assert (
+        subprocess.run(
+            [sys.executable, str(copied / "tools/generate_tables.py"), "--check"], check=False
+        ).returncode
+        != 0
+    )
+
+
+def test_canonical_hashes_accept_crlf_checkout_and_reject_tamper(tmp_path: Path):
+    copied = tmp_path / "crlf-paper"
+    shutil.copytree(PAPER, copied)
+    for relative in (
+        "generated/evidence-snapshot.json",
+        "generated/macros.tex",
+        "generated/results.tex",
+        "generated/figures.tex",
+        "arxiv-source-manifest.json",
+    ):
+        path = copied / relative
+        path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+    assert (
+        subprocess.run(
+            [sys.executable, str(copied / "tools/generate_tables.py"), "--check"], check=False
+        ).returncode
+        == 0
+    )
+    assert (
+        subprocess.run(
+            [sys.executable, str(copied / "tools/check_paper.py")], check=False
+        ).returncode
+        == 0
+    )
+    output = copied / "generated/results.tex"
+    output.write_bytes(output.read_bytes().replace(b"0.0332", b"0.0333", 1))
     assert (
         subprocess.run(
             [sys.executable, str(copied / "tools/generate_tables.py"), "--check"], check=False

@@ -6,10 +6,14 @@ import argparse
 import hashlib
 import json
 import os
+import sys
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+TOOLS = Path(__file__).resolve().parent
+sys.path.insert(0, str(TOOLS))
+from source_manifest import HASH_MODE, canonical_sha256, canonical_utf8_lf  # noqa: E402, I001
 SHA = "2d091df35ccafb8a912fa42cfc4e9bd993f6087923eca9119f1e8369c8d5dffd"
 CUSTODY_SHA = "0b043086a6fb074ae5c3b3508bd27834777d93a26fade5f3a155f9d79b592553"
 MANIFEST = ROOT / "arxiv-source-manifest.json"
@@ -61,7 +65,7 @@ def fail(message: str) -> None:
 
 
 def file_sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return canonical_sha256(path.read_bytes())
 
 
 def atomic_write(path: Path, content: str) -> None:
@@ -87,6 +91,10 @@ def validate_source_manifest(manifest: object) -> dict:
         fail("unsupported source manifest")
     if manifest.get("status") != MANIFEST_STATUS:
         fail("source manifest status mismatch")
+    if manifest.get("status") != MANIFEST_STATUS:
+        fail("source manifest status mismatch")
+    if manifest.get("hash_mode") != HASH_MODE:
+        fail("source manifest hash mode mismatch")
     if manifest.get("result_sha256") != SHA or manifest.get("custody_sha256") != CUSTODY_SHA:
         fail("source manifest identity mismatch")
     if manifest.get("include") != list(REQUIRED_INCLUDE):
@@ -140,7 +148,7 @@ def verify_public_manifest(snapshot_raw: bytes, snapshot: dict) -> None:
     if recorded_hashes != actual_hashes:
         fail("source manifest file hash mismatch")
     expected = manifest.get("sha256", {}).get("generated/evidence-snapshot.json")
-    if not expected or hashlib.sha256(snapshot_raw).hexdigest() != expected:
+    if not expected or canonical_sha256(snapshot_raw) != expected:
         fail("public snapshot hash mismatch")
     if snapshot.get("schema") != "howhow-harth-publication-snapshot-v2.1":
         fail("public snapshot schema mismatch")
@@ -548,7 +556,9 @@ def main() -> int:
     if args.check:
         return int(
             any(
-                not p.is_file() or p.read_text(encoding="utf-8") != content
+                not p.is_file()
+                or canonical_utf8_lf(p.read_bytes())
+                != canonical_utf8_lf(content.encode("utf-8"))
                 for p, content in expected.items()
             )
         )
