@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+from jsonschema import Draft202012Validator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -47,7 +48,30 @@ CONFIG = ROOT / "episodes/harth-calibration/run-config-v2.1.json"
 SCHEMA = ROOT / "schemas/v2.1/Result.json"
 CLASSES = ["1", "2", "3", "4", "5", "6", "7", "8", "13", "14", "130", "140"]
 REAL_CONSENT_ENV = "HOWHOW_RUN_REAL_HARTH_V21"
+DECISION_ID = "howhow-harth-v21-pr42-review-4"
 BUDGETS = {"timeout_seconds": 1800, "bootstrap_reps": 2000, "pvalue_draws": 200000}
+AUTH_FIELDS = {
+    "authorization_version",
+    "protocol_version",
+    "decision_id",
+    "decision_sha256",
+    "allow_rerun",
+    "allow_resume",
+    "allow_retry",
+    "allow_tuning",
+    "one_shot",
+    "hashes",
+    "budgets",
+    "destination",
+    "git_revision",
+    "vocabulary",
+}
+PACKAGE_PATHS = {
+    "main": "scripts/harth_v21_run.py",
+    "protocol": "episodes/harth-calibration/protocol/protocol-v2.1.json",
+    "config": "episodes/harth-calibration/run-config-v2.1.json",
+    "schema": "schemas/v2.1/Result.json",
+}
 CODE_PATHS = (
     "scripts/harth_v21_run.py",
     "scripts/harth_v2_run.py",
@@ -62,6 +86,20 @@ CODE_PATHS = (
 
 def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _git_blob(path: str) -> str:
+    """Return the index/HEAD Git blob identity, independent of checkout EOLs."""
+    line = subprocess.run(
+        ("git", "ls-files", "-s", "--", path),
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout.strip()
+    if not line:
+        raise V21Error(f"UNTRACKED_PACKAGE:{path}")
+    return line.split()[1]
 
 
 def _code_identity() -> tuple[str, str]:
@@ -119,45 +157,52 @@ def _load_authorization(path: Path, *, archive: Path, output: Path) -> dict[str,
         auth = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise V21Error("AUTHORIZATION_RECORD_INVALID") from exc
-    required = {
-        "authorization_version",
-        "protocol_version",
-        "allow_rerun",
-        "one_shot",
-        "hashes",
-        "budgets",
-        "destination",
-        "git_revision",
-        "vocabulary",
-    }
-    if (
-        not isinstance(auth, dict)
-        or set(auth) != required
-        or auth["authorization_version"] != "v2.1"
-    ):
+    if not isinstance(auth, dict):
+        raise V21Error("AUTHORIZATION_RECORD_INVALID")
+    # Legacy records are rejected as stale without becoming an executable authorization.
+    if "decision_id" not in auth and isinstance(auth.get("hashes"), dict):
+        if auth.get("git_revision") != _code_identity()[1]:
+            raise V21Error("STALE_OR_WRONG_AUTHORIZATION")
+    auth_schema = json.loads((ROOT / "schemas/v2.1/Authorization.json").read_text(encoding="utf-8"))
+    try:
+        Draft202012Validator(auth_schema).validate(auth)
+    except Exception as exc:
+        raise V21Error("AUTHORIZATION_SCHEMA_INVALID") from exc
+    # Exact top-level schema: an authorization is not a bag of caller-controlled flags.
+    if set(auth) != AUTH_FIELDS or auth.get("authorization_version") != "v2.1":
+        # Preserve a useful stale error for legacy records, while never accepting them.
+        if isinstance(auth.get("hashes"), dict) and auth.get("git_revision") != _code_identity()[1]:
+            raise V21Error("STALE_OR_WRONG_AUTHORIZATION")
         raise V21Error("AUTHORIZATION_RECORD_FIELDS_MISMATCH")
+    if auth["protocol_version"] != PROTOCOL_VERSION:
+        raise V21Error("AUTHORIZATION_PROTOCOL_MISMATCH")
     if (
-        auth["protocol_version"] != PROTOCOL_VERSION
-        or auth["allow_rerun"] is not True
+        auth["allow_rerun"] is not True
+        or auth["allow_resume"] is not False
+        or auth["allow_retry"] is not False
+        or auth["allow_tuning"] is not False
         or auth["one_shot"] is not True
     ):
         raise V21Error("RERUN_NOT_AUTHORIZED")
     code_hash, revision = _code_identity()
     expected = {
-        "protocol": _sha(PROTOCOL),
+        "main": _git_blob(PACKAGE_PATHS["main"]),
         "code": code_hash,
-        "config": _sha(CONFIG),
-        "schema": _sha(SCHEMA),
+        "protocol": _git_blob(PACKAGE_PATHS["protocol"]),
+        "config": _git_blob(PACKAGE_PATHS["config"]),
+        "schema": _git_blob(PACKAGE_PATHS["schema"]),
         "archive": _sha(archive),
         "vocabulary": canonical_hash(CLASSES),
+        "budgets": canonical_hash(BUDGETS),
     }
     if auth["hashes"] != expected or auth["git_revision"] != revision:
         raise V21Error("STALE_OR_WRONG_AUTHORIZATION")
+    if auth["decision_id"] != DECISION_ID or auth["decision_sha256"] != APPROVED_DECISION_SHA256:
+        raise V21Error("DECISION_BINDING_MISMATCH")
     if auth["vocabulary"] != CLASSES or auth["destination"] != str(output.resolve()):
         raise V21Error("AUTHORIZATION_BINDING_MISMATCH")
     if auth["budgets"] != BUDGETS:
         raise V21Error("AUTHORIZATION_BUDGET_MISMATCH")
-    # Approval provenance is independently parsed from the record, never copied into it.
     validate_approval_provenance(
         {
             "proposal_sha256": APPROVED_PROPOSAL_SHA256,
@@ -179,6 +224,9 @@ def _build_result(
     *,
     claim: str = "synthetic_structural_only_no_performance_claim",
     forced_status: str | None = None,
+    execution_authorization: Mapping[str, Any] | None = None,
+    real_data: bool = False,
+    timeout_check: Any = None,
 ) -> dict[str, Any]:
     folds = [f for f in engine.folds if f["configuration"] == "full_sensor"]
     subjects = sorted({w.subject for w in windows})
@@ -190,7 +238,15 @@ def _build_result(
         m: {s: {} for s in ("calibrated", "uncalibrated")} for m in ESTIMANDS
     }
     records: list[dict[str, Any]] = []
+    if len(engine.folds) != 66 or {f["configuration"] for f in engine.folds} != {
+        "full_sensor",
+        "back_only",
+        "thigh_only",
+    }:
+        raise V21Error("ENGINE_FOLD_CONFIGURATION_INCOMPLETE")
     for fold in folds:
+        if timeout_check is not None:
+            timeout_check()
         subject = fold["test_subject"]
         for arm in ("calibrated", "uncalibrated"):
             stats = fold["sufficient_statistics"][arm][subject]
@@ -259,7 +315,20 @@ def _build_result(
             "allow_code_fix": True,
             "allow_rerun": False,
         },
+        **(
+            {
+                "execution_authorization": {
+                    "decision_id": execution_authorization["decision_id"],
+                    "decision_sha256": execution_authorization["decision_sha256"],
+                    "destination": execution_authorization["destination"],
+                    "one_shot": True,
+                }
+            }
+            if execution_authorization is not None
+            else {}
+        ),
         "hashes": hashes,
+        "engine": engine.to_dict(),
         "support": {
             "training": support_gate(train_labels, CLASSES, stage="training", minimum=2),
             "inner_calibration": support_gate(
@@ -300,7 +369,11 @@ def _build_result(
         "outputs": {"generator": "", "manuscript": ""},
         "claim_boundary": claim,
     }
+    if timeout_check is not None:
+        timeout_check()
     generated = generate_outputs(result)
+    if timeout_check is not None:
+        timeout_check()
     result["outputs"] = {
         "generator": generated["generator.json"],
         "manuscript": generated["manuscript.md"],
@@ -372,30 +445,94 @@ def _publish(output: Path, result: dict[str, Any], guard: RunGuard) -> Path:
     atomic_canonical_write(output / "generator.json", generated)
     atomic_canonical_write(
         output / "quarantine.json",
-        {
-            "quarantine": "synthetic_only_no_scientific_claim",
-            "real_data": False,
-            "scientific_metrics": False,
-        },
+        (
+            {
+                "quarantine": "guarded_real_unverified",
+                "real_data": True,
+                "performance_bearing": True,
+                "scientific_status": "UNVERIFIED",
+                "release": False,
+            }
+            if result.get("claim_boundary") == "guarded_real_quarantined_no_release"
+            else {
+                "quarantine": "synthetic_only_no_scientific_claim",
+                "real_data": False,
+                "performance_bearing": False,
+                "scientific_status": "UNVERIFIED",
+                "release": False,
+            }
+        ),
     )
     from howhow.episodes.harth.v2.run_guard import atomic_text_write
 
     atomic_text_write(output / "manuscript.md", result["outputs"]["manuscript"])
-    guard.final(phase="complete", quarantine="synthetic_only_no_scientific_claim")
+    guard.final(
+        phase="complete",
+        quarantine=(
+            "guarded_real_unverified"
+            if result.get("claim_boundary") == "guarded_real_quarantined_no_release"
+            else "synthetic_only_no_scientific_claim"
+        ),
+    )
     return output / "result-v2.1.json"
+
+
+def _claim_destination(output: Path, authorization: Mapping[str, Any]) -> Path:
+    """Atomically create and mark the one-shot destination after auth only."""
+    if output.exists():
+        raise V21Error("FRESH_OUTPUT_REQUIRED")
+    try:
+        output.mkdir(parents=True, exist_ok=False)
+        marker = output / ".howhow-v21-owned"
+        fd = os.open(marker, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
+            stream.write(canonical_hash(dict(authorization)) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+    except FileExistsError as exc:
+        raise V21Error("DESTINATION_RACE_OR_ALREADY_OWNED") from exc
+    return output
 
 
 def run_real(archive: Path, authorization: Path, output: Path) -> Path:
     if os.environ.get(REAL_CONSENT_ENV) != "1":
         raise V21Error(f"--execute-real requires {REAL_CONSENT_ENV}=1")
-    if output.exists() and (not output.is_dir() or any(output.iterdir())):
-        raise V21Error("FRESH_OUTPUT_REQUIRED")
-    output.mkdir(parents=True, exist_ok=True)
-    # Guard owns preflight, loader, engine, validation, quarantine, failure, and publication.
-    guard = RunGuard(output, input_hash=_sha(archive), protocol_hash=_sha(PROTOCOL), code_hash=None)
+    # Authorization is completely validated before mkdir: new-schema auth failure leaves no output dir.
+    legacy = False
     try:
-        _load_authorization(authorization.resolve(), archive=archive.resolve(), output=output)
-        code_hash, revision = _code_identity()
+        raw = json.loads(authorization.read_text(encoding="utf-8"))
+        legacy = isinstance(raw, dict) and "decision_id" not in raw and "allow_rerun" in raw
+    except (OSError, json.JSONDecodeError):
+        pass
+    try:
+        auth = _load_authorization(
+            authorization.resolve(), archive=archive.resolve(), output=output
+        )
+    except BaseException as exc:
+        # Compatibility-only failure envelope for pre-v2.1 records; such records are never executed.
+        if legacy:
+            output.mkdir(parents=True, exist_ok=True)
+            from howhow.episodes.harth.v2.run_guard import atomic_write
+
+            atomic_write(
+                output / "failure.json",
+                {
+                    "status": "FAILED",
+                    "scientific_metrics": False,
+                    "phase": "authorization",
+                    "error": str(exc),
+                },
+            )
+        raise
+    _claim_destination(output, auth)
+    guard = RunGuard(
+        output,
+        input_hash=_sha(archive),
+        protocol_hash=_git_blob(PACKAGE_PATHS["protocol"]),
+        code_hash=None,
+    )
+    try:
+        code_hash, _revision = _code_identity()
         guard.code_hash = code_hash
         protocol_data, config_data, schema_data = (
             json.loads(PROTOCOL.read_text()),
@@ -409,7 +546,10 @@ def run_real(archive: Path, authorization: Path, output: Path) -> Path:
         ):
             raise V21Error("PROTOCOL_CONFIG_SCHEMA_MISMATCH")
         loaded = load_harth_archive(
-            archive, CLASSES, protocol_hash=_sha(PROTOCOL), code_hash=code_hash
+            archive,
+            CLASSES,
+            protocol_hash=_git_blob(PACKAGE_PATHS["protocol"]),
+            code_hash=code_hash,
         )
         guard.stage("loader_complete", manifest=loaded.manifest)
         guard.bind_input_hash(input_hash(loaded.windows))
@@ -422,10 +562,20 @@ def run_real(archive: Path, authorization: Path, output: Path) -> Path:
             timeout_seconds=BUDGETS["timeout_seconds"],
         )
         guard.stage("engine_complete", folds=len(engine.folds))
-        result = _build_result(engine, loaded.windows, loaded.manifest, code_hash, archive)
+        result = _build_result(
+            engine,
+            loaded.windows,
+            loaded.manifest,
+            code_hash,
+            archive,
+            claim="guarded_real_quarantined_no_release",
+            execution_authorization=auth,
+            real_data=True,
+            timeout_check=guard.check_timeout,
+        )
         return _publish(output, result, guard)
     except BaseException as exc:
-        guard.failure(exc, phase="preflight_loader_engine_analysis_schema_generator_publication")
+        guard.failure(exc, phase="loader_engine_analysis_schema_generator_publication")
         raise
 
 

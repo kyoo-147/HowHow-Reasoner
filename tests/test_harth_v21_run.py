@@ -54,6 +54,36 @@ def test_stage_failures_are_atomic_and_metrics_free(tmp_path: Path, fixture: str
     assert not (output / "result-v2.1.json").exists()
 
 
+def test_real_auth_schema_rejects_unknown_fields_without_creating_destination(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    archive = tmp_path / "archive.zip"
+    archive.write_bytes(b"not-a-zip")
+    auth = tmp_path / "authorization.json"
+    auth.write_text(json.dumps({"authorization_version": "v2.1", "unexpected": True}))
+    output = tmp_path / "out"
+    monkeypatch.setenv(_MODULE.REAL_CONSENT_ENV, "1")
+    with pytest.raises(V21Error, match="AUTHORIZATION_SCHEMA_INVALID"):
+        _MODULE.run_real(archive, auth, output)
+    assert not output.exists()
+
+
+def test_real_generator_is_quarantined_and_unverified() -> None:
+    generated = _MODULE.generate_outputs(
+        {"status": "COMPLETE", "claim_boundary": "guarded_real_quarantined_no_release"}
+    )
+    payload = json.loads(generated["generator.json"])
+    assert payload == {
+        "claim_boundary": "guarded_real_quarantined_no_release",
+        "performance_bearing": True,
+        "real_data": True,
+        "release": False,
+        "scientific_status": "UNVERIFIED",
+        "source_result_hash": payload["source_result_hash"],
+        "status": "COMPLETE",
+    }
+
+
 def test_preexisting_destination_is_refused(tmp_path: Path) -> None:
     output = tmp_path / "existing"
     output.mkdir()

@@ -16,17 +16,22 @@ HOWHOW_RUN_REAL_HARTH_V21=1 uv run python scripts/harth_v21_run.py \
   --output /absolute/path/new-output
 ```
 
-The authorization record is an exact JSON object containing `authorization_version`,
-`protocol_version`, `allow_rerun: true`, `one_shot: true`, the independent hashes for
-archive/protocol/config/schema/code/vocabulary, fixed budgets, canonical destination,
-current git revision, and the frozen vocabulary. The consent environment variable is
+The authorization record is validated by `schemas/v2.1/Authorization.json` as an exact
+JSON object containing a separate `decision_id` and `decision_sha256`,
+`allow_rerun: true`, `allow_resume: false`, `allow_retry: false`,
+`allow_tuning: false`, `one_shot: true`, and exact `main`/`code`/`protocol`/`config`/
+`schema`/`archive`/`vocabulary`/`budgets` hashes. Hashes for tracked artifacts are
+Git-blob identities (LF-independent), not checkout bytes. The consent environment variable is
 required in addition to that record. Preflight rejects stale or current-head/code,
 tracked-dirty, protocol/config/schema/archive/vocabulary/budget, and destination
 mismatches before archive loading. It never resumes or retries and requires an empty
 publication directory.
 
-Loader, v2 engine, v2.1 aggregation/validation, timeout, quarantine, and immutable
-atomic publication are owned by one `RunGuard`. Failure artifacts are metrics-free;
-stdout contains only an operational pass/block line, never metrics. Real outputs remain
-quarantined and make no performance claim. No real HARTH archive or checkpoint is
+Authorization is validated before the destination exists; only then is an exclusive
+owned marker created. Loader, v2 engine, v2.1 aggregation/validation, timeout,
+quarantine, and immutable atomic publication are owned by one `RunGuard`. Failure
+artifacts are metrics-free; stdout contains only an operational pass/block line, never
+metrics. Real outputs truthfully record `real_data=true`, `performance_bearing=true`,
+`scientific_status=UNVERIFIED`, and `release=false`; they remain quarantined and make
+no scientific claim. No real HARTH archive or checkpoint is
 included in this repository or required by the test suite.

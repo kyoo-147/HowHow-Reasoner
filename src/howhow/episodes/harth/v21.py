@@ -21,7 +21,6 @@ from jsonschema import Draft202012Validator
 from jsonschema import ValidationError as JsonSchemaValidationError
 
 PROTOCOL_VERSION = "protocol-v2.1"
-PROTOCOL_VERSION = "protocol-v2.1"
 APPROVED_PROPOSAL_SHA256 = "17cfe84a5096ce1025f13cce779e34a55ab459f408168c899b2de05b2c339b08"
 APPROVED_DECISION_SHA256 = "7469a71ac40a002595a0e2a5d241a62ddd8278cb5bb507a529a2fb579d12061c"
 SCHEMA_VERSION = "result-schema-v2.1"
@@ -667,6 +666,7 @@ def validate_result(
         "state",
         "scope",
         "provenance",
+        "execution_authorization",
         "reason",
         "required_fields_missing",
         "hashes",
@@ -674,6 +674,7 @@ def validate_result(
         "estimability",
         "population",
         "pairing",
+        "engine",
         "family",
         "outputs",
         "claim_boundary",
@@ -824,18 +825,26 @@ def migration_v2_to_v21(
 
 
 def generate_outputs(result: Mapping[str, Any]) -> dict[str, str]:
-    """Render only from the already-validated in-memory result contract."""
+    """Render only from the already-validated in-memory result contract.
+
+    The result's claim boundary is authoritative; this function never invents a
+    performance claim and is called only after artifact-bound validation.
+    """
     status = str(result.get("status", "UNKNOWN"))
-    boundary = "No performance claim; synthetic structural contract only."
+    boundary = str(result.get("claim_boundary", "UNVERIFIED"))
+    real = boundary == "guarded_real_quarantined_no_release"
     payload = {
         "status": status,
         "claim_boundary": boundary,
-        "scientific_status": "UNVERIFIED" if status != "COMPLETE" else "STRUCTURAL_ONLY",
+        "scientific_status": "UNVERIFIED",
+        "real_data": real,
+        "performance_bearing": real,
+        "release": False,
         "source_result_hash": canonical_hash(result),
     }
     return {
         "generator.json": canonical_bytes(payload).decode("utf-8"),
-        "manuscript.md": f"HARTH protocol-v2.1 status: {status}. {boundary}\n",
+        "manuscript.md": f"HARTH protocol-v2.1 status: {status}. No performance claim. Scientific status: UNVERIFIED; release: false.\n",
     }
 
 
