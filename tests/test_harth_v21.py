@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 
 from howhow.episodes.harth.v21 import (
+    APPROVED_DECISION_SHA256,
+    APPROVED_PROPOSAL_SHA256,
     V21Error,
     atomic_canonical_write,
     bootstrap,
@@ -18,6 +20,7 @@ from howhow.episodes.harth.v21 import (
     subject_metrics,
     support_gate,
     transition,
+    validate_approval_provenance,
     validate_result,
 )
 
@@ -146,6 +149,28 @@ def test_empty_and_malformed_jobs_fail_closed():
         holm({"H_NLL": -0.1, "H_BRIER": 0.1, "H_ECE": 0.1})
 
 
+def test_approval_provenance_is_frozen():
+    validate_approval_provenance(
+        {
+            "proposal_sha256": APPROVED_PROPOSAL_SHA256,
+            "decision_sha256": APPROVED_DECISION_SHA256,
+            "review_revision": 4,
+            "allow_code_fix": True,
+            "allow_rerun": False,
+        }
+    )
+    with pytest.raises(V21Error):
+        validate_approval_provenance(
+            {
+                "proposal_sha256": "a" * 64,
+                "decision_sha256": APPROVED_DECISION_SHA256,
+                "review_revision": 4,
+                "allow_code_fix": True,
+                "allow_rerun": False,
+            }
+        )
+
+
 def test_strict_result_validator_rejects_unknowns_and_bad_bindings():
     hashes = {
         name: "a" * 64
@@ -160,15 +185,58 @@ def test_strict_result_validator_rejects_unknowns_and_bad_bindings():
             "pairing_manifest_sha256",
         )
     }
+    fit = {
+        "stage": "training",
+        "counts": {"c0": 2},
+        "minimum": 2,
+        "status": "PASS",
+        "reason": None,
+        "failed_classes": [],
+    }
+    inner = {**fit, "stage": "inner_calibration"}
+    held = {
+        "stage": "held_out_test",
+        "counts": {"c0": 1, "c1": 0},
+        "status": "OUTER_TEST_OBSERVED",
+        "class_status": {
+            "c0": {"status": "OBSERVED", "support": 1},
+            "c1": {"status": "NOT_ESTIMABLE", "support": 0, "reason": "ZERO_SUPPORT"},
+        },
+        "zero_support": ["c1"],
+        "aggregate_metrics_allowed": True,
+    }
+    hypothesis = {
+        "identifier": "H_NLL",
+        "raw_p": 1.0,
+        "sorted_rank": 1,
+        "equality_tie_group": 1,
+        "threshold": 0.016666666666666666,
+        "raw_holm": 1.0,
+        "adjusted_p": 1.0,
+        "local_pass": False,
+        "final_reject": False,
+        "stop_rank": 1,
+    }
     result = {
         "schema_version": "result-schema-v2.1",
         "protocol_version": "protocol-v2.1",
         "status": "NOT_ESTIMABLE",
         "state": "NOT_ESTIMABLE",
         "scope": "estimand",
+        "provenance": {
+            "proposal_sha256": APPROVED_PROPOSAL_SHA256,
+            "decision_sha256": APPROVED_DECISION_SHA256,
+            "review_revision": 4,
+            "allow_code_fix": True,
+            "allow_rerun": False,
+        },
         "hashes": hashes,
-        "support": {"training": {}, "inner_calibration": {}, "held_out_test": {}},
-        "estimability": {"nll": {}, "brier": {}, "ece": {}},
+        "support": {"training": fit, "inner_calibration": inner, "held_out_test": held},
+        "estimability": {
+            "nll": {"status": "NOT_ESTIMABLE", "reason": "NO_ELIGIBLE_SUBJECTS"},
+            "brier": {"status": "NOT_ESTIMABLE", "reason": "NO_ELIGIBLE_SUBJECTS"},
+            "ece": {"status": "NOT_ESTIMABLE", "reason": "NO_ELIGIBLE_SUBJECTS"},
+        },
         "population": {
             "frozen_subject_ids": [],
             "exclusions": [],
@@ -182,7 +250,11 @@ def test_strict_result_validator_rejects_unknowns_and_bad_bindings():
         },
         "family": {
             "family_id": "v2-primary-calibrated-vs-uncalibrated-3",
-            "hypotheses": [],
+            "hypotheses": [
+                hypothesis,
+                {**hypothesis, "identifier": "H_BRIER", "sorted_rank": 2},
+                {**hypothesis, "identifier": "H_ECE", "sorted_rank": 3},
+            ],
             "alpha": 0.05,
             "m": 3,
             "status": "INCOMPLETE_FAMILY",
@@ -191,7 +263,7 @@ def test_strict_result_validator_rejects_unknowns_and_bad_bindings():
         "claim_boundary": "synthetic_structural_only_no_performance_claim",
     }
     assert validate_result(result)["state"] == "NOT_ESTIMABLE"
-    with pytest.raises(V21Error, match="UNKNOWN"):
+    with pytest.raises(V21Error, match="JSON_SCHEMA"):
         validate_result({**result, "unexpected": True})
 
 
@@ -211,3 +283,19 @@ def test_generator_is_truthful_and_atomic_publication_is_exclusive(tmp_path):
     atomic_canonical_write(path, {"b": 2, "a": 1})
     with pytest.raises(V21Error, match="IMMUTABLE"):
         atomic_canonical_write(path, {"a": 9})
+
+
+def test_all_bootstrap_job_templates_and_holm_ties():
+    single = "protocol-v2.1|bootstrap|subject_macro|nll|single_arm|full_sensor|calibrated|seed=0"
+    paired = (
+        "protocol-v2.1|bootstrap|paired_delta|ece|calibrated_vs_uncalibrated|full_sensor|"
+        "calibrated|full_sensor|uncalibrated|seed=0"
+    )
+    assert bootstrap({"s": 1.0}, job_id=single)["job_kind"] == "subject_macro"
+    assert bootstrap({"s": 1.0}, job_id=paired)["job_kind"] == "paired_delta"
+    tied = holm({"H_NLL": 0.01, "H_BRIER": 0.01, "H_ECE": 0.9})
+    assert (
+        tied["hypotheses"][0]["equality_tie_group"] == tied["hypotheses"][1]["equality_tie_group"]
+    )
+    assert tied["hypotheses"][2]["stop_rank"] == 3
+    assert tied["hypotheses"][0]["adjusted_p"] == tied["hypotheses"][1]["adjusted_p"]

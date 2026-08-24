@@ -17,8 +17,13 @@ from pathlib import Path
 from typing import Any, cast
 
 import numpy as np
+from jsonschema import Draft202012Validator
+from jsonschema import ValidationError as JsonSchemaValidationError
 
 PROTOCOL_VERSION = "protocol-v2.1"
+PROTOCOL_VERSION = "protocol-v2.1"
+APPROVED_PROPOSAL_SHA256 = "17cfe84a5096ce1025f13cce779e34a55ab459f408168c899b2de05b2c339b08"
+APPROVED_DECISION_SHA256 = "7469a71ac40a002595a0e2a5d241a62ddd8278cb5bb507a529a2fb579d12061c"
 SCHEMA_VERSION = "result-schema-v2.1"
 P_FLOOR = 1e-12
 SUM_TOLERANCE = 1e-12
@@ -620,9 +625,35 @@ def build_artifact_hashes(
     }
 
 
+def _validate_json_schema_document(data: Mapping[str, Any]) -> None:
+    schema_path = Path(__file__).resolve().parents[4] / "schemas" / "v2.1" / "Result.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    try:
+        Draft202012Validator.check_schema(schema)
+        Draft202012Validator(schema).validate(data)
+    except JsonSchemaValidationError as exc:
+        raise V21Error(f"JSON_SCHEMA_VALIDATION: {exc.message}") from exc
+
+
+def validate_approval_provenance(value: Mapping[str, Any]) -> None:
+    if (
+        value.get("proposal_sha256") != APPROVED_PROPOSAL_SHA256
+        or value.get("decision_sha256") != APPROVED_DECISION_SHA256
+        or value.get("review_revision") != 4
+        or value.get("allow_code_fix") is not True
+        or value.get("allow_rerun") is not False
+    ):
+        raise V21Error("APPROVAL_PROVENANCE_MISMATCH")
+
+
 def validate_result(
-    data: Mapping[str, Any], *, artifacts: Mapping[str, Any] | None = None
+    data: Mapping[str, Any],
+    *,
+    artifacts: Mapping[str, Any] | None = None,
+    _schema_checked: bool = False,
 ) -> dict[str, Any]:
+    if not _schema_checked:
+        _validate_json_schema_document(data)
     if (
         not isinstance(data, Mapping)
         or data.get("schema_version") != SCHEMA_VERSION
@@ -635,6 +666,7 @@ def validate_result(
         "status",
         "state",
         "scope",
+        "provenance",
         "reason",
         "required_fields_missing",
         "hashes",
@@ -677,8 +709,6 @@ def validate_result(
         raise V21Error("HASH_FIELD_MATRIX_MISMATCH")
     for name in _HASHES:
         _hash(hashes[name], name)
-    for name in _HASHES:
-        _hash(hashes[name], name)
     family = cast(Mapping[str, Any], data["family"])
     if (
         family["family_id"] != "v2-primary-calibrated-vs-uncalibrated-3"
@@ -719,14 +749,14 @@ def validate_result(
         if dict(hashes) != expected:
             raise V21Error("ARTIFACT_HASH_BINDING_MISMATCH")
     return cast(dict[str, Any], json.loads(json.dumps(dict(data), ensure_ascii=False)))
-    return cast(dict[str, Any], json.loads(json.dumps(dict(data), ensure_ascii=False)))
 
 
 def validate_json_schema(
     data: Mapping[str, Any], *, artifacts: Mapping[str, Any] | None = None
 ) -> dict[str, Any]:
     """Canonical parity entry point: Python and JSON-schema callers share this validator."""
-    return validate_result(data, artifacts=artifacts)
+    _validate_json_schema_document(data)
+    return validate_result(data, artifacts=artifacts, _schema_checked=True)
 
 
 validate_schema_parity = validate_json_schema
