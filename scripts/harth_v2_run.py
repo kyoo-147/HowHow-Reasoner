@@ -144,15 +144,44 @@ def validate_output(output: Path, *, resume: bool = False) -> None:
     output.mkdir(parents=True, exist_ok=True)
 
 
+CODE_PATHS = ("scripts/harth_v2_run.py", "src/howhow/episodes/harth/v2")
+
+
+def _code_blobs() -> list[tuple[str, str]]:
+    """Return committed source paths and blob IDs used by the runner."""
+    listing = subprocess.run(
+        ("git", "ls-tree", "-r", "-z", "--full-tree", "HEAD", "--", *CODE_PATHS),
+        cwd=ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout
+    entries: list[tuple[str, str]] = []
+    for item in listing.split(b"\0"):
+        if not item:
+            continue
+        metadata, raw_path = item.split(b"\t", 1)
+        mode, kind, object_id = metadata.decode("ascii").split(" ")
+        if kind != "blob" or mode == "160000":
+            continue
+        path = raw_path.decode("utf-8").replace("\\", "/")
+        if not path.endswith(".py"):
+            continue
+        entries.append((path, object_id))
+    if not entries:
+        raise PreflightFailure("no committed HARTH runner source was found")
+    return sorted(entries)
+
+
 def code_hash() -> str:
-    files = [
-        ROOT / "scripts/harth_v2_run.py",
-        *sorted((ROOT / "src/howhow/episodes/harth/v2").glob("*.py")),
-    ]
+    """Hash canonical Git identities, not checkout paths or working-tree bytes."""
     digest = hashlib.sha256()
-    for path in files:
-        digest.update(str(path.relative_to(ROOT)).encode())
-        digest.update(path.read_bytes())
+    for path, blob_id in _code_blobs():
+        path_bytes = path.encode("utf-8")
+        blob_bytes = blob_id.encode("ascii")
+        digest.update(len(path_bytes).to_bytes(8, "big"))
+        digest.update(path_bytes)
+        digest.update(len(blob_bytes).to_bytes(8, "big"))
+        digest.update(blob_bytes)
     return digest.hexdigest()
 
 
