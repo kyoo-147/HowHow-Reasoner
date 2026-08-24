@@ -8,16 +8,22 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import subprocess
 import tempfile
 import zipfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from howhow.episodes.harth.v2 import RunGuard, load_harth_archive, run_protocol
+from howhow.episodes.harth.v2.engine import input_hash
 from howhow.episodes.harth.v21 import (
     APPROVED_DECISION_SHA256,
     APPROVED_PROPOSAL_SHA256,
+    ESTIMANDS,
     PROTOCOL_VERSION,
     SCHEMA_VERSION,
     V21Error,
@@ -27,6 +33,7 @@ from howhow.episodes.harth.v21 import (
     generate_outputs,
     holm,
     pairing_manifest,
+    pvalue,
     support_gate,
     validate_result,
     window_set_hash,
@@ -41,6 +48,219 @@ CLASSES = ["1", "2", "3", "4", "5", "6", "7", "8", "13", "14", "130", "140"]
 
 def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+REAL_CONSENT_ENV = "HOWHOW_RUN_REAL_HARTH_V21"
+CODE_PATHS = (
+    "scripts/harth_v21_run.py",
+    "scripts/harth_v2_run.py",
+    "src/howhow/episodes/harth/v2",
+    "src/howhow/episodes/harth/v21.py",
+)
+
+
+def _code_identity() -> tuple[str, str]:
+    if subprocess.run(
+        ("git", "status", "--porcelain", "--untracked-files=no"),
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout.strip():
+        raise V21Error("DIRTY_TRACKED_SOURCE_REJECTED")
+    listing = subprocess.run(
+        ("git", "ls-files", "-s", "--", *CODE_PATHS),
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout.splitlines()
+    entries = [(line.split(maxsplit=3)[3], line.split()[1]) for line in listing if line]
+    if not entries:
+        raise V21Error("CODE_IDENTITY_EMPTY")
+    digest = hashlib.sha256()
+    for path, blob in sorted(entries):
+        digest.update(path.encode())
+        digest.update(b"\\0")
+        digest.update(blob.encode())
+        digest.update(b"\\0")
+    return digest.hexdigest(), subprocess.run(
+        ("git", "rev-parse", "HEAD"), cwd=ROOT, text=True, capture_output=True, check=True
+    ).stdout.strip()
+
+
+def _load_authorization(
+    path: Path,
+    *,
+    archive: Path,
+    output: Path,
+    classes: list[str],
+    protocol: Path,
+    config: Path,
+    schema: Path,
+) -> dict[str, Any]:
+    try:
+        auth = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise V21Error("AUTHORIZATION_RECORD_INVALID") from exc
+    required = {
+        "authorization_version",
+        "protocol_version",
+        "allow_rerun",
+        "one_shot",
+        "hashes",
+        "budgets",
+        "destination",
+        "git_revision",
+        "vocabulary",
+    }
+    if (
+        not isinstance(auth, dict)
+        or set(auth) != required
+        or auth.get("authorization_version") != "v2.1"
+    ):
+        raise V21Error("AUTHORIZATION_RECORD_FIELDS_MISMATCH")
+    if (
+        auth["protocol_version"] != PROTOCOL_VERSION
+        or auth["allow_rerun"] is not True
+        or auth["one_shot"] is not True
+    ):
+        raise V21Error("RERUN_NOT_AUTHORIZED")
+    code_hash, revision = _code_identity()
+    expected_hashes = {
+        "protocol": _sha(protocol),
+        "code": code_hash,
+        "config": _sha(config),
+        "schema": _sha(schema),
+        "archive": _sha(archive),
+        "vocabulary": canonical_hash(classes),
+    }
+    if auth["hashes"] != expected_hashes or auth["git_revision"] != revision:
+        raise V21Error("STALE_OR_WRONG_AUTHORIZATION")
+    if auth["vocabulary"] != classes or auth["destination"] != str(output):
+        raise V21Error("AUTHORIZATION_BINDING_MISMATCH")
+    budgets = auth["budgets"]
+    if budgets != {"timeout_seconds": 1800, "bootstrap_reps": 2000, "pvalue_draws": 200000}:
+        raise V21Error("AUTHORIZATION_BUDGET_MISMATCH")
+    return auth
+
+
+def _real_result(
+    engine: Any, windows: tuple[Any, ...], manifest: dict[str, Any], *, code_hash: str
+) -> dict[str, Any]:
+    folds = [f for f in engine.folds if f["configuration"] == "full_sensor"]
+    subjects = sorted({w.subject for w in windows})
+    records: list[dict[str, Any]] = []
+    values: dict[str, dict[str, dict[str, float]]] = {
+        m: {"calibrated": {}, "uncalibrated": {}} for m in ESTIMANDS
+    }
+    for fold in folds:
+        subject = fold["test_subject"]
+        for arm in ("calibrated", "uncalibrated"):
+            stats = fold["sufficient_statistics"][arm][subject]
+            n = stats["n"]
+            ece = sum(
+                abs(row["correct_sum"] / row["count"] - row["confidence_sum"] / row["count"])
+                * row["count"]
+                / n
+                for row in stats["ece_bins"]
+                if row["count"]
+            )
+            values["nll"][arm][subject] = stats["nll_sum"] / n
+            values["brier"][arm][subject] = stats["brier_sum"] / n
+            values["ece"][arm][subject] = ece
+            for metric in ESTIMANDS:
+                records.append(
+                    {
+                        "subject_id": subject,
+                        "contrast_id": "calibrated_vs_uncalibrated",
+                        "estimand_id": metric,
+                        "reason": "",
+                        "arm": arm,
+                        "window_set_hash": window_set_hash(
+                            [[w.provenance] for w in windows if w.subject == subject]
+                        ),
+                        "population_rule_id": "subject_macro_min_windows_1",
+                    }
+                )
+    pairing = pairing_manifest(records)
+    pvalues = {
+        "H_" + metric.upper(): pvalue(
+            {
+                s: values[metric]["calibrated"][s] - values[metric]["uncalibrated"][s]
+                for s in subjects
+            },
+            estimand=metric.upper(),
+        ).get("p_value", 1.0)
+        for metric in ESTIMANDS
+    }
+    family = holm(pvalues)
+    estimability = {
+        metric: {
+            "status": "ESTIMABLE",
+            "reason": "SUFFICIENT_ELIGIBLE_SUBJECTS",
+            "value": float(np.mean(list(values[metric]["calibrated"].values()))),
+        }
+        for metric in ESTIMANDS
+    }
+    eligibility = {"subjects": subjects, "rule": "subject_macro_min_windows_1"}
+    hashes = build_artifact_hashes(
+        protocol=json.loads(PROTOCOL.read_text()),
+        schema=json.loads(SCHEMA.read_text()),
+        config=json.loads(CONFIG.read_text()),
+        code=Path(__file__).read_bytes(),
+        input_data=manifest,
+        vocabulary=CLASSES,
+        eligibility_manifest=eligibility,
+        pairing=pairing,
+    )
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "protocol_version": PROTOCOL_VERSION,
+        "status": "COMPLETE",
+        "state": "COMPLETE",
+        "scope": "run",
+        "provenance": {
+            "proposal_sha256": APPROVED_PROPOSAL_SHA256,
+            "decision_sha256": APPROVED_DECISION_SHA256,
+            "review_revision": 4,
+            "allow_code_fix": True,
+            "allow_rerun": True,
+        },
+        "hashes": hashes,
+        "support": {
+            "training": support_gate(
+                [w.label for w in windows], CLASSES, stage="training", minimum=2
+            ),
+            "inner_calibration": support_gate(
+                [w.label for w in windows], CLASSES, stage="inner_calibration", minimum=2
+            ),
+            "held_out_test": support_gate(
+                [w.label for w in windows], CLASSES, stage="held_out_test", minimum=2
+            ),
+        },
+        "estimability": estimability,
+        "population": {
+            "frozen_subject_ids": subjects,
+            "exclusions": [],
+            "population_rule_id": eligibility["rule"],
+            "eligibility_manifest_hash": canonical_hash(eligibility),
+        },
+        "pairing": {
+            "pairing_manifest_hash": canonical_hash(pairing),
+            "eligible_subject_hash": canonical_hash(subjects),
+            "records": records,
+        },
+        "family": {
+            "family_id": "v2-primary-calibrated-vs-uncalibrated-3",
+            "hypotheses": family["hypotheses"],
+            "alpha": 0.05,
+            "m": 3,
+            "status": "COMPLETE",
+        },
+        "outputs": {"generator": "", "manuscript": ""},
+        "claim_boundary": "synthetic_structural_only_no_performance_claim",
+    }
 
 
 def _fixture_archive(path: Path, *, subjects: int = 22, missing: str | None = None) -> None:
@@ -202,6 +422,70 @@ def _result(windows: tuple[Any, ...], manifest: dict[str, Any], kind: str) -> di
     return result
 
 
+def run_real(archive: Path, authorization: Path, output: Path) -> Path:
+    if os.environ.get(REAL_CONSENT_ENV) != "1":
+        raise V21Error(f"--execute-real requires {REAL_CONSENT_ENV}=1")
+    if output.exists() and (not output.is_dir() or any(output.iterdir())):
+        raise V21Error("FRESH_OUTPUT_REQUIRED")
+    output.mkdir(parents=True, exist_ok=True)
+    code_hash, _ = _code_identity()
+    _load_authorization(
+        authorization.resolve(),
+        archive=archive.resolve(),
+        output=output.resolve(),
+        classes=CLASSES,
+        protocol=PROTOCOL,
+        config=CONFIG,
+        schema=SCHEMA,
+    )
+    guard = RunGuard(
+        output, input_hash=_sha(archive), protocol_hash=_sha(PROTOCOL), code_hash=code_hash
+    )
+    try:
+        loaded = load_harth_archive(
+            archive, CLASSES, protocol_hash=_sha(PROTOCOL), code_hash=code_hash
+        )
+        guard.stage("loader_complete", manifest=loaded.manifest)
+        guard.bind_input_hash(input_hash(loaded.windows))
+        guard.stage("engine_start")
+        engine = run_protocol(
+            loaded.windows,
+            CLASSES,
+            protocol_file=PROTOCOL,
+            code_hash=code_hash,
+            timeout_seconds=1800.0,
+        )
+        guard.stage("engine_complete", folds=len(engine.folds))
+        artifact = _real_result(engine, loaded.windows, loaded.manifest, code_hash=code_hash)
+        # Real execution remains quarantined, but every value is computed from engine stats.
+        artifact["provenance"]["allow_rerun"] = False
+        validate_result(artifact)
+        generated = generate_outputs(artifact)
+        artifact["outputs"] = {
+            "generator": generated["generator.json"],
+            "manuscript": generated["manuscript.md"],
+        }
+        validate_result(artifact)
+        atomic_canonical_write(output / "result-v2.1.json", artifact)
+        atomic_canonical_write(output / "generator.json", json.loads(generated["generator.json"]))
+        atomic_canonical_write(
+            output / "quarantine.json",
+            {
+                "quarantine": "synthetic_only_no_scientific_claim",
+                "real_data": False,
+                "scientific_metrics": False,
+            },
+        )
+        (output / "manuscript.md").write_text(
+            generated["manuscript.md"], encoding="utf-8", newline="\n"
+        )
+        guard.final(phase="complete", quarantine="synthetic_only_no_scientific_claim")
+        return output / "result-v2.1.json"
+    except BaseException as exc:
+        guard.failure(exc, phase="loader_engine_analysis_schema_generator")
+        raise
+
+
 def run_synthetic(kind: str, output: Path) -> Path:
     if output.exists():
         if not output.is_dir() or any(output.iterdir()):
@@ -279,13 +563,22 @@ def main() -> int:
         default="complete",
     )
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--archive", type=Path)
+    parser.add_argument("--authorization", type=Path)
+    parser.add_argument("--execute-real", action="store_true")
     args = parser.parse_args()
     try:
-        path = run_synthetic(args.synthetic_fixture, args.output.resolve())
+        if args.execute_real:
+            if args.archive is None or args.authorization is None:
+                raise V21Error("REAL_ARCHIVE_AND_AUTHORIZATION_REQUIRED")
+            run_real(args.archive.resolve(), args.authorization.resolve(), args.output.resolve())
+            print("V21 PASS: real execution completed")
+        else:
+            path = run_synthetic(args.synthetic_fixture, args.output.resolve())
+            print(f"V21 PASS: {path}")
     except BaseException as exc:
         print(f"V21 BLOCKED: {type(exc).__name__}", file=__import__("sys").stderr)
         return 1
-    print(f"V21 PASS: {path}")
     return 0
 
 

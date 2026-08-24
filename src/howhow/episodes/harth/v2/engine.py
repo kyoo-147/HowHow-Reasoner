@@ -335,6 +335,45 @@ def _subject_metric_rows(
     return result
 
 
+def _subject_sufficient_statistics(
+    probabilities: np.ndarray, labels: np.ndarray, subjects: Sequence[str], classes: Sequence[str]
+) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for subject in sorted(set(subjects)):
+        mask = np.asarray([s == subject for s in subjects])
+        p, y = probabilities[mask], labels[mask]
+        pred = p.argmax(axis=1)
+        rows = []
+        for index, cls in enumerate(classes):
+            tp = int(np.sum((pred == index) & (y == index)))
+            fp = int(np.sum((pred == index) & (y != index)))
+            fn = int(np.sum((pred != index) & (y == index)))
+            rows.append({"class": str(cls), "TP": tp, "FP": fp, "FN": fn, "support": tp + fn})
+        bins = []
+        confidence = p.max(axis=1)
+        for b in range(10):
+            left, right = b / 10, (b + 1) / 10
+            mask_bin = (confidence >= left) & (
+                (confidence < right) if b < 9 else (confidence <= right)
+            )
+            bins.append(
+                {
+                    "bin": b + 1,
+                    "count": int(mask_bin.sum()),
+                    "confidence_sum": float(confidence[mask_bin].sum()),
+                    "correct_sum": int(np.sum(pred[mask_bin] == y[mask_bin])),
+                }
+            )
+        result[subject] = {
+            "n": int(len(y)),
+            "nll_sum": float(-np.log(np.maximum(p[np.arange(len(y)), y], 1e-12)).sum()),
+            "brier_sum": float(np.sum(np.sum((p - np.eye(len(classes))[y]) ** 2, axis=1))),
+            "ece_bins": bins,
+            "classification": rows,
+        }
+    return result
+
+
 def _comparison_report(folds: Sequence[dict[str, Any]]) -> dict[str, Any]:
     """Build paired subject comparisons without treating windows as replicates."""
     report: dict[str, Any] = {}
@@ -456,6 +495,17 @@ def run_protocol(
                 "calibrated": _subject_metric_rows(
                     probabilities, y[test], [subjects[i] for i in test], vocabulary
                 ),
+                # These are the complete per-subject sufficient statistics used by
+                # v2.1 aggregation; downstream code must not reconstruct metrics
+                # from checkpoint summaries or constants.
+                "sufficient_statistics": {
+                    "uncalibrated": _subject_sufficient_statistics(
+                        uncalibrated, y[test], [subjects[i] for i in test], vocabulary
+                    ),
+                    "calibrated": _subject_sufficient_statistics(
+                        probabilities, y[test], [subjects[i] for i in test], vocabulary
+                    ),
+                },
                 "calibration_state": ["uncalibrated", "calibrated"],
             }
             result.folds.append(fold_row)
