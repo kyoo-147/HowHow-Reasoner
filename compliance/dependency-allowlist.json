@@ -1,4 +1,999 @@
 {
+  "artifacts": [
+    {
+      "artifact": "annotated_doc-0.0.5.tar.gz",
+      "ecosystem": "pypi",
+      "package": "annotated-doc",
+      "scope": "sdist",
+      "sha256": "c7e58ce09192557605d8bbd92836d7e1d520ac9580096042c0bfd197efacf1bb",
+      "url": "https://files.pythonhosted.org/packages/5a/8e/38aa427ed5402449e226975b649c5dc73ccadfefeb95e6aecb8f8ea4b6b6/annotated_doc-0.0.5.tar.gz",
+      "version": "0.0.5"
+    },
+    {
+      "artifact": "annotated_doc-0.0.5-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "annotated-doc",
+      "scope": "wheel:any",
+      "sha256": "117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101",
+      "url": "https://files.pythonhosted.org/packages/3e/30/e900b21425a860e195f32e37657aa1f7c7f2b1bfb26f03ca209b90933c06/annotated_doc-0.0.5-py3-none-any.whl",
+      "version": "0.0.5"
+    },
+    {
+      "artifact": "annotated_types-0.8.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "annotated-types",
+      "scope": "sdist",
+      "sha256": "13b2beaad985e05e2d6407ee4c4f35590b11f8d693a258a561055cac8f64cab7",
+      "url": "https://files.pythonhosted.org/packages/5f/56/a8120250d128bed162cd73c76d45f6ef9991f3e068f62a8ee060afa3104a/annotated_types-0.8.0.tar.gz",
+      "version": "0.8.0"
+    },
+    {
+      "artifact": "annotated_types-0.8.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "annotated-types",
+      "scope": "wheel:any",
+      "sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0",
+      "url": "https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl",
+      "version": "0.8.0"
+    },
+    {
+      "artifact": "anyio-4.14.2.tar.gz",
+      "ecosystem": "pypi",
+      "package": "anyio",
+      "scope": "sdist",
+      "sha256": "cfa139f3ed1a23ee8f88a145ddb5ac7605b8bbfd8592baacd7ce3d8bb4313c7f",
+      "url": "https://files.pythonhosted.org/packages/61/cc/a381afa6efea9f496eff839d4a6a1aed3bfafc7b3ab4b0d1b243a12573dd/anyio-4.14.2.tar.gz",
+      "version": "4.14.2"
+    },
+    {
+      "artifact": "anyio-4.14.2-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "anyio",
+      "scope": "wheel:any",
+      "sha256": "9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494",
+      "url": "https://files.pythonhosted.org/packages/da/35/f2287558c17e29fafc8ef3daf819bb9834061cfa43bff8014f7df7f63bdc/anyio-4.14.2-py3-none-any.whl",
+      "version": "4.14.2"
+    },
+    {
+      "artifact": "certifi-2026.7.22.tar.gz",
+      "ecosystem": "pypi",
+      "package": "certifi",
+      "scope": "sdist",
+      "sha256": "741e2c3b351ddf169a738da9f2c048608ff7f2c5cc02f1ebc6b118bb090d5d55",
+      "url": "https://files.pythonhosted.org/packages/a3/c2/24167ea9858356b47a87a50d39908bfdb72ceeefe0041586e704e5376b3a/certifi-2026.7.22.tar.gz",
+      "version": "2026.7.22"
+    },
+    {
+      "artifact": "certifi-2026.7.22-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "certifi",
+      "scope": "wheel:any",
+      "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775",
+      "url": "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl",
+      "version": "2026.7.22"
+    },
+    {
+      "artifact": "click-8.4.2.tar.gz",
+      "ecosystem": "pypi",
+      "package": "click",
+      "scope": "sdist",
+      "sha256": "9a6cea6e60b17ebe0a44c5cc636d94f09bd66142c1cd7d8b4cd731c4917a15f6",
+      "url": "https://files.pythonhosted.org/packages/76/d4/81420972a676e8ffea40450d8c8c92943e7218a78fe9b64359836cc9876b/click-8.4.2.tar.gz",
+      "version": "8.4.2"
+    },
+    {
+      "artifact": "click-8.4.2-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "click",
+      "scope": "wheel:any",
+      "sha256": "e6f9f66136c816745b9d65817da91d61d957fb16e02e4dcd0552553c5a197b76",
+      "url": "https://files.pythonhosted.org/packages/fb/e2/79c688af8b210d232694e31e59da9f6ec747bae31c3f5946e4e9b98860d5/click-8.4.2-py3-none-any.whl",
+      "version": "8.4.2"
+    },
+    {
+      "artifact": "colorama-0.4.6.tar.gz",
+      "ecosystem": "pypi",
+      "package": "colorama",
+      "scope": "sdist",
+      "sha256": "08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44",
+      "url": "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz",
+      "version": "0.4.6"
+    },
+    {
+      "artifact": "colorama-0.4.6-py2.py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "colorama",
+      "scope": "wheel:any",
+      "sha256": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",
+      "url": "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl",
+      "version": "0.4.6"
+    },
+    {
+      "artifact": "fastapi-0.141.1.tar.gz",
+      "ecosystem": "pypi",
+      "package": "fastapi",
+      "scope": "sdist",
+      "sha256": "e8822fc40db1e1858054d7a949a888695bc9bdce70139178e33bd2871a453ca1",
+      "url": "https://files.pythonhosted.org/packages/8a/02/91e3416a8fdd715abb903a952a6bec7cdd8d14eed55d415fc8595524c319/fastapi-0.141.1.tar.gz",
+      "version": "0.141.1"
+    },
+    {
+      "artifact": "fastapi-0.141.1-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "fastapi",
+      "scope": "wheel:any",
+      "sha256": "bfb91aa2d334c61cb35ba9a116fc123b3d3df31640b801cf57a7a78ec3f603b3",
+      "url": "https://files.pythonhosted.org/packages/cb/03/10388a42375ee7e4ac9b94eb2c5c569c8b5795e377e701c9ac3ad63de890/fastapi-0.141.1-py3-none-any.whl",
+      "version": "0.141.1"
+    },
+    {
+      "artifact": "h11-0.16.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "h11",
+      "scope": "sdist",
+      "sha256": "4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1",
+      "url": "https://files.pythonhosted.org/packages/01/ee/02a2c011bdab74c6fb3c75474d40b3052059d95df7e73351460c8588d963/h11-0.16.0.tar.gz",
+      "version": "0.16.0"
+    },
+    {
+      "artifact": "h11-0.16.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "h11",
+      "scope": "wheel:any",
+      "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+      "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+      "version": "0.16.0"
+    },
+    {
+      "artifact": "httpcore-1.0.9.tar.gz",
+      "ecosystem": "pypi",
+      "package": "httpcore",
+      "scope": "sdist",
+      "sha256": "6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8",
+      "url": "https://files.pythonhosted.org/packages/06/94/82699a10bca87a5556c9c59b5963f2d039dbd239f25bc2a63907a05a14cb/httpcore-1.0.9.tar.gz",
+      "version": "1.0.9"
+    },
+    {
+      "artifact": "httpcore-1.0.9-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "httpcore",
+      "scope": "wheel:any",
+      "sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55",
+      "url": "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl",
+      "version": "1.0.9"
+    },
+    {
+      "artifact": "httpx-0.28.1.tar.gz",
+      "ecosystem": "pypi",
+      "package": "httpx",
+      "scope": "sdist",
+      "sha256": "75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc",
+      "url": "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz",
+      "version": "0.28.1"
+    },
+    {
+      "artifact": "httpx-0.28.1-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "httpx",
+      "scope": "wheel:any",
+      "sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad",
+      "url": "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl",
+      "version": "0.28.1"
+    },
+    {
+      "artifact": "idna-3.19.tar.gz",
+      "ecosystem": "pypi",
+      "package": "idna",
+      "scope": "sdist",
+      "sha256": "5e0811a4383b21dc5838069f801c4fb62113b7447663d2530d2bd6e77b49bf15",
+      "url": "https://files.pythonhosted.org/packages/5f/f7/abb373e5757eaec4b922b92f97ec8d6d7e057cf06778247604fbc4e7c3f3/idna-3.19.tar.gz",
+      "version": "3.19"
+    },
+    {
+      "artifact": "idna-3.19-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "idna",
+      "scope": "wheel:any",
+      "sha256": "815e7be7a7806d54abb586dc943addc79e8b2ee16915059658cbeff4b1b43bf4",
+      "url": "https://files.pythonhosted.org/packages/57/b0/0e52c878c53f245edd3a11020f20979b3f490f245af532c7cae3027754b5/idna-3.19-py3-none-any.whl",
+      "version": "3.19"
+    },
+    {
+      "artifact": "iniconfig-2.3.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "iniconfig",
+      "scope": "sdist",
+      "sha256": "c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730",
+      "url": "https://files.pythonhosted.org/packages/72/34/14ca021ce8e5dfedc35312d08ba8bf51fdd999c576889fc2c24cb97f4f10/iniconfig-2.3.0.tar.gz",
+      "version": "2.3.0"
+    },
+    {
+      "artifact": "iniconfig-2.3.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "iniconfig",
+      "scope": "wheel:any",
+      "sha256": "f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12",
+      "url": "https://files.pythonhosted.org/packages/cb/b1/3846dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/iniconfig-2.3.0-py3-none-any.whl",
+      "version": "2.3.0"
+    },
+    {
+      "artifact": "markdown_it_py-4.2.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "markdown-it-py",
+      "scope": "sdist",
+      "sha256": "04a21681d6fbb623de53f6f364d352309d4094dd4194040a10fd51833e418d49",
+      "url": "https://files.pythonhosted.org/packages/06/ff/7841249c247aa650a76b9ee4bbaeae59370dc8bfd2f6c01f3630c35eb134/markdown_it_py-4.2.0.tar.gz",
+      "version": "4.2.0"
+    },
+    {
+      "artifact": "markdown_it_py-4.2.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "markdown-it-py",
+      "scope": "wheel:any",
+      "sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+      "url": "https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl",
+      "version": "4.2.0"
+    },
+    {
+      "artifact": "mdurl-0.1.2.tar.gz",
+      "ecosystem": "pypi",
+      "package": "mdurl",
+      "scope": "sdist",
+      "sha256": "bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba",
+      "url": "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz",
+      "version": "0.1.2"
+    },
+    {
+      "artifact": "mdurl-0.1.2-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "mdurl",
+      "scope": "wheel:any",
+      "sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+      "url": "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl",
+      "version": "0.1.2"
+    },
+    {
+      "artifact": "mypy-1.17.1.tar.gz",
+      "ecosystem": "pypi",
+      "package": "mypy",
+      "scope": "sdist",
+      "sha256": "25e01ec741ab5bb3eec8ba9cdb0f769230368a22c959c4937360efb89b7e9f01",
+      "url": "https://files.pythonhosted.org/packages/8e/22/ea637422dedf0bf36f3ef238eab4e455e2a0dcc3082b5cc067615347ab8e/mypy-1.17.1.tar.gz",
+      "version": "1.17.1"
+    },
+    {
+      "artifact": "mypy-1.17.1-cp312-cp312-macosx_10_13_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "mypy",
+      "scope": "wheel:macosx_10_13_x86_64",
+      "sha256": "69e83ea6553a3ba79c08c6e15dbd9bfa912ec1e493bf75489ef93beb65209aeb",
+      "url": "https://files.pythonhosted.org/packages/17/a2/7034d0d61af8098ec47902108553122baa0f438df8a713be860f7407c9e6/mypy-1.17.1-cp312-cp312-macosx_10_13_x86_64.whl",
+      "version": "1.17.1"
+    },
+    {
+      "artifact": "mypy-1.17.1-cp312-cp312-macosx_11_0_arm64.whl",
+      "ecosystem": "pypi",
+      "package": "mypy",
+      "scope": "wheel:macosx_11_0_arm64",
+      "sha256": "1b16708a66d38abb1e6b5702f5c2c87e133289da36f6a1d15f6a5221085c6403",
+      "url": "https://files.pythonhosted.org/packages/14/1f/19e7e44b594d4b12f6ba8064dbe136505cec813549ca3e5191e40b1d3cc2/mypy-1.17.1-cp312-cp312-macosx_11_0_arm64.whl",
+      "version": "1.17.1"
+    },
+    {
+      "artifact": "mypy-1.17.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+      "ecosystem": "pypi",
+      "package": "mypy",
+      "scope": "wheel:manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64",
+      "sha256": "89e972c0035e9e05823907ad5398c5a73b9f47a002b22359b177d40bdaee7056",
+      "url": "https://files.pythonhosted.org/packages/5b/69/baa33927e29e6b4c55d798a9d44db5d394072eef2bdc18c3e2048c9ed1e9/mypy-1.17.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+      "version": "1.17.1"
+    },
+    {
+      "artifact": "mypy-1.17.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "mypy",
+      "scope": "wheel:manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64",
+      "sha256": "03b6d0ed2b188e35ee6d5c36b5580cffd6da23319991c49ab5556c023ccf1341",
+      "url": "https://files.pythonhosted.org/packages/90/13/f3a89c76b0a41e19490b01e7069713a30949d9a6c147289ee1521bcea245/mypy-1.17.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+      "version": "1.17.1"
+    },
+    {
+      "artifact": "mypy-1.17.1-cp312-cp312-musllinux_1_2_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "mypy",
+      "scope": "wheel:musllinux_1_2_x86_64",
+      "sha256": "c837b896b37cd103570d776bda106eabb8737aa6dd4f248451aecf53030cdbeb",
+      "url": "https://files.pythonhosted.org/packages/23/a1/c4ee79ac484241301564072e6476c5a5be2590bc2e7bfd28220033d2ef8f/mypy-1.17.1-cp312-cp312-musllinux_1_2_x86_64.whl",
+      "version": "1.17.1"
+    },
+    {
+      "artifact": "mypy-1.17.1-cp312-cp312-win_amd64.whl",
+      "ecosystem": "pypi",
+      "package": "mypy",
+      "scope": "wheel:win_amd64",
+      "sha256": "665afab0963a4b39dff7c1fa563cc8b11ecff7910206db4b2e64dd1ba25aed19",
+      "url": "https://files.pythonhosted.org/packages/89/b8/7409477be7919a0608900e6320b155c72caab4fef46427c5cc75f85edadd/mypy-1.17.1-cp312-cp312-win_amd64.whl",
+      "version": "1.17.1"
+    },
+    {
+      "artifact": "mypy-1.17.1-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "mypy",
+      "scope": "wheel:any",
+      "sha256": "a9f52c0351c21fe24c21d8c0eb1f62967b262d6729393397b6f443c3b773c3b9",
+      "url": "https://files.pythonhosted.org/packages/1d/f3/8fcd2af0f5b806f6cf463efaffd3c9548a28f84220493ecd38d127b6b66d/mypy-1.17.1-py3-none-any.whl",
+      "version": "1.17.1"
+    },
+    {
+      "artifact": "mypy_extensions-1.1.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "mypy-extensions",
+      "scope": "sdist",
+      "sha256": "52e68efc3284861e772bbcd66823fde5ae21fd2fdb51c62a211403730b916558",
+      "url": "https://files.pythonhosted.org/packages/a2/6e/371856a3fb9d31ca8dac321cda606860fa4548858c0cc45d9d1d4ca2628b/mypy_extensions-1.1.0.tar.gz",
+      "version": "1.1.0"
+    },
+    {
+      "artifact": "mypy_extensions-1.1.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "mypy-extensions",
+      "scope": "wheel:any",
+      "sha256": "1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505",
+      "url": "https://files.pythonhosted.org/packages/79/7b/2c79738432f5c924bef5071f933bcc9efd0473bac3b4aa584a6f7c1c8df8/mypy_extensions-1.1.0-py3-none-any.whl",
+      "version": "1.1.0"
+    },
+    {
+      "artifact": "numpy-2.3.2.tar.gz",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "sdist",
+      "sha256": "e0486a11ec30cdecb53f184d496d1c6a20786c81e55e41640270130056f8ee48",
+      "upstream_notices": "LICENSE.txt,LICENSES_bundled.txt",
+      "url": "https://files.pythonhosted.org/packages/37/7d/3fec4199c5ffb892bed55cff901e4f39a58c81df9c44c280499e92cad264/numpy-2.3.2.tar.gz",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "numpy-2.3.2-cp312-cp312-macosx_10_13_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "wheel:macosx_10_13_x86_64",
+      "sha256": "bc3186bea41fae9d8e90c2b4fb5f0a1f5a690682da79b92574d63f56b529080b",
+      "upstream_notices": "LICENSE.txt,LICENSE_osx.txt",
+      "url": "https://files.pythonhosted.org/packages/00/6d/745dd1c1c5c284d17725e5c802ca4d45cfc6803519d777f087b71c9f4069/numpy-2.3.2-cp312-cp312-macosx_10_13_x86_64.whl",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "numpy-2.3.2-cp312-cp312-macosx_11_0_arm64.whl",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "wheel:macosx_11_0_arm64",
+      "sha256": "2f4f0215edb189048a3c03bd5b19345bdfa7b45a7a6f72ae5945d2a28272727f",
+      "upstream_notices": "LICENSE.txt,LICENSE_osx.txt",
+      "url": "https://files.pythonhosted.org/packages/bc/96/e7b533ea5740641dd62b07a790af5d9d8fec36000b8e2d0472bd7574105f/numpy-2.3.2-cp312-cp312-macosx_11_0_arm64.whl",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "numpy-2.3.2-cp312-cp312-macosx_14_0_arm64.whl",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "wheel:macosx_14_0_arm64",
+      "sha256": "8b1224a734cd509f70816455c3cffe13a4f599b1bf7130f913ba0e2c0b2006c0",
+      "upstream_notices": "LICENSE.txt,LICENSE_osx.txt",
+      "url": "https://files.pythonhosted.org/packages/2b/53/102c6122db45a62aa20d1b18c9986f67e6b97e0d6fbc1ae13e3e4c84430c/numpy-2.3.2-cp312-cp312-macosx_14_0_arm64.whl",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "numpy-2.3.2-cp312-cp312-macosx_14_0_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "wheel:macosx_14_0_x86_64",
+      "sha256": "3dcf02866b977a38ba3ec10215220609ab9667378a9e2150615673f3ffd6c73b",
+      "upstream_notices": "LICENSE.txt,LICENSE_osx.txt",
+      "url": "https://files.pythonhosted.org/packages/2b/21/376257efcbf63e624250717e82b4fae93d60178f09eb03ed766dbb48ec9c/numpy-2.3.2-cp312-cp312-macosx_14_0_x86_64.whl",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "numpy-2.3.2-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "wheel:manylinux_2_27_aarch64.manylinux_2_28_aarch64",
+      "sha256": "572d5512df5470f50ada8d1972c5f1082d9a0b7aa5944db8084077570cf98370",
+      "upstream_notices": "LICENSE.txt,LICENSE_linux.txt",
+      "url": "https://files.pythonhosted.org/packages/91/ba/f4ebf257f08affa464fe6036e13f2bf9d4642a40228781dc1235da81be9f/numpy-2.3.2-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "numpy-2.3.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "wheel:manylinux_2_27_x86_64.manylinux_2_28_x86_64",
+      "sha256": "8145dd6d10df13c559d1e4314df29695613575183fa2e2d11fac4c208c8a1f73",
+      "upstream_notices": "LICENSE.txt,LICENSE_linux.txt",
+      "url": "https://files.pythonhosted.org/packages/59/ef/f96536f1df42c668cbacb727a8c6da7afc9c05ece6d558927fb1722693e1/numpy-2.3.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "numpy-2.3.2-cp312-cp312-musllinux_1_2_aarch64.whl",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "wheel:musllinux_1_2_aarch64",
+      "sha256": "103ea7063fa624af04a791c39f97070bf93b96d7af7eb23530cd087dc8dbe9dc",
+      "upstream_notices": "LICENSE.txt,LICENSE_linux.txt",
+      "url": "https://files.pythonhosted.org/packages/f6/a7/af813a7b4f9a42f498dde8a4c6fcbff8100eed00182cc91dbaf095645f38/numpy-2.3.2-cp312-cp312-musllinux_1_2_aarch64.whl",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "numpy-2.3.2-cp312-cp312-musllinux_1_2_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "wheel:musllinux_1_2_x86_64",
+      "sha256": "fc927d7f289d14f5e037be917539620603294454130b6de200091e23d27dc9be",
+      "upstream_notices": "LICENSE.txt,LICENSE_linux.txt",
+      "url": "https://files.pythonhosted.org/packages/8b/5d/41c4ef8404caaa7f05ed1cfb06afe16a25895260eacbd29b4d84dff2920b/numpy-2.3.2-cp312-cp312-musllinux_1_2_x86_64.whl",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "numpy-2.3.2-cp312-cp312-win32.whl",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "wheel:win32",
+      "sha256": "d95f59afe7f808c103be692175008bab926b59309ade3e6d25009e9a171f7036",
+      "upstream_notices": "LICENSE.txt,LICENSE_win32.txt",
+      "url": "https://files.pythonhosted.org/packages/a1/4f/9950e44c5a11636f4a3af6e825ec23003475cc9a466edb7a759ed3ea63bd/numpy-2.3.2-cp312-cp312-win32.whl",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "numpy-2.3.2-cp312-cp312-win_amd64.whl",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "wheel:win_amd64",
+      "sha256": "9e196ade2400c0c737d93465327d1ae7c06c7cb8a1756121ebf54b06ca183c7f",
+      "upstream_notices": "LICENSE.txt,LICENSE_win32.txt",
+      "url": "https://files.pythonhosted.org/packages/7c/2f/244643a5ce54a94f0a9a2ab578189c061e4a87c002e037b0829dd77293b6/numpy-2.3.2-cp312-cp312-win_amd64.whl",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "numpy-2.3.2-cp312-cp312-win_arm64.whl",
+      "ecosystem": "pypi",
+      "package": "numpy",
+      "scope": "wheel:win_arm64",
+      "sha256": "ee807923782faaf60d0d7331f5e86da7d5e3079e28b291973c545476c2b00d07",
+      "upstream_notices": "LICENSE.txt,LICENSE_win32.txt",
+      "url": "https://files.pythonhosted.org/packages/54/cd/7b5f49d5d78db7badab22d8323c1b6ae458fbf86c4fdfa194ab3cd4eb39b/numpy-2.3.2-cp312-cp312-win_arm64.whl",
+      "version": "2.3.2"
+    },
+    {
+      "artifact": "packaging-26.3.tar.gz",
+      "ecosystem": "pypi",
+      "package": "packaging",
+      "scope": "sdist",
+      "sha256": "94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79",
+      "url": "https://files.pythonhosted.org/packages/7d/fa/3944b40b07da9ce895c0e6303a5ab7d53da063554f534556b134a54d6093/packaging-26.3.tar.gz",
+      "version": "26.3"
+    },
+    {
+      "artifact": "packaging-26.3-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "packaging",
+      "scope": "wheel:any",
+      "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+      "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+      "version": "26.3"
+    },
+    {
+      "artifact": "pathspec-1.1.1.tar.gz",
+      "ecosystem": "pypi",
+      "package": "pathspec",
+      "scope": "sdist",
+      "sha256": "17db5ecd524104a120e173814c90367a96a98d07c45b2e10c2f3919fff91bf5a",
+      "url": "https://files.pythonhosted.org/packages/5a/82/42f767fc1c1143d6fd36efb827202a2d997a375e160a71eb2888a925aac1/pathspec-1.1.1.tar.gz",
+      "version": "1.1.1"
+    },
+    {
+      "artifact": "pathspec-1.1.1-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "pathspec",
+      "scope": "wheel:any",
+      "sha256": "a00ce642f577bf7f473932318056212bc4f8bfdf53128c78bbd5af0b9b20b189",
+      "url": "https://files.pythonhosted.org/packages/f1/d9/7fb5aa316bc299258e68c73ba3bddbc499654a07f151cba08f6153988714/pathspec-1.1.1-py3-none-any.whl",
+      "version": "1.1.1"
+    },
+    {
+      "artifact": "pluggy-1.6.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "pluggy",
+      "scope": "sdist",
+      "sha256": "7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3",
+      "url": "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz",
+      "version": "1.6.0"
+    },
+    {
+      "artifact": "pluggy-1.6.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "pluggy",
+      "scope": "wheel:any",
+      "sha256": "e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746",
+      "url": "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl",
+      "version": "1.6.0"
+    },
+    {
+      "artifact": "pydantic-2.11.7.tar.gz",
+      "ecosystem": "pypi",
+      "package": "pydantic",
+      "scope": "sdist",
+      "sha256": "d989c3c6cb79469287b1569f7447a17848c998458d49ebe294e975b9baf0f0db",
+      "url": "https://files.pythonhosted.org/packages/00/dd/4325abf92c39ba8623b5af936ddb36ffcfe0beae70405d456ab1fb2f5b8c/pydantic-2.11.7.tar.gz",
+      "version": "2.11.7"
+    },
+    {
+      "artifact": "pydantic-2.11.7-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic",
+      "scope": "wheel:any",
+      "sha256": "dde5df002701f6de26248661f6835bbe296a47bf73990135c7d07ce741b9623b",
+      "url": "https://files.pythonhosted.org/packages/6a/c0/ec2b1c8712ca690e5d61979dee872603e92b8a32f94cc1b72d53beab008a/pydantic-2.11.7-py3-none-any.whl",
+      "version": "2.11.7"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2.tar.gz",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "sdist",
+      "sha256": "7cb8bc3605c29176e1b105350d2e6474142d7c1bd1d9327c4a9bdb46bf827acc",
+      "url": "https://files.pythonhosted.org/packages/ad/88/5f2260bdfae97aabf98f1778d43f69574390ad787afb646292a638c923d4/pydantic_core-2.33.2.tar.gz",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-macosx_10_12_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:macosx_10_12_x86_64",
+      "sha256": "a7ec89dc587667f22b6a0b6579c249fca9026ce7c333fc142ba42411fa243cdc",
+      "url": "https://files.pythonhosted.org/packages/18/8a/2b41c97f554ec8c71f2a8a5f85cb56a8b0956addfe8b0efb5b3d77e8bdc3/pydantic_core-2.33.2-cp312-cp312-macosx_10_12_x86_64.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-macosx_11_0_arm64.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:macosx_11_0_arm64",
+      "sha256": "3c6db6e52c6d70aa0d00d45cdb9b40f0433b96380071ea80b09277dba021ddf7",
+      "url": "https://files.pythonhosted.org/packages/a1/02/6224312aacb3c8ecbaa959897af57181fb6cf3a3d7917fd44d0f2917e6f2/pydantic_core-2.33.2-cp312-cp312-macosx_11_0_arm64.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:manylinux_2_17_aarch64.manylinux2014_aarch64",
+      "sha256": "4e61206137cbc65e6d5256e1166f88331d3b6238e082d9f74613b9b765fb9025",
+      "url": "https://files.pythonhosted.org/packages/d6/46/6dcdf084a523dbe0a0be59d054734b86a981726f221f4562aed313dbcb49/pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:manylinux_2_17_armv7l.manylinux2014_armv7l",
+      "sha256": "eb8c529b2819c37140eb51b914153063d27ed88e3bdc31b71198a198e921e011",
+      "url": "https://files.pythonhosted.org/packages/ec/6b/1ec2c03837ac00886ba8160ce041ce4e325b41d06a034adbef11339ae422/pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:manylinux_2_17_ppc64le.manylinux2014_ppc64le",
+      "sha256": "c52b02ad8b4e2cf14ca7b3d918f3eb0ee91e63b3167c32591e57c4317e134f8f",
+      "url": "https://files.pythonhosted.org/packages/2d/1d/6bf34d6adb9debd9136bd197ca72642203ce9aaaa85cfcbfcf20f9696e83/pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:manylinux_2_17_s390x.manylinux2014_s390x",
+      "sha256": "96081f1605125ba0855dfda83f6f3df5ec90c61195421ba72223de35ccfb2f88",
+      "url": "https://files.pythonhosted.org/packages/e0/94/2bd0aaf5a591e974b32a9f7123f16637776c304471a0ab33cf263cf5591a/pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:manylinux_2_17_x86_64.manylinux2014_x86_64",
+      "sha256": "8f57a69461af2a5fa6e6bbd7a5f60d3b7e6cebb687f55106933188e79ad155c1",
+      "url": "https://files.pythonhosted.org/packages/f9/41/4b043778cf9c4285d59742281a769eac371b9e47e35f98ad321349cc5d61/pydantic_core-2.33.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:manylinux_2_5_i686.manylinux1_i686",
+      "sha256": "572c7e6c8bb4774d2ac88929e3d1f12bc45714ae5ee6d9a788a9fb35e60bb04b",
+      "url": "https://files.pythonhosted.org/packages/cb/d5/7bb781bf2748ce3d03af04d5c969fa1308880e1dca35a9bd94e1a96a922e/pydantic_core-2.33.2-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-musllinux_1_1_aarch64.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:musllinux_1_1_aarch64",
+      "sha256": "db4b41f9bd95fbe5acd76d89920336ba96f03e149097365afe1cb092fceb89a1",
+      "url": "https://files.pythonhosted.org/packages/fe/36/def5e53e1eb0ad896785702a5bbfd25eed546cdcf4087ad285021a90ed53/pydantic_core-2.33.2-cp312-cp312-musllinux_1_1_aarch64.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-musllinux_1_1_armv7l.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:musllinux_1_1_armv7l",
+      "sha256": "fa854f5cf7e33842a892e5c73f45327760bc7bc516339fda888c75ae60edaeb6",
+      "url": "https://files.pythonhosted.org/packages/01/6c/57f8d70b2ee57fc3dc8b9610315949837fa8c11d86927b9bb044f8705419/pydantic_core-2.33.2-cp312-cp312-musllinux_1_1_armv7l.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-musllinux_1_1_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:musllinux_1_1_x86_64",
+      "sha256": "5f483cfb75ff703095c59e365360cb73e00185e01aaea067cd19acffd2ab20ea",
+      "url": "https://files.pythonhosted.org/packages/27/b9/9c17f0396a82b3d5cbea4c24d742083422639e7bb1d5bf600e12cb176a13/pydantic_core-2.33.2-cp312-cp312-musllinux_1_1_x86_64.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-win32.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:win32",
+      "sha256": "9cb1da0f5a471435a7bc7e439b8a728e8b61e59784b2af70d7c169f8dd8ae290",
+      "url": "https://files.pythonhosted.org/packages/b0/6a/adf5734ffd52bf86d865093ad70b2ce543415e0e356f6cacabbc0d9ad910/pydantic_core-2.33.2-cp312-cp312-win32.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-win_amd64.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:win_amd64",
+      "sha256": "f941635f2a3d96b2973e867144fde513665c87f13fe0e193c158ac51bfaaa7b2",
+      "url": "https://files.pythonhosted.org/packages/43/e4/5479fecb3606c1368d496a825d8411e126133c41224c1e7238be58b87d7e/pydantic_core-2.33.2-cp312-cp312-win_amd64.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pydantic_core-2.33.2-cp312-cp312-win_arm64.whl",
+      "ecosystem": "pypi",
+      "package": "pydantic-core",
+      "scope": "wheel:win_arm64",
+      "sha256": "cca3868ddfaccfbc4bfb1d608e2ccaaebe0ae628e1416aeb9c4d88c001bb45ab",
+      "url": "https://files.pythonhosted.org/packages/0d/24/8b11e8b3e2be9dd82df4b11408a67c61bb4dc4f8e11b5b0fc888b38118b5/pydantic_core-2.33.2-cp312-cp312-win_arm64.whl",
+      "version": "2.33.2"
+    },
+    {
+      "artifact": "pygments-2.21.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "pygments",
+      "scope": "sdist",
+      "sha256": "610ca751c9bc2492b38eb9a38a7fbc93edbbb2d7182edaf34e66ae493dee5c8c",
+      "url": "https://files.pythonhosted.org/packages/49/2e/ced460408999b33da6b31b0021b0f37d329e202d4169aeb164493778f25b/pygments-2.21.0.tar.gz",
+      "version": "2.21.0"
+    },
+    {
+      "artifact": "pygments-2.21.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "pygments",
+      "scope": "wheel:any",
+      "sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9",
+      "url": "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl",
+      "version": "2.21.0"
+    },
+    {
+      "artifact": "pytest-9.0.3.tar.gz",
+      "ecosystem": "pypi",
+      "package": "pytest",
+      "scope": "sdist",
+      "sha256": "b86ada508af81d19edeb213c681b1d48246c1a91d304c6c81a427674c17eb91c",
+      "url": "https://files.pythonhosted.org/packages/7d/0d/549bd94f1a0a402dc8cf64563a117c0f3765662e2e668477624baeec44d5/pytest-9.0.3.tar.gz",
+      "version": "9.0.3"
+    },
+    {
+      "artifact": "pytest-9.0.3-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "pytest",
+      "scope": "wheel:any",
+      "sha256": "2c5efc453d45394fdd706ade797c0a81091eccd1d6e4bccfcd476e2b8e0ab5d9",
+      "url": "https://files.pythonhosted.org/packages/d4/24/a372aaf5c9b7208e7112038812994107bc65a84cd00e0354a88c2c77a617/pytest-9.0.3-py3-none-any.whl",
+      "version": "9.0.3"
+    },
+    {
+      "artifact": "rich-15.0.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "rich",
+      "scope": "sdist",
+      "sha256": "edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36",
+      "url": "https://files.pythonhosted.org/packages/c0/8f/0722ca900cc807c13a6a0c696dacf35430f72e0ec571c4275d2371fca3e9/rich-15.0.0.tar.gz",
+      "version": "15.0.0"
+    },
+    {
+      "artifact": "rich-15.0.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "rich",
+      "scope": "wheel:any",
+      "sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+      "url": "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl",
+      "version": "15.0.0"
+    },
+    {
+      "artifact": "ruff-0.12.7.tar.gz",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "sdist",
+      "sha256": "1fc3193f238bc2d7968772c82831a4ff69252f673be371fb49663f0068b7ec71",
+      "url": "https://files.pythonhosted.org/packages/a1/81/0bd3594fa0f690466e41bd033bdcdf86cba8288345ac77ad4afbe5ec743a/ruff-0.12.7.tar.gz",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-linux_armv6l.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:linux_armv6l",
+      "sha256": "76e4f31529899b8c434c3c1dede98c4483b89590e15fb49f2d46183801565303",
+      "url": "https://files.pythonhosted.org/packages/e1/d2/6cb35e9c85e7a91e8d22ab32ae07ac39cc34a71f1009a6f9e4a2a019e602/ruff-0.12.7-py3-none-linux_armv6l.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-macosx_10_12_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:macosx_10_12_x86_64",
+      "sha256": "789b7a03e72507c54fb3ba6209e4bb36517b90f1a3569ea17084e3fd295500fb",
+      "url": "https://files.pythonhosted.org/packages/63/5b/a4136b9921aa84638f1a6be7fb086f8cad0fde538ba76bda3682f2599a2f/ruff-0.12.7-py3-none-macosx_10_12_x86_64.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-macosx_11_0_arm64.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:macosx_11_0_arm64",
+      "sha256": "2e1c2a3b8626339bb6369116e7030a4cf194ea48f49b64bb505732a7fce4f4e3",
+      "url": "https://files.pythonhosted.org/packages/a8/c9/3e24a8472484269b6b1821794141f879c54645a111ded4b6f58f9ab0705f/ruff-0.12.7-py3-none-macosx_11_0_arm64.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:manylinux_2_17_aarch64.manylinux2014_aarch64",
+      "sha256": "32dec41817623d388e645612ec70d5757a6d9c035f3744a52c7b195a57e03860",
+      "url": "https://files.pythonhosted.org/packages/26/7c/458dd25deeb3452c43eaee853c0b17a1e84169f8021a26d500ead77964fd/ruff-0.12.7-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:manylinux_2_17_armv7l.manylinux2014_armv7l",
+      "sha256": "47ef751f722053a5df5fa48d412dbb54d41ab9b17875c6840a58ec63ff0c247c",
+      "url": "https://files.pythonhosted.org/packages/7f/8b/658798472ef260ca050e400ab96ef7e85c366c39cf3dfbef4d0a46a528b6/ruff-0.12.7-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:manylinux_2_17_i686.manylinux2014_i686",
+      "sha256": "a828a5fc25a3efd3e1ff7b241fd392686c9386f20e5ac90aa9234a5faa12c423",
+      "url": "https://files.pythonhosted.org/packages/a8/86/9c2336f13b2a3326d06d39178fd3448dcc7025f82514d1b15816fe42bfe8/ruff-0.12.7-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:manylinux_2_17_ppc64.manylinux2014_ppc64",
+      "sha256": "5726f59b171111fa6a69d82aef48f00b56598b03a22f0f4170664ff4d8298efb",
+      "url": "https://files.pythonhosted.org/packages/76/69/df73f65f53d6c463b19b6b312fd2391dc36425d926ec237a7ed028a90fc1/ruff-0.12.7-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:manylinux_2_17_ppc64le.manylinux2014_ppc64le",
+      "sha256": "74e6f5c04c4dd4aba223f4fe6e7104f79e0eebf7d307e4f9b18c18362124bccd",
+      "url": "https://files.pythonhosted.org/packages/58/1e/de6cda406d99fea84b66811c189b5ea139814b98125b052424b55d28a41c/ruff-0.12.7-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:manylinux_2_17_s390x.manylinux2014_s390x",
+      "sha256": "5d0bfe4e77fba61bf2ccadf8cf005d6133e3ce08793bbe870dd1c734f2699a3e",
+      "url": "https://files.pythonhosted.org/packages/6f/ae/625d46d5164a6cc9261945a5e89df24457dc8262539ace3ac36c40f0b51e/ruff-0.12.7-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:manylinux_2_17_x86_64.manylinux2014_x86_64",
+      "sha256": "06bfb01e1623bf7f59ea749a841da56f8f653d641bfd046edee32ede7ff6c606",
+      "url": "https://files.pythonhosted.org/packages/55/bf/9cb1ea5e3066779e42ade8d0cd3d3b0582a5720a814ae1586f85014656b6/ruff-0.12.7-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-musllinux_1_2_aarch64.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:musllinux_1_2_aarch64",
+      "sha256": "e41df94a957d50083fd09b916d6e89e497246698c3f3d5c681c8b3e7b9bb4ac8",
+      "url": "https://files.pythonhosted.org/packages/55/7f/7ead2663be5627c04be83754c4f3096603bf5e99ed856c7cd29618c691bd/ruff-0.12.7-py3-none-musllinux_1_2_aarch64.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-musllinux_1_2_armv7l.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:musllinux_1_2_armv7l",
+      "sha256": "4000623300563c709458d0ce170c3d0d788c23a058912f28bbadc6f905d67afa",
+      "url": "https://files.pythonhosted.org/packages/17/40/a95352ea16edf78cd3a938085dccc55df692a4d8ba1b3af7accbe2c806b0/ruff-0.12.7-py3-none-musllinux_1_2_armv7l.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-musllinux_1_2_i686.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:musllinux_1_2_i686",
+      "sha256": "69ffe0e5f9b2cf2b8e289a3f8945b402a1b19eff24ec389f45f23c42a3dd6fb5",
+      "url": "https://files.pythonhosted.org/packages/4d/74/633b04871c669e23b8917877e812376827c06df866e1677f15abfadc95cb/ruff-0.12.7-py3-none-musllinux_1_2_i686.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-musllinux_1_2_x86_64.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:musllinux_1_2_x86_64",
+      "sha256": "a07a5c8ffa2611a52732bdc67bf88e243abd84fe2d7f6daef3826b59abbfeda4",
+      "url": "https://files.pythonhosted.org/packages/be/34/c3ef2d7799c9778b835a76189c6f53c179d3bdebc8c65288c29032e03613/ruff-0.12.7-py3-none-musllinux_1_2_x86_64.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-win32.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:win32",
+      "sha256": "c928f1b2ec59fb77dfdf70e0419408898b63998789cc98197e15f560b9e77f77",
+      "url": "https://files.pythonhosted.org/packages/77/ab/aca2e756ad7b09b3d662a41773f3edcbd262872a4fc81f920dc1ffa44541/ruff-0.12.7-py3-none-win32.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-win_amd64.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:win_amd64",
+      "sha256": "9c18f3d707ee9edf89da76131956aba1270c6348bfee8f6c647de841eac7194f",
+      "url": "https://files.pythonhosted.org/packages/b4/71/26d45a5042bc71db22ddd8252ca9d01e9ca454f230e2996bb04f16d72799/ruff-0.12.7-py3-none-win_amd64.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "ruff-0.12.7-py3-none-win_arm64.whl",
+      "ecosystem": "pypi",
+      "package": "ruff",
+      "scope": "wheel:win_arm64",
+      "sha256": "dfce05101dbd11833a0776716d5d1578641b7fddb537fe7fa956ab85d1769b69",
+      "url": "https://files.pythonhosted.org/packages/4c/9b/0b8aa09817b63e78d94b4977f18b1fcaead3165a5ee49251c5d5c245bb2d/ruff-0.12.7-py3-none-win_arm64.whl",
+      "version": "0.12.7"
+    },
+    {
+      "artifact": "shellingham-1.5.4.tar.gz",
+      "ecosystem": "pypi",
+      "package": "shellingham",
+      "scope": "sdist",
+      "sha256": "8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de",
+      "url": "https://files.pythonhosted.org/packages/58/15/8b3609fd3830ef7b27b655beb4b4e9c62313a4e8da8c676e142cc210d58e/shellingham-1.5.4.tar.gz",
+      "version": "1.5.4"
+    },
+    {
+      "artifact": "shellingham-1.5.4-py2.py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "shellingham",
+      "scope": "wheel:any",
+      "sha256": "7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686",
+      "url": "https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl",
+      "version": "1.5.4"
+    },
+    {
+      "artifact": "starlette-1.6.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "starlette",
+      "scope": "sdist",
+      "sha256": "d4e3ac5e546444960c710297a3c9fc3f7ebae1b7e963f3d36173b49da535be9b",
+      "url": "https://files.pythonhosted.org/packages/b5/b4/205b0d5241d934e8add0c38aa924c4f9fb7330834ff11e5444db964ec3f9/starlette-1.6.0.tar.gz",
+      "version": "1.6.0"
+    },
+    {
+      "artifact": "starlette-1.6.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "starlette",
+      "scope": "wheel:any",
+      "sha256": "a86dd39d14bb45f85a3d18525215a9ef0cfd1f192ac793220e72598c90335f0c",
+      "url": "https://files.pythonhosted.org/packages/c8/cb/6a6a47d5b464bd08695d254f3da6e7986cc70c9fa5d778eda57538edfe56/starlette-1.6.0-py3-none-any.whl",
+      "version": "1.6.0"
+    },
+    {
+      "artifact": "typer-0.16.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "typer",
+      "scope": "sdist",
+      "sha256": "af377ffaee1dbe37ae9440cb4e8f11686ea5ce4e9bae01b84ae7c63b87f1dd3b",
+      "url": "https://files.pythonhosted.org/packages/c5/8c/7d682431efca5fd290017663ea4588bf6f2c6aad085c7f108c5dbc316e70/typer-0.16.0.tar.gz",
+      "version": "0.16.0"
+    },
+    {
+      "artifact": "typer-0.16.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "typer",
+      "scope": "wheel:any",
+      "sha256": "1f79bed11d4d02d4310e3c1b7ba594183bcedb0ac73b27a9e5f28f6fb5b98855",
+      "url": "https://files.pythonhosted.org/packages/76/42/3efaf858001d2c2913de7f354563e3a3a2f0decae3efe98427125a8f441e/typer-0.16.0-py3-none-any.whl",
+      "version": "0.16.0"
+    },
+    {
+      "artifact": "typing_extensions-4.16.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "typing-extensions",
+      "scope": "sdist",
+      "sha256": "dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5",
+      "url": "https://files.pythonhosted.org/packages/f6/cc/6253133b5bb138fc3306cebfbda2c520f545d36b5be2c7255cc528bb45d6/typing_extensions-4.16.0.tar.gz",
+      "version": "4.16.0"
+    },
+    {
+      "artifact": "typing_extensions-4.16.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "typing-extensions",
+      "scope": "wheel:any",
+      "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+      "version": "4.16.0"
+    },
+    {
+      "artifact": "typing_inspection-0.4.4.tar.gz",
+      "ecosystem": "pypi",
+      "package": "typing-inspection",
+      "scope": "sdist",
+      "sha256": "547274fa6b0a561ccf549cc9524b999a578e737d015d8709d021f9d0d13bea47",
+      "url": "https://files.pythonhosted.org/packages/a3/26/b09b8010994eccc3c09092e6b34058f36a460eea2d4c3e8b910c695975a0/typing_inspection-0.4.4.tar.gz",
+      "version": "0.4.4"
+    },
+    {
+      "artifact": "typing_inspection-0.4.4-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "typing-inspection",
+      "scope": "wheel:any",
+      "sha256": "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147",
+      "url": "https://files.pythonhosted.org/packages/67/81/4add07e5172b7ac40d8ed5ff580409a7801a4fe26d529bdd915401dabfbe/typing_inspection-0.4.4-py3-none-any.whl",
+      "version": "0.4.4"
+    },
+    {
+      "artifact": "uvicorn-0.35.0.tar.gz",
+      "ecosystem": "pypi",
+      "package": "uvicorn",
+      "scope": "sdist",
+      "sha256": "bc662f087f7cf2ce11a1d7fd70b90c9f98ef2e2831556dd078d131b96cc94a01",
+      "url": "https://files.pythonhosted.org/packages/5e/42/e0e305207bb88c6b8d3061399c6a961ffe5fbb7e2aa63c9234df7259e9cd/uvicorn-0.35.0.tar.gz",
+      "version": "0.35.0"
+    },
+    {
+      "artifact": "uvicorn-0.35.0-py3-none-any.whl",
+      "ecosystem": "pypi",
+      "package": "uvicorn",
+      "scope": "wheel:any",
+      "sha256": "197535216b25ff9b785e29a0b79199f55222193d47f820816e7da751e9bc8d4a",
+      "url": "https://files.pythonhosted.org/packages/d2/e2/dc81b1bd1dcfe91735810265e9d26bc8ec5da45b4c0f6237e286819194c3/uvicorn-0.35.0-py3-none-any.whl",
+      "version": "0.35.0"
+    }
+  ],
   "generated": "2026-08-24",
   "harth": {
     "attribution_verified": true,
@@ -1759,7 +2754,7 @@
     },
     {
       "ecosystem": "pypi",
-      "license": "Copyright (c) 2005-2025, NumPy Developers.\n         All rights reserved.\n         \n         Redistribution and use in source and binary forms, with or without\n         modification, are permitted provided that the following conditions are\n         met:\n         \n             * Redistributions of source code must retain the above copyright\n                notice, this list of conditions and the following disclaimer.\n         \n             * Redistributions in binary form must reproduce the above\n                copyright notice, this list of conditions and the following\n                disclaimer in the documentation and/or other materials provided\n                with the distribution.\n         \n             * Neither the name of the NumPy Developers nor the names of any\n                contributors may be used to endorse or promote products derived\n                from this software without specific prior written permission.\n         \n         THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n         \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\n         LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\n         A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\n         OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\n         SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\n         LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\n         DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\n         THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n         (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n         OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n         \n         ----\n         \n         The NumPy repository and source distributions bundle several libraries that are\n         compatibly licensed.  We list these here.\n         \n         Name: lapack-lite\n         Files: numpy/linalg/lapack_lite/*\n         License: BSD-3-Clause\n           For details, see numpy/linalg/lapack_lite/LICENSE.txt\n         \n         Name: dragon4\n         Files: numpy/_core/src/multiarray/dragon4.c\n         License: MIT\n           For license text, see numpy/_core/src/multiarray/dragon4.c\n         \n         Name: libdivide\n         Files: numpy/_core/include/numpy/libdivide/*\n         License: Zlib\n           For license text, see numpy/_core/include/numpy/libdivide/LICENSE.txt\n         \n         \n         Note that the following files are vendored in the repository and sdist but not\n         installed in built numpy packages:\n         \n         Name: Meson\n         Files: vendored-meson/meson/*\n         License: Apache 2.0\n           For license text, see vendored-meson/meson/COPYING\n         \n         Name: spin\n         Files: .spin/cmds.py\n         License: BSD-3\n           For license text, see .spin/LICENSE\n         \n         Name: tempita\n         Files: numpy/_build_utils/tempita/*\n         License: MIT\n           For details, see numpy/_build_utils/tempita/LICENCE.txt\n         \n         ----\n         \n         This binary distribution of NumPy also bundles the following software:\n         \n         \n         Name: OpenBLAS\n         Files: numpy/.dylibs/libscipy_openblas*.so\n         Description: bundled as a dynamically linked library\n         Availability: https://github.com/OpenMathLib/OpenBLAS/\n         License: BSD-3-Clause\n           Copyright (c) 2011-2014, The OpenBLAS Project\n           All rights reserved.\n         \n           Redistribution and use in source and binary forms, with or without\n           modification, are permitted provided that the following conditions are\n           met:\n         \n              1. Redistributions of source code must retain the above copyright\n                 notice, this list of conditions and the following disclaimer.\n         \n              2. Redistributions in binary form must reproduce the above copyright\n                 notice, this list of conditions and the following disclaimer in\n                 the documentation and/or other materials provided with the\n                 distribution.\n              3. Neither the name of the OpenBLAS project nor the names of\n                 its contributors may be used to endorse or promote products\n                 derived from this software without specific prior written\n                 permission.\n         \n           THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\n           AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n           IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\n           ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE\n           LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\n           DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\n           SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\n           CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\n           OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE\n           USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n         \n         \n         Name: LAPACK\n         Files: numpy/.dylibs/libscipy_openblas*.so\n         Description: bundled in OpenBLAS\n         Availability: https://github.com/OpenMathLib/OpenBLAS/\n         License: BSD-3-Clause-Open-MPI\n           Copyright (c) 1992-2013 The University of Tennessee and The University\n                                   of Tennessee Research Foundation.  All rights\n                                   reserved.\n           Copyright (c) 2000-2013 The University of California Berkeley. All\n                                   rights reserved.\n           Copyright (c) 2006-2013 The University of Colorado Denver.  All rights\n                                   reserved.\n         \n           $COPYRIGHT$\n         \n           Additional copyrights may follow\n         \n           $HEADER$\n         \n           Redistribution and use in source and binary forms, with or without\n           modification, are permitted provided that the following conditions are\n           met:\n         \n           - Redistributions of source code must retain the above copyright\n             notice, this list of conditions and the following disclaimer.\n         \n           - Redistributions in binary form must reproduce the above copyright\n             notice, this list of conditions and the following disclaimer listed\n             in this license in the documentation and/or other materials\n             provided with the distribution.\n         \n           - Neither the name of the copyright holders nor the names of its\n             contributors may be used to endorse or promote products derived from\n             this software without specific prior written permission.\n         \n           The copyright holders provide no reassurances that the source code\n           provided does not infringe any patent, copyright, or any other\n           intellectual property rights of third parties.  The copyright holders\n           disclaim any liability to any recipient for claims brought against\n           recipient by any third party for infringement of that parties\n           intellectual property rights.\n         \n           THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n           \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\n           LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\n           A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\n           OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\n           SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\n           LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\n           DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\n           THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n           (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n           OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n         \n         \n         Name: GCC runtime library\n         Files: numpy/.dylibs/libgfortran*, numpy/.dylibs/libgcc*\n         Description: dynamically linked to files compiled with gcc\n         Availability: https://gcc.gnu.org/git/?p=gcc.git;a=tree;f=libgfortran\n         License: GPL-3.0-or-later WITH GCC-exception-3.1\n           Copyright (C) 2002-2017 Free Software Foundation, Inc.\n         \n           Libgfortran is free software; you can redistribute it and/or modify\n           it under the terms of the GNU General Public License as published by\n           the Free Software Foundation; either version 3, or (at your option)\n           any later version.\n         \n           Libgfortran is distributed in the hope that it will be useful,\n           but WITHOUT ANY WARRANTY; without even the implied warranty of\n           MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n           GNU General Public License for more details.\n         \n           Under Section 7 of GPL version 3, you are granted additional\n           permissions described in the GCC Runtime Library Exception, version\n           3.1, as published by the Free Software Foundation.\n         \n           You should have received a copy of the GNU General Public License and\n           a copy of the GCC Runtime Library Exception along with this program;\n           see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see\n           <http://www.gnu.org/licenses/>.\n         \n         ----\n         \n         Full text of license texts referred to above follows (that they are\n         listed below does not necessarily imply the conditions apply to the\n         present binary release):\n         \n         ----\n         \n         GCC RUNTIME LIBRARY EXCEPTION\n         \n         Version 3.1, 31 March 2009\n         \n         Copyright (C) 2009 Free Software Foundation, Inc. <https://fsf.org/>\n         \n         Everyone is permitted to copy and distribute verbatim copies of this\n         license document, but changing it is not allowed.\n         \n         This GCC Runtime Library Exception (\"Exception\") is an additional\n         permission under section 7 of the GNU General Public License, version\n         3 (\"GPLv3\"). It applies to a given file (the \"Runtime Library\") that\n         bears a notice placed by the copyright holder of the file stating that\n         the file is governed by GPLv3 along with this Exception.\n         \n         When you use GCC to compile a program, GCC may combine portions of\n         certain GCC header files and runtime libraries with the compiled\n         program. The purpose of this Exception is to allow compilation of\n         non-GPL (including proprietary) programs to use, in this way, the\n         header files and runtime libraries covered by this Exception.\n         \n         0. Definitions.\n         \n         A file is an \"Independent Module\" if it either requires the Runtime\n         Library for execution after a Compilation Process, or makes use of an\n         interface provided by the Runtime Library, but is not otherwise based\n         on the Runtime Library.\n         \n         \"GCC\" means a version of the GNU Compiler Collection, with or without\n         modifications, governed by version 3 (or a specified later version) of\n         the GNU General Public License (GPL) with the option of using any\n         subsequent versions published by the FSF.\n         \n         \"GPL-compatible Software\" is software whose conditions of propagation,\n         modification and use would permit combination with GCC in accord with\n         the license of GCC.\n         \n         \"Target Code\" refers to output from any compiler for a real or virtual\n         target processor architecture, in executable form or suitable for\n         input to an assembler, loader, linker and/or execution\n         phase. Notwithstanding that, Target Code does not include data in any\n         format that is used as a compiler intermediate representation, or used\n         for producing a compiler intermediate representation.\n         \n         The \"Compilation Process\" transforms code entirely represented in\n         non-intermediate languages designed for human-written code, and/or in\n         Java Virtual Machine byte code, into Target Code. Thus, for example,\n         use of source code generators and preprocessors need not be considered\n         part of the Compilation Process, since the Compilation Process can be\n         understood as starting with the output of the generators or\n         preprocessors.\n         \n         A Compilation Process is \"Eligible\" if it is done using GCC, alone or\n         with other GPL-compatible software, or if it is done without using any\n         work based on GCC. For example, using non-GPL-compatible Software to\n         optimize any GCC intermediate representations would not qualify as an\n         Eligible Compilation Process.\n         \n         1. Grant of Additional Permission.\n         \n         You have permission to propagate a work of Target Code formed by\n         combining the Runtime Library with Independent Modules, even if such\n         propagation would otherwise violate the terms of GPLv3, provided that\n         all Target Code was generated by Eligible Compilation Processes. You\n         may then convey such a combination under terms of your choice,\n         consistent with the licensing of the Independent Modules.\n         \n         2. No Weakening of GCC Copyleft.\n         \n         The availability of this Exception does not imply any general\n         presumption that third-party software is unaffected by the copyleft\n         requirements of the license of GCC.\n         \n         ----\n         \n                             GNU GENERAL PUBLIC LICENSE\n                                Version 3, 29 June 2007\n         \n          Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>\n          Everyone is permitted to copy and distribute verbatim copies\n          of this license document, but changing it is not allowed.\n         \n                                     Preamble\n         \n           The GNU General Public License is a free, copyleft license for\n         software and other kinds of works.\n         \n           The licenses for most software and other practical works are designed\n         to take away your freedom to share and change the works.  By contrast,\n         the GNU General Public License is intended to guarantee your freedom to\n         share and change all versions of a program--to make sure it remains free\n         software for all its users.  We, the Free Software Foundation, use the\n         GNU General Public License for most of our software; it applies also to\n         any other work released this way by its authors.  You can apply it to\n         your programs, too.\n         \n           When we speak of free software, we are referring to freedom, not\n         price.  Our General Public Licenses are designed to make sure that you\n         have the freedom to distribute copies of free software (and charge for\n         them if you wish), that you receive source code or can get it if you\n         want it, that you can change the software or use pieces of it in new\n         free programs, and that you know you can do these things.\n         \n           To protect your rights, we need to prevent others from denying you\n         these rights or asking you to surrender the rights.  Therefore, you have\n         certain responsibilities if you distribute copies of the software, or if\n         you modify it: responsibilities to respect the freedom of others.\n         \n           For example, if you distribute copies of such a program, whether\n         gratis or for a fee, you must pass on to the recipients the same\n         freedoms that you received.  You must make sure that they, too, receive\n         or can get the source code.  And you must show them these terms so they\n         know their rights.\n         \n           Developers that use the GNU GPL protect your rights with two steps:\n         (1) assert copyright on the software, and (2) offer you this License\n         giving you legal permission to copy, distribute and/or modify it.\n         \n           For the developers' and authors' protection, the GPL clearly explains\n         that there is no warranty for this free software.  For both users' and\n         authors' sake, the GPL requires that modified versions be marked as\n         changed, so that their problems will not be attributed erroneously to\n         authors of previous versions.\n         \n           Some devices are designed to deny users access to install or run\n         modified versions of the software inside them, although the manufacturer\n         can do so.  This is fundamentally incompatible with the aim of\n         protecting users' freedom to change the software.  The systematic\n         pattern of such abuse occurs in the area of products for individuals to\n         use, which is precisely where it is most unacceptable.  Therefore, we\n         have designed this version of the GPL to prohibit the practice for those\n         products.  If such problems arise substantially in other domains, we\n         stand ready to extend this provision to those domains in future versions\n         of the GPL, as needed to protect the freedom of users.\n         \n           Finally, every program is threatened constantly by software patents.\n         States should not allow patents to restrict development and use of\n         software on general-purpose computers, but in those that do, we wish to\n         avoid the special danger that patents applied to a free program could\n         make it effectively proprietary.  To prevent this, the GPL assures that\n         patents cannot be used to render the program non-free.\n         \n           The precise terms and conditions for copying, distribution and\n         modification follow.\n         \n                                TERMS AND CONDITIONS\n         \n           0. Definitions.\n         \n           \"This License\" refers to version 3 of the GNU General Public License.\n         \n           \"Copyright\" also means copyright-like laws that apply to other kinds of\n         works, such as semiconductor masks.\n         \n           \"The Program\" refers to any copyrightable work licensed under this\n         License.  Each licensee is addressed as \"you\".  \"Licensees\" and\n         \"recipients\" may be individuals or organizations.\n         \n           To \"modify\" a work means to copy from or adapt all or part of the work\n         in a fashion requiring copyright permission, other than the making of an\n         exact copy.  The resulting work is called a \"modified version\" of the\n         earlier work or a work \"based on\" the earlier work.\n         \n           A \"covered work\" means either the unmodified Program or a work based\n         on the Program.\n         \n           To \"propagate\" a work means to do anything with it that, without\n         permission, would make you directly or secondarily liable for\n         infringement under applicable copyright law, except executing it on a\n         computer or modifying a private copy.  Propagation includes copying,\n         distribution (with or without modification), making available to the\n         public, and in some countries other activities as well.\n         \n           To \"convey\" a work means any kind of propagation that enables other\n         parties to make or receive copies.  Mere interaction with a user through\n         a computer network, with no transfer of a copy, is not conveying.\n         \n           An interactive user interface displays \"Appropriate Legal Notices\"\n         to the extent that it includes a convenient and prominently visible\n         feature that (1) displays an appropriate copyright notice, and (2)\n         tells the user that there is no warranty for the work (except to the\n         extent that warranties are provided), that licensees may convey the\n         work under this License, and how to view a copy of this License.  If\n         the interface presents a list of user commands or options, such as a\n         menu, a prominent item in the list meets this criterion.\n         \n           1. Source Code.\n         \n           The \"source code\" for a work means the preferred form of the work\n         for making modifications to it.  \"Object code\" means any non-source\n         form of a work.\n         \n           A \"Standard Interface\" means an interface that either is an official\n         standard defined by a recognized standards body, or, in the case of\n         interfaces specified for a particular programming language, one that\n         is widely used among developers working in that language.\n         \n           The \"System Libraries\" of an executable work include anything, other\n         than the work as a whole, that (a) is included in the normal form of\n         packaging a Major Component, but which is not part of that Major\n         Component, and (b) serves only to enable use of the work with that\n         Major Component, or to implement a Standard Interface for which an\n         implementation is available to the public in source code form.  A\n         \"Major Component\", in this context, means a major essential component\n         (kernel, window system, and so on) of the specific operating system\n         (if any) on which the executable work runs, or a compiler used to\n         produce the work, or an object code interpreter used to run it.\n         \n           The \"Corresponding Source\" for a work in object code form means all\n         the source code needed to generate, install, and (for an executable\n         work) run the object code and to modify the work, including scripts to\n         control those activities.  However, it does not include the work's\n         System Libraries, or general-purpose tools or generally available free\n         programs which are used unmodified in performing those activities but\n         which are not part of the work.  For example, Corresponding Source\n         includes interface definition files associated with source files for\n         the work, and the source code for shared libraries and dynamically\n         linked subprograms that the work is specifically designed to require,\n         such as by intimate data communication or control flow between those\n         subprograms and other parts of the work.\n         \n           The Corresponding Source need not include anything that users\n         can regenerate automatically from other parts of the Corresponding\n         Source.\n         \n           The Corresponding Source for a work in source code form is that\n         same work.\n         \n           2. Basic Permissions.\n         \n           All rights granted under this License are granted for the term of\n         copyright on the Program, and are irrevocable provided the stated\n         conditions are met.  This License explicitly affirms your unlimited\n         permission to run the unmodified Program.  The output from running a\n         covered work is covered by this License only if the output, given its\n         content, constitutes a covered work.  This License acknowledges your\n         rights of fair use or other equivalent, as provided by copyright law.\n         \n           You may make, run and propagate covered works that you do not\n         convey, without conditions so long as your license otherwise remains\n         in force.  You may convey covered works to others for the sole purpose\n         of having them make modifications exclusively for you, or provide you\n         with facilities for running those works, provided that you comply with\n         the terms of this License in conveying all material for which you do\n         not control copyright.  Those thus making or running the covered works\n         for you must do so exclusively on your behalf, under your direction\n         and control, on terms that prohibit them from making any copies of\n         your copyrighted material outside their relationship with you.\n         \n           Conveying under any other circumstances is permitted solely under\n         the conditions stated below.  Sublicensing is not allowed; section 10\n         makes it unnecessary.\n         \n           3. Protecting Users' Legal Rights From Anti-Circumvention Law.\n         \n           No covered work shall be deemed part of an effective technological\n         measure under any applicable law fulfilling obligations under article\n         11 of the WIPO copyright treaty adopted on 20 December 1996, or\n         similar laws prohibiting or restricting circumvention of such\n         measures.\n         \n           When you convey a covered work, you waive any legal power to forbid\n         circumvention of technological measures to the extent such circumvention\n         is effected by exercising rights under this License with respect to\n         the covered work, and you disclaim any intention to limit operation or\n         modification of the work as a means of enforcing, against the work's\n         users, your or third parties' legal rights to forbid circumvention of\n         technological measures.\n         \n           4. Conveying Verbatim Copies.\n         \n           You may convey verbatim copies of the Program's source code as you\n         receive it, in any medium, provided that you conspicuously and\n         appropriately publish on each copy an appropriate copyright notice;\n         keep intact all notices stating that this License and any\n         non-permissive terms added in accord with section 7 apply to the code;\n         keep intact all notices of the absence of any warranty; and give all\n         recipients a copy of this License along with the Program.\n         \n           You may charge any price or no price for each copy that you convey,\n         and you may offer support or warranty protection for a fee.\n         \n           5. Conveying Modified Source Versions.\n         \n           You may convey a work based on the Program, or the modifications to\n         produce it from the Program, in the form of source code under the\n         terms of section 4, provided that you also meet all of these conditions:\n         \n             a) The work must carry prominent notices stating that you modified\n             it, and giving a relevant date.\n         \n             b) The work must carry prominent notices stating that it is\n             released under this License and any conditions added under section\n             7.  This requirement modifies the requirement in section 4 to\n             \"keep intact all notices\".\n         \n             c) You must license the entire work, as a whole, under this\n             License to anyone who comes into possession of a copy.  This\n             License will therefore apply, along with any applicable section 7\n             additional terms, to the whole of the work, and all its parts,\n             regardless of how they are packaged.  This License gives no\n             permission to license the work in any other way, but it does not\n             invalidate such permission if you have separately received it.\n         \n             d) If the work has interactive user interfaces, each must display\n             Appropriate Legal Notices; however, if the Program has interactive\n             interfaces that do not display Appropriate Legal Notices, your\n             work need not make them do so.\n         \n           A compilation of a covered work with other separate and independent\n         works, which are not by their nature extensions of the covered work,\n         and which are not combined with it such as to form a larger program,\n         in or on a volume of a storage or distribution medium, is called an\n         \"aggregate\" if the compilation and its resulting copyright are not\n         used to limit the access or legal rights of the compilation's users\n         beyond what the individual works permit.  Inclusion of a covered work\n         in an aggregate does not cause this License to apply to the other\n         parts of the aggregate.\n         \n           6. Conveying Non-Source Forms.\n         \n           You may convey a covered work in object code form under the terms\n         of sections 4 and 5, provided that you also convey the\n         machine-readable Corresponding Source under the terms of this License,\n         in one of these ways:\n         \n             a) Convey the object code in, or embodied in, a physical product\n             (including a physical distribution medium), accompanied by the\n             Corresponding Source fixed on a durable physical medium\n             customarily used for software interchange.\n         \n             b) Convey the object code in, or embodied in, a physical product\n             (including a physical distribution medium), accompanied by a\n             written offer, valid for at least three years and valid for as\n             long as you offer spare parts or customer support for that product\n             model, to give anyone who possesses the object code either (1) a\n             copy of the Corresponding Source for all the software in the\n             product that is covered by this License, on a durable physical\n             medium customarily used for software interchange, for a price no\n             more than your reasonable cost of physically performing this\n             conveying of source, or (2) access to copy the\n             Corresponding Source from a network server at no charge.\n         \n             c) Convey individual copies of the object code with a copy of the\n             written offer to provide the Corresponding Source.  This\n             alternative is allowed only occasionally and noncommercially, and\n             only if you received the object code with such an offer, in accord\n             with subsection 6b.\n         \n             d) Convey the object code by offering access from a designated\n             place (gratis or for a charge), and offer equivalent access to the\n             Corresponding Source in the same way through the same place at no\n             further charge.  You need not require recipients to copy the\n             Corresponding Source along with the object code.  If the place to\n             copy the object code is a network server, the Corresponding Source\n             may be on a different server (operated by you or a third party)\n             that supports equivalent copying facilities, provided you maintain\n             clear directions next to the object code saying where to find the\n             Corresponding Source.  Regardless of what server hosts the\n             Corresponding Source, you remain obligated to ensure that it is\n             available for as long as needed to satisfy these requirements.\n         \n             e) Convey the object code using peer-to-peer transmission, provided\n             you inform other peers where the object code and Corresponding\n             Source of the work are being offered to the general public at no\n             charge under subsection 6d.\n         \n           A separable portion of the object code, whose source code is excluded\n         from the Corresponding Source as a System Library, need not be\n         included in conveying the object code work.\n         \n           A \"User Product\" is either (1) a \"consumer product\", which means any\n         tangible personal property which is normally used for personal, family,\n         or household purposes, or (2) anything designed or sold for incorporation\n         into a dwelling.  In determining whether a product is a consumer product,\n         doubtful cases shall be resolved in favor of coverage.  For a particular\n         product received by a particular user, \"normally used\" refers to a\n         typical or common use of that class of product, regardless of the status\n         of the particular user or of the way in which the particular user\n         actually uses, or expects or is expected to use, the product.  A product\n         is a consumer product regardless of whether the product has substantial\n         commercial, industrial or non-consumer uses, unless such uses represent\n         the only significant mode of use of the product.\n         \n           \"Installation Information\" for a User Product means any methods,\n         procedures, authorization keys, or other information required to install\n         and execute modified versions of a covered work in that User Product from\n         a modified version of its Corresponding Source.  The information must\n         suffice to ensure that the continued functioning of the modified object\n         code is in no case prevented or interfered with solely because\n         modification has been made.\n         \n           If you convey an object code work under this section in, or with, or\n         specifically for use in, a User Product, and the conveying occurs as\n         part of a transaction in which the right of possession and use of the\n         User Product is transferred to the recipient in perpetuity or for a\n         fixed term (regardless of how the transaction is characterized), the\n         Corresponding Source conveyed under this section must be accompanied\n         by the Installation Information.  But this requirement does not apply\n         if neither you nor any third party retains the ability to install\n         modified object code on the User Product (for example, the work has\n         been installed in ROM).\n         \n           The requirement to provide Installation Information does not include a\n         requirement to continue to provide support service, warranty, or updates\n         for a work that has been modified or installed by the recipient, or for\n         the User Product in which it has been modified or installed.  Access to a\n         network may be denied when the modification itself materially and\n         adversely affects the operation of the network or violates the rules and\n         protocols for communication across the network.\n         \n           Corresponding Source conveyed, and Installation Information provided,\n         in accord with this section must be in a format that is publicly\n         documented (and with an implementation available to the public in\n         source code form), and must require no special password or key for\n         unpacking, reading or copying.\n         \n           7. Additional Terms.\n         \n           \"Additional permissions\" are terms that supplement the terms of this\n         License by making exceptions from one or more of its conditions.\n         Additional permissions that are applicable to the entire Program shall\n         be treated as though they were included in this License, to the extent\n         that they are valid under applicable law.  If additional permissions\n         apply only to part of the Program, that part may be used separately\n         under those permissions, but the entire Program remains governed by\n         this License without regard to the additional permissions.\n         \n           When you convey a copy of a covered work, you may at your option\n         remove any additional permissions from that copy, or from any part of\n         it.  (Additional permissions may be written to require their own\n         removal in certain cases when you modify the work.)  You may place\n         additional permissions on material, added by you to a covered work,\n         for which you have or can give appropriate copyright permission.\n         \n           Notwithstanding any other provision of this License, for material you\n         add to a covered work, you may (if authorized by the copyright holders of\n         that material) supplement the terms of this License with terms:\n         \n             a) Disclaiming warranty or limiting liability differently from the\n             terms of sections 15 and 16 of this License; or\n         \n             b) Requiring preservation of specified reasonable legal notices or\n             author attributions in that material or in the Appropriate Legal\n             Notices displayed by works containing it; or\n         \n             c) Prohibiting misrepresentation of the origin of that material, or\n             requiring that modified versions of such material be marked in\n             reasonable ways as different from the original version; or\n         \n             d) Limiting the use for publicity purposes of names of licensors or\n             authors of the material; or\n         \n             e) Declining to grant rights under trademark law for use of some\n             trade names, trademarks, or service marks; or\n         \n             f) Requiring indemnification of licensors and authors of that\n             material by anyone who conveys the material (or modified versions of\n             it) with contractual assumptions of liability to the recipient, for\n             any liability that these contractual assumptions directly impose on\n             those licensors and authors.\n         \n           All other non-permissive additional terms are considered \"further\n         restrictions\" within the meaning of section 10.  If the Program as you\n         received it, or any part of it, contains a notice stating that it is\n         governed by this License along with a term that is a further\n         restriction, you may remove that term.  If a license document contains\n         a further restriction but permits relicensing or conveying under this\n         License, you may add to a covered work material governed by the terms\n         of that license document, provided that the further restriction does\n         not survive such relicensing or conveying.\n         \n           If you add terms to a covered work in accord with this section, you\n         must place, in the relevant source files, a statement of the\n         additional terms that apply to those files, or a notice indicating\n         where to find the applicable terms.\n         \n           Additional terms, permissive or non-permissive, may be stated in the\n         form of a separately written license, or stated as exceptions;\n         the above requirements apply either way.\n         \n           8. Termination.\n         \n           You may not propagate or modify a covered work except as expressly\n         provided under this License.  Any attempt otherwise to propagate or\n         modify it is void, and will automatically terminate your rights under\n         this License (including any patent licenses granted under the third\n         paragraph of section 11).\n         \n           However, if you cease all violation of this License, then your\n         license from a particular copyright holder is reinstated (a)\n         provisionally, unless and until the copyright holder explicitly and\n         finally terminates your license, and (b) permanently, if the copyright\n         holder fails to notify you of the violation by some reasonable means\n         prior to 60 days after the cessation.\n         \n           Moreover, your license from a particular copyright holder is\n         reinstated permanently if the copyright holder notifies you of the\n         violation by some reasonable means, this is the first time you have\n         received notice of violation of this License (for any work) from that\n         copyright holder, and you cure the violation prior to 30 days after\n         your receipt of the notice.\n         \n           Termination of your rights under this section does not terminate the\n         licenses of parties who have received copies or rights from you under\n         this License.  If your rights have been terminated and not permanently\n         reinstated, you do not qualify to receive new licenses for the same\n         material under section 10.\n         \n           9. Acceptance Not Required for Having Copies.\n         \n           You are not required to accept this License in order to receive or\n         run a copy of the Program.  Ancillary propagation of a covered work\n         occurring solely as a consequence of using peer-to-peer transmission\n         to receive a copy likewise does not require acceptance.  However,\n         nothing other than this License grants you permission to propagate or\n         modify any covered work.  These actions infringe copyright if you do\n         not accept this License.  Therefore, by modifying or propagating a\n         covered work, you indicate your acceptance of this License to do so.\n         \n           10. Automatic Licensing of Downstream Recipients.\n         \n           Each time you convey a covered work, the recipient automatically\n         receives a license from the original licensors, to run, modify and\n         propagate that work, subject to this License.  You are not responsible\n         for enforcing compliance by third parties with this License.\n         \n           An \"entity transaction\" is a transaction transferring control of an\n         organization, or substantially all assets of one, or subdividing an\n         organization, or merging organizations.  If propagation of a covered\n         work results from an entity transaction, each party to that\n         transaction who receives a copy of the work also receives whatever\n         licenses to the work the party's predecessor in interest had or could\n         give under the previous paragraph, plus a right to possession of the\n         Corresponding Source of the work from the predecessor in interest, if\n         the predecessor has it or can get it with reasonable efforts.\n         \n           You may not impose any further restrictions on the exercise of the\n         rights granted or affirmed under this License.  For example, you may\n         not impose a license fee, royalty, or other charge for exercise of\n         rights granted under this License, and you may not initiate litigation\n         (including a cross-claim or counterclaim in a lawsuit) alleging that\n         any patent claim is infringed by making, using, selling, offering for\n         sale, or importing the Program or any portion of it.\n         \n           11. Patents.\n         \n           A \"contributor\" is a copyright holder who authorizes use under this\n         License of the Program or a work on which the Program is based.  The\n         work thus licensed is called the contributor's \"contributor version\".\n         \n           A contributor's \"essential patent claims\" are all patent claims\n         owned or controlled by the contributor, whether already acquired or\n         hereafter acquired, that would be infringed by some manner, permitted\n         by this License, of making, using, or selling its contributor version,\n         but do not include claims that would be infringed only as a\n         consequence of further modification of the contributor version.  For\n         purposes of this definition, \"control\" includes the right to grant\n         patent sublicenses in a manner consistent with the requirements of\n         this License.\n         \n           Each contributor grants you a non-exclusive, worldwide, royalty-free\n         patent license under the contributor's essential patent claims, to\n         make, use, sell, offer for sale, import and otherwise run, modify and\n         propagate the contents of its contributor version.\n         \n           In the following three paragraphs, a \"patent license\" is any express\n         agreement or commitment, however denominated, not to enforce a patent\n         (such as an express permission to practice a patent or covenant not to\n         sue for patent infringement).  To \"grant\" such a patent license to a\n         party means to make such an agreement or commitment not to enforce a\n         patent against the party.\n         \n           If you convey a covered work, knowingly relying on a patent license,\n         and the Corresponding Source of the work is not available for anyone\n         to copy, free of charge and under the terms of this License, through a\n         publicly available network server or other readily accessible means,\n         then you must either (1) cause the Corresponding Source to be so\n         available, or (2) arrange to deprive yourself of the benefit of the\n         patent license for this particular work, or (3) arrange, in a manner\n         consistent with the requirements of this License, to extend the patent\n         license to downstream recipients.  \"Knowingly relying\" means you have\n         actual knowledge that, but for the patent license, your conveying the\n         covered work in a country, or your recipient's use of the covered work\n         in a country, would infringe one or more identifiable patents in that\n         country that you have reason to believe are valid.\n         \n           If, pursuant to or in connection with a single transaction or\n         arrangement, you convey, or propagate by procuring conveyance of, a\n         covered work, and grant a patent license to some of the parties\n         receiving the covered work authorizing them to use, propagate, modify\n         or convey a specific copy of the covered work, then the patent license\n         you grant is automatically extended to all recipients of the covered\n         work and works based on it.\n         \n           A patent license is \"discriminatory\" if it does not include within\n         the scope of its coverage, prohibits the exercise of, or is\n         conditioned on the non-exercise of one or more of the rights that are\n         specifically granted under this License.  You may not convey a covered\n         work if you are a party to an arrangement with a third party that is\n         in the business of distributing software, under which you make payment\n         to the third party based on the extent of your activity of conveying\n         the work, and under which the third party grants, to any of the\n         parties who would receive the covered work from you, a discriminatory\n         patent license (a) in connection with copies of the covered work\n         conveyed by you (or copies made from those copies), or (b) primarily\n         for and in connection with specific products or compilations that\n         contain the covered work, unless you entered into that arrangement,\n         or that patent license was granted, prior to 28 March 2007.\n         \n           Nothing in this License shall be construed as excluding or limiting\n         any implied license or other defenses to infringement that may\n         otherwise be available to you under applicable patent law.\n         \n           12. No Surrender of Others' Freedom.\n         \n           If conditions are imposed on you (whether by court order, agreement or\n         otherwise) that contradict the conditions of this License, they do not\n         excuse you from the conditions of this License.  If you cannot convey a\n         covered work so as to satisfy simultaneously your obligations under this\n         License and any other pertinent obligations, then as a consequence you may\n         not convey it at all.  For example, if you agree to terms that obligate you\n         to collect a royalty for further conveying from those to whom you convey\n         the Program, the only way you could satisfy both those terms and this\n         License would be to refrain entirely from conveying the Program.\n         \n           13. Use with the GNU Affero General Public License.\n         \n           Notwithstanding any other provision of this License, you have\n         permission to link or combine any covered work with a work licensed\n         under version 3 of the GNU Affero General Public License into a single\n         combined work, and to convey the resulting work.  The terms of this\n         License will continue to apply to the part which is the covered work,\n         but the special requirements of the GNU Affero General Public License,\n         section 13, concerning interaction through a network will apply to the\n         combination as such.\n         \n           14. Revised Versions of this License.\n         \n           The Free Software Foundation may publish revised and/or new versions of\n         the GNU General Public License from time to time.  Such new versions will\n         be similar in spirit to the present version, but may differ in detail to\n         address new problems or concerns.\n         \n           Each version is given a distinguishing version number.  If the\n         Program specifies that a certain numbered version of the GNU General\n         Public License \"or any later version\" applies to it, you have the\n         option of following the terms and conditions either of that numbered\n         version or of any later version published by the Free Software\n         Foundation.  If the Program does not specify a version number of the\n         GNU General Public License, you may choose any version ever published\n         by the Free Software Foundation.\n         \n           If the Program specifies that a proxy can decide which future\n         versions of the GNU General Public License can be used, that proxy's\n         public statement of acceptance of a version permanently authorizes you\n         to choose that version for the Program.\n         \n           Later license versions may give you additional or different\n         permissions.  However, no additional obligations are imposed on any\n         author or copyright holder as a result of your choosing to follow a\n         later version.\n         \n           15. Disclaimer of Warranty.\n         \n           THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY\n         APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT\n         HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY\n         OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,\n         THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n         PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM\n         IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF\n         ALL NECESSARY SERVICING, REPAIR OR CORRECTION.\n         \n           16. Limitation of Liability.\n         \n           IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING\n         WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS\n         THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY\n         GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE\n         USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF\n         DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD\n         PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),\n         EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF\n         SUCH DAMAGES.\n         \n           17. Interpretation of Sections 15 and 16.\n         \n           If the disclaimer of warranty and limitation of liability provided\n         above cannot be given local legal effect according to their terms,\n         reviewing courts shall apply local law that most closely approximates\n         an absolute waiver of all civil liability in connection with the\n         Program, unless a warranty or assumption of liability accompanies a\n         copy of the Program in return for a fee.\n         \n                              END OF TERMS AND CONDITIONS\n         \n                     How to Apply These Terms to Your New Programs\n         \n           If you develop a new program, and you want it to be of the greatest\n         possible use to the public, the best way to achieve this is to make it\n         free software which everyone can redistribute and change under these terms.\n         \n           To do so, attach the following notices to the program.  It is safest\n         to attach them to the start of each source file to most effectively\n         state the exclusion of warranty; and each file should have at least\n         the \"copyright\" line and a pointer to where the full notice is found.\n         \n             <one line to give the program's name and a brief idea of what it does.>\n             Copyright (C) <year>  <name of author>\n         \n             This program is free software: you can redistribute it and/or modify\n             it under the terms of the GNU General Public License as published by\n             the Free Software Foundation, either version 3 of the License, or\n             (at your option) any later version.\n         \n             This program is distributed in the hope that it will be useful,\n             but WITHOUT ANY WARRANTY; without even the implied warranty of\n             MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n             GNU General Public License for more details.\n         \n             You should have received a copy of the GNU General Public License\n             along with this program.  If not, see <https://www.gnu.org/licenses/>.\n         \n         Also add information on how to contact you by electronic and paper mail.\n         \n           If the program does terminal interaction, make it output a short\n         notice like this when it starts in an interactive mode:\n         \n             <program>  Copyright (C) <year>  <name of author>\n             This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.\n             This is free software, and you are welcome to redistribute it\n             under certain conditions; type `show c' for details.\n         \n         The hypothetical commands `show w' and `show c' should show the appropriate\n         parts of the General Public License.  Of course, your program's commands\n         might be different; for a GUI interface, you would use an \"about box\".\n         \n           You should also get your employer (if you work as a programmer) or school,\n         if any, to sign a \"copyright disclaimer\" for the program, if necessary.\n         For more information on this, and how to apply and follow the GNU GPL, see\n         <https://www.gnu.org/licenses/>.\n         \n           The GNU General Public License does not permit incorporating your program\n         into proprietary programs.  If your program is a subroutine library, you\n         may consider it more useful to permit linking proprietary applications with\n         the library.  If this is what you want to do, use the GNU Lesser General\n         Public License instead of this License.  But first, please read\n         <https://www.gnu.org/licenses/why-not-lgpl.html>.\n         \n         Name: libquadmath\n         Files: numpy/.dylibs/libquadmath*.so\n         Description: dynamically linked to files compiled with gcc\n         Availability: https://gcc.gnu.org/git/?p=gcc.git;a=tree;f=libquadmath\n         License: LGPL-2.1-or-later\n         \n             GCC Quad-Precision Math Library\n             Copyright (C) 2010-2019 Free Software Foundation, Inc.\n             Written by Francois-Xavier Coudert  <fxcoudert@gcc.gnu.org>\n         \n             This file is part of the libquadmath library.\n             Libquadmath is free software; you can redistribute it and/or\n             modify it under the terms of the GNU Library General Public\n             License as published by the Free Software Foundation; either\n             version 2.1 of the License, or (at your option) any later version.\n         \n             Libquadmath is distributed in the hope that it will be useful,\n             but WITHOUT ANY WARRANTY; without even the implied warranty of\n             MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU\n             Lesser General Public License for more details.\n             https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html",
+      "license": "BSD-3-Clause with bundled notices (see artifact provenance)",
       "name": "numpy",
       "source": "https://pypi.org/pypi/numpy/2.3.2/json",
       "status": "REVIEW",
@@ -1890,206 +2885,36 @@
   "secrets": {
     "status": "PASS"
   },
+  "upstream_notices": {
+    "LICENSE.txt": {
+      "scope": "source-and-wheel",
+      "sha256": "1be1df33863f97a7bc1c4d67980bd6c69c9a6fef0a5ee76e6ad6cb91e56e8491",
+      "url": "https://raw.githubusercontent.com/numpy/numpy/v2.3.2/LICENSE.txt"
+    },
+    "LICENSES_bundled.txt": {
+      "scope": "sdist-and-source-only",
+      "sha256": "7fe52683ce840a3103e9cc82fe92252b2c533061ca4f9b8d6f3d4d835f7c32f9",
+      "url": "https://raw.githubusercontent.com/numpy/numpy/v2.3.2/LICENSES_bundled.txt"
+    },
+    "LICENSE_linux.txt": {
+      "scope": "wheel-platform:linux",
+      "sha256": "a8683fdcd75a8dbd2cf7f638e5b77ada6c61a31f4cb1c8a77e7bfa9f40560442",
+      "url": "https://raw.githubusercontent.com/numpy/numpy/v2.3.2/tools/wheels/LICENSE_linux.txt"
+    },
+    "LICENSE_osx.txt": {
+      "scope": "wheel-platform:macos",
+      "sha256": "c91c24ac6ba9ef8ba13b1707d14107cd82e3397ddb9b78201a6e6d2777680fda",
+      "url": "https://raw.githubusercontent.com/numpy/numpy/v2.3.2/tools/wheels/LICENSE_osx.txt"
+    },
+    "LICENSE_win32.txt": {
+      "scope": "wheel-platform:windows",
+      "sha256": "d2ddbc988223a00e704574ddf9f0b20ae62bfa38fbabf4f06c0d00ac456e1aac",
+      "url": "https://raw.githubusercontent.com/numpy/numpy/v2.3.2/tools/wheels/LICENSE_win32.txt"
+    }
+  },
   "vulnerability_scan": {
-    "scanners": [
-      {
-        "ecosystem": "pypi",
-        "result": {
-          "dependencies": [
-            {
-              "name": "annotated-doc",
-              "version": "0.0.5",
-              "vulns": []
-            },
-            {
-              "name": "annotated-types",
-              "version": "0.8.0",
-              "vulns": []
-            },
-            {
-              "name": "anyio",
-              "version": "4.14.2",
-              "vulns": []
-            },
-            {
-              "name": "certifi",
-              "version": "2026.7.22",
-              "vulns": []
-            },
-            {
-              "name": "click",
-              "version": "8.4.2",
-              "vulns": []
-            },
-            {
-              "name": "colorama",
-              "version": "0.4.6",
-              "vulns": []
-            },
-            {
-              "name": "fastapi",
-              "version": "0.141.1",
-              "vulns": []
-            },
-            {
-              "name": "h11",
-              "version": "0.16.0",
-              "vulns": []
-            },
-            {
-              "name": "howhow",
-              "skip_reason": "Dependency not found on PyPI and could not be audited: howhow (0.1.0)"
-            },
-            {
-              "name": "httpcore",
-              "version": "1.0.9",
-              "vulns": []
-            },
-            {
-              "name": "httpx",
-              "version": "0.28.1",
-              "vulns": []
-            },
-            {
-              "name": "idna",
-              "version": "3.19",
-              "vulns": []
-            },
-            {
-              "name": "iniconfig",
-              "version": "2.3.0",
-              "vulns": []
-            },
-            {
-              "name": "markdown-it-py",
-              "version": "4.2.0",
-              "vulns": []
-            },
-            {
-              "name": "mdurl",
-              "version": "0.1.2",
-              "vulns": []
-            },
-            {
-              "name": "mypy",
-              "version": "1.17.1",
-              "vulns": []
-            },
-            {
-              "name": "mypy-extensions",
-              "version": "1.1.0",
-              "vulns": []
-            },
-            {
-              "name": "numpy",
-              "version": "2.3.2",
-              "vulns": []
-            },
-            {
-              "name": "packaging",
-              "version": "26.3",
-              "vulns": []
-            },
-            {
-              "name": "pathspec",
-              "version": "1.1.1",
-              "vulns": []
-            },
-            {
-              "name": "pluggy",
-              "version": "1.6.0",
-              "vulns": []
-            },
-            {
-              "name": "pydantic",
-              "version": "2.11.7",
-              "vulns": []
-            },
-            {
-              "name": "pydantic-core",
-              "version": "2.33.2",
-              "vulns": []
-            },
-            {
-              "name": "pygments",
-              "version": "2.21.0",
-              "vulns": []
-            },
-            {
-              "name": "pytest",
-              "version": "9.0.3",
-              "vulns": []
-            },
-            {
-              "name": "rich",
-              "version": "15.0.0",
-              "vulns": []
-            },
-            {
-              "name": "ruff",
-              "version": "0.12.7",
-              "vulns": []
-            },
-            {
-              "name": "shellingham",
-              "version": "1.5.4",
-              "vulns": []
-            },
-            {
-              "name": "starlette",
-              "version": "1.6.0",
-              "vulns": []
-            },
-            {
-              "name": "typer",
-              "version": "0.16.0",
-              "vulns": []
-            },
-            {
-              "name": "typing-extensions",
-              "version": "4.16.0",
-              "vulns": []
-            },
-            {
-              "name": "typing-inspection",
-              "version": "0.4.4",
-              "vulns": []
-            },
-            {
-              "name": "uvicorn",
-              "version": "0.35.0",
-              "vulns": []
-            }
-          ],
-          "fixes": []
-        },
-        "returncode": 0,
-        "status": "PASS"
-      },
-      {
-        "ecosystem": "npm",
-        "result": {
-          "actions": [],
-          "advisories": {},
-          "metadata": {
-            "dependencies": 203,
-            "devDependencies": 0,
-            "optionalDependencies": 0,
-            "totalDependencies": 203,
-            "vulnerabilities": {
-              "critical": 0,
-              "high": 0,
-              "info": 0,
-              "low": 0,
-              "moderate": 0
-            }
-          },
-          "muted": []
-        },
-        "returncode": 0,
-        "status": "PASS"
-      }
-    ],
-    "schema": "howhow.supply-chain.vulnerability-scan.v1"
+    "reason": "Library audits do not execute external scanners.",
+    "schema": "howhow.supply-chain.vulnerability-scan.v1",
+    "status": "NOT_APPLICABLE"
   }
 }

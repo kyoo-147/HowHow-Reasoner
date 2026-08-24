@@ -44,3 +44,30 @@ def test_public_compliance_artifacts_reject_private_paths() -> None:
         assert not private_path.search(text), path
         if path.suffix == ".json":
             json.loads(text)
+
+
+def test_artifact_provenance_is_lock_derived_and_platform_scoped() -> None:
+    from scripts.audit_supply_chain import locked_artifacts
+
+    artifacts = locked_artifacts()
+    numpy = [item for item in artifacts if item["package"] == "numpy"]
+    assert any(item["scope"] == "sdist" for item in numpy)
+    windows = [item for item in numpy if "win_amd64" in item["artifact"]]
+    assert (
+        windows[0]["sha256"] == "9e196ade2400c0c737d93465327d1ae7c06c7cb8a1756121ebf54b06ca183c7f"
+    )
+    assert windows[0]["upstream_notices"] == "LICENSE.txt,LICENSE_win32.txt"
+    assert all("Users" not in str(item) and ".venv" not in str(item) for item in artifacts)
+
+
+def test_numpy_license_summary_is_single_line_and_howhow_stays_unknown() -> None:
+    report, _ = audit(refresh=False)
+    numpy = next(item for item in report["packages"] if item["name"] == "numpy")
+    howhow = next(item for item in report["packages"] if item["name"] == "howhow")
+    assert "\n" not in numpy["license"]
+    assert howhow["license"] == "UNKNOWN"
+    assert howhow["status"] == "UNKNOWN"
+    assert (
+        "artifacts" in report
+        and report["upstream_notices"]["LICENSE_win32.txt"]["scope"] == "wheel-platform:windows"
+    )
