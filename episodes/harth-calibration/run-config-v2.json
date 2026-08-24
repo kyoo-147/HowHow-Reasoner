@@ -1,5 +1,6 @@
 {
   "protocol_id": "harth-calibration-v2",
+  "class_vocabulary": ["1", "2", "3", "4", "5", "6", "7", "8", "13", "14", "130", "140"],
   "archive": "episodes/harth-calibration/data/harth.zip",
   "archive_sha256": "REQUIRED_OPERATOR_CHECKSUM",
   "seed": 0,

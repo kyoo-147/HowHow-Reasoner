@@ -1,5 +1,6 @@
 {
   "protocol_id": "harth-calibration-v2",
+  "class_vocabulary": ["1", "2", "3", "4", "5", "6", "7", "8", "13", "14", "130", "140"],
   "decision": "REVISE",
   "status": "PROTOCOL_ONLY_NO_REAL_RERUN",
   "primary_design": "nested_subject_held_out_loso",
@@ -24,6 +25,11 @@
     "subject_session_boundary": true,
     "minimum_training_subjects_for_temperature": 2,
     "fixed_sensitivity_cohort": ["S015", "S016", "S017", "S018", "S019", "S020", "S021", "S022"]
+  },
+  "timestamp_policy": {
+    "naive_timestamps": "interpret_as_utc",
+    "gap_policy": "split_at_gap",
+    "gap_factor_over_median_cadence": 2.0
   },
   "data_policy": {
     "default": "all_eligible_rows_and_complete_windows",

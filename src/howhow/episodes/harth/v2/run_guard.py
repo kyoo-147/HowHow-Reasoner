@@ -24,14 +24,13 @@ def _json(value: Any) -> str:
     return json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n"
 
 
-def atomic_write(path: str | Path, value: Mapping[str, Any]) -> None:
-    """Write JSON durably enough for a process crash, then atomically replace target."""
+def _atomic(path: str | Path, content: str) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=target.parent)
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as stream:
-            stream.write(_json(value))
+            stream.write(content)
             stream.flush()
             os.fsync(stream.fileno())
         os.replace(temporary, target)
@@ -43,8 +42,18 @@ def atomic_write(path: str | Path, value: Mapping[str, Any]) -> None:
         raise
 
 
+def atomic_write(path: str | Path, value: Mapping[str, Any]) -> None:
+    """Write JSON durably, then atomically replace the target."""
+    _atomic(path, _json(value))
+
+
+def atomic_text_write(path: str | Path, value: str) -> None:
+    """Write text durably, then atomically replace the target."""
+    _atomic(path, value)
+
+
 class RunGuard:
-    """Owns checkpoint/final/failure artifacts and converts every failure to evidence."""
+    """Own every validation, execution, stage, final, and failure artifact."""
 
     def __init__(
         self,
@@ -66,6 +75,24 @@ class RunGuard:
         self.completed_folds: list[Any] = []
         self.output.mkdir(parents=True, exist_ok=True)
 
+    def restore_checkpoint(self, payload: Mapping[str, Any]) -> None:
+        expected = {
+            "input_hash": self.input_hash,
+            "protocol_hash": self.protocol_hash,
+            "code_hash": self.code_hash,
+        }
+        if any(payload.get(key) != value for key, value in expected.items()):
+            raise RunGuardFailure("checkpoint immutable identity mismatch")
+        completed = payload.get("completed_folds", [])
+        if not isinstance(completed, list) or len(completed) > MAX_OUTER_FOLDS:
+            raise RunGuardFailure("checkpoint completed-fold progress is invalid")
+        self.completed_folds = list(completed)
+
+    def bind_input_hash(self, input_hash: str) -> None:
+        if self.completed_folds:
+            raise RunGuardFailure("cannot change input identity after execution starts")
+        self.input_hash = input_hash
+
     def _base(self) -> dict[str, Any]:
         return {
             "scientific_metrics": False,
@@ -74,6 +101,15 @@ class RunGuard:
             "code_hash": self.code_hash,
             "completed_folds": self.completed_folds,
         }
+
+    def stage(self, phase: str, **extra: Any) -> Path:
+        """Persist a durable stage marker without replacing the resumable checkpoint."""
+        payload = (
+            self._base() | {"status": "RUNNING", "phase": phase, "updated_at": time.time()} | extra
+        )
+        target = self.output / f"stage-{phase}.json"
+        atomic_write(target, payload)
+        return target
 
     def checkpoint(
         self, *, phase: str, hashes: Mapping[str, str] | None = None, **extra: Any
@@ -95,7 +131,11 @@ class RunGuard:
     def final(self, *, phase: str = "complete", **extra: Any) -> Path:
         payload = (
             self._base()
-            | {"status": "COMPLETE", "phase": phase, "finished_at": time.time()}
+            | {
+                "status": "COMPLETE",
+                "phase": phase,
+                "finished_at": time.time(),
+            }
             | extra
         )
         target = self.output / "final.json"
