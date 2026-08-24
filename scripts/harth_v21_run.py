@@ -51,7 +51,6 @@ CONFIG = ROOT / "episodes/harth-calibration/run-config-v2.1.json"
 SCHEMA = ROOT / "schemas/v2.1/Result.json"
 CLASSES = ["1", "2", "3", "4", "5", "6", "7", "8", "13", "14", "130", "140"]
 REAL_CONSENT_ENV = "HOWHOW_RUN_REAL_HARTH_V21"
-DECISION_ID = "howhow-harth-v21-pr42-review-4"
 BUDGETS = {"timeout_seconds": 1800, "bootstrap_reps": 2000, "pvalue_draws": 200000}
 AUTH_FIELDS = {
     "authorization_version",
@@ -155,6 +154,42 @@ def _artifacts(
     }
 
 
+def _load_decision(path: Path, *, authorization: Mapping[str, Any]) -> dict[str, Any]:
+    """Load the independently rerun decision and bind its exact bytes to auth."""
+    try:
+        raw = path.read_bytes()
+        decision = json.loads(raw.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise V21Error("DECISION_FILE_INVALID") from exc
+    if (
+        not isinstance(decision, dict)
+        or hashlib.sha256(raw).hexdigest() != authorization["decision_sha256"]
+    ):
+        raise V21Error("DECISION_HASH_MISMATCH")
+    required = {
+        "decision_id",
+        "protocol_version",
+        "allow_rerun",
+        "allow_resume",
+        "allow_retry",
+        "allow_tuning",
+        "one_shot",
+        "hashes",
+        "budgets",
+        "destination",
+        "git_revision",
+        "vocabulary",
+    }
+    if set(decision) != required:
+        raise V21Error("DECISION_FIELDS_MISMATCH")
+    expected = {key: authorization[key] for key in required if key != "hashes"}
+    if any(decision[key] != value for key, value in expected.items()):
+        raise V21Error("DECISION_AUTHORIZATION_MISMATCH")
+    if decision["hashes"] != authorization["hashes"]:
+        raise V21Error("DECISION_PACKAGE_HASH_MISMATCH")
+    return decision
+
+
 def _load_authorization(path: Path, *, archive: Path, output: Path) -> dict[str, Any]:
     try:
         auth = json.loads(path.read_text(encoding="utf-8"))
@@ -200,7 +235,7 @@ def _load_authorization(path: Path, *, archive: Path, output: Path) -> dict[str,
     }
     if auth["hashes"] != expected or auth["git_revision"] != revision:
         raise V21Error("STALE_OR_WRONG_AUTHORIZATION")
-    if auth["decision_id"] != DECISION_ID or auth["decision_sha256"] != APPROVED_DECISION_SHA256:
+    if not auth["decision_sha256"]:
         raise V21Error("DECISION_BINDING_MISMATCH")
     if auth["vocabulary"] != CLASSES or auth["destination"] != str(output.resolve()):
         raise V21Error("AUTHORIZATION_BINDING_MISMATCH")
@@ -365,11 +400,8 @@ def _build_result(
             "reason": "ZERO_SUPPORT",
             "support": 0,
         }
-    support_status = (
-        "NOT_ESTIMABLE"
-        if any(fold["held_out_test"]["zero_support"] for fold in fold_support)
-        else None
-    )
+    # Held-out support is descriptive: macro NLL/Brier/ECE remain estimable.
+    # Only class-specific exploratory cells carry NOT_ESTIMABLE state.
     values: dict[str, dict[str, dict[str, float]]] = {
         m: {s: {} for s in ("calibrated", "uncalibrated")} for m in ESTIMANDS
     }
@@ -436,9 +468,7 @@ def _build_result(
         eligibility_manifest=eligibility,
         pairing=pairing,
     )
-    status = (
-        support_status or forced_status or ("COMPLETE" if len(raw_p) == 3 else "INCOMPLETE_FAMILY")
-    )
+    status = forced_status or ("COMPLETE" if len(raw_p) == 3 else "INCOMPLETE_FAMILY")
     result = {
         "schema_version": SCHEMA_VERSION,
         "protocol_version": PROTOCOL_VERSION,
@@ -465,15 +495,33 @@ def _build_result(
             else {}
         ),
         "hashes": hashes,
-        "engine": engine.to_dict()
-        | {
-            "inference": inference,
+        "inference": inference,
+        "exploratory": {
             "frozen_population": {"subjects": subjects, "count": len(subjects)},
             "configuration_state_pairings": [
                 {"configuration": configuration, "state": state, "subjects": subjects}
                 for configuration in ("full_sensor", "back_only", "thigh_only")
                 for state in ("calibrated", "uncalibrated")
             ],
+            "f1": {
+                f"{fold['configuration']}/{state}/{fold['test_subject']}": {
+                    "class_records": fold["sufficient_statistics"][state][fold["test_subject"]][
+                        "classification"
+                    ],
+                    "class_status": {
+                        row["class"]: (
+                            {"status": "OBSERVED", "support": row["support"]}
+                            if row["support"]
+                            else {"status": "NOT_ESTIMABLE", "support": 0, "reason": "ZERO_SUPPORT"}
+                        )
+                        for row in fold["sufficient_statistics"][state][fold["test_subject"]][
+                            "classification"
+                        ]
+                    },
+                }
+                for fold in engine.folds
+                for state in ("calibrated", "uncalibrated")
+            },
         },
         "support": {
             "training": fold_support[0]["training"],
@@ -588,8 +636,11 @@ def _fixture_windows(kind: str) -> tuple[tuple[Any, ...], dict[str, Any]]:
 
 def _publish(output: Path, result: dict[str, Any], guard: RunGuard) -> Path:
     generated = json.loads(result["outputs"]["generator"])
+    guard.check_timeout()
     atomic_canonical_write(output / "result-v2.1.json", result)
+    guard.check_timeout()
     atomic_canonical_write(output / "generator.json", generated)
+    guard.check_timeout()
     atomic_canonical_write(
         output / "quarantine.json",
         (
@@ -612,7 +663,9 @@ def _publish(output: Path, result: dict[str, Any], guard: RunGuard) -> Path:
     )
     from howhow.episodes.harth.v2.run_guard import atomic_text_write
 
+    guard.check_timeout()
     atomic_text_write(output / "manuscript.md", result["outputs"]["manuscript"])
+    guard.check_timeout()
     guard.final(
         phase="complete",
         quarantine=(
@@ -641,11 +694,16 @@ def _claim_destination(output: Path, authorization: Mapping[str, Any]) -> Path:
     return output
 
 
-def run_real(archive: Path, authorization: Path, output: Path) -> Path:
+def run_real(
+    archive: Path, authorization: Path, output: Path, decision: Path | None = None
+) -> Path:
     if os.environ.get(REAL_CONSENT_ENV) != "1":
         raise V21Error(f"--execute-real requires {REAL_CONSENT_ENV}=1")
     # Validate authorization before mkdir: new-schema auth failure leaves no output dir.
     auth = _load_authorization(authorization.resolve(), archive=archive.resolve(), output=output)
+    if decision is None:
+        raise V21Error("DECISION_FILE_REQUIRED")
+    _load_decision(decision.resolve(), authorization=auth)
     _claim_destination(output, auth)
     guard = RunGuard(
         output,
@@ -758,13 +816,14 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--archive", type=Path)
     parser.add_argument("--authorization", type=Path)
+    parser.add_argument("--decision", type=Path)
     parser.add_argument("--execute-real", action="store_true")
     args = parser.parse_args()
     try:
         if args.execute_real:
             if args.archive is None or args.authorization is None:
                 raise V21Error("REAL_ARCHIVE_AND_AUTHORIZATION_REQUIRED")
-            run_real(args.archive, args.authorization, args.output)
+            run_real(args.archive, args.authorization, args.output, args.decision)
             print("V21 PASS: real execution completed")
         else:
             print(f"V21 PASS: {run_synthetic(args.synthetic_fixture, args.output)}")

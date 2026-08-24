@@ -41,7 +41,10 @@ def test_complete_fixture_publishes_quarantined_truthful_artifacts(tmp_path: Pat
 def test_support_and_family_failures_are_preserved(tmp_path: Path) -> None:
     zero = json.loads(run_synthetic("zero-support", tmp_path / "zero").read_text())
     incomplete = json.loads(run_synthetic("incomplete-family", tmp_path / "family").read_text())
-    assert zero["status"] == "NOT_ESTIMABLE"
+    assert zero["status"] == "COMPLETE"
+    assert all(
+        zero["estimability"][metric]["status"] == "ESTIMABLE" for metric in ("nll", "brier", "ece")
+    )
     assert "140" in zero["support"]["held_out_test"]["zero_support"]
     assert incomplete["status"] == "INCOMPLETE_FAMILY"
 
@@ -113,6 +116,30 @@ def test_real_generator_is_quarantined_and_unverified() -> None:
         "source_result_hash": payload["source_result_hash"],
         "status": "COMPLETE",
     }
+
+
+def test_independent_decision_binds_exact_bytes_and_package_hashes(tmp_path: Path) -> None:
+    auth = {
+        "decision_id": "rerun-2026-08-24",
+        "protocol_version": _MODULE.PROTOCOL_VERSION,
+        "allow_rerun": True,
+        "allow_resume": False,
+        "allow_retry": False,
+        "allow_tuning": False,
+        "one_shot": True,
+        "hashes": {"package": "a" * 64},
+        "budgets": {"timeout_seconds": 1800, "bootstrap_reps": 2000, "pvalue_draws": 200000},
+        "destination": str((tmp_path / "out").resolve()),
+        "git_revision": "b" * 40,
+        "vocabulary": _MODULE.CLASSES,
+    }
+    decision = tmp_path / "decision.json"
+    decision.write_bytes(json.dumps(auth, sort_keys=True, separators=(",", ":")).encode() + b"\n")
+    auth["decision_sha256"] = __import__("hashlib").sha256(decision.read_bytes()).hexdigest()
+    assert _MODULE._load_decision(decision, authorization=auth)["decision_id"] == "rerun-2026-08-24"
+    decision.write_bytes(decision.read_bytes().replace(b"rerun-2026-08-24", b"tampered-2026-08-24"))
+    with pytest.raises(V21Error, match="DECISION_HASH_MISMATCH"):
+        _MODULE._load_decision(decision, authorization=auth)
 
 
 def test_preexisting_destination_is_refused(tmp_path: Path) -> None:
