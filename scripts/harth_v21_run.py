@@ -674,7 +674,13 @@ def _fixture_windows(kind: str) -> tuple[tuple[Any, ...], dict[str, Any]]:
         return loaded.windows, loaded.manifest
 
 
-def _publish(output: Path, result: dict[str, Any], guard: RunGuard) -> Path:
+def _publish(
+    output: Path,
+    result: dict[str, Any],
+    guard: RunGuard,
+    *,
+    completed_fold_ids: list[str] | None = None,
+) -> Path:
     """Stage all package members and publish the completion manifest last."""
     generated = json.loads(result["outputs"]["generator"])
     staging = output / ".staging"
@@ -731,12 +737,19 @@ def _publish(output: Path, result: dict[str, Any], guard: RunGuard) -> Path:
     guard.check_timeout()
     (staging / "package-quarantine.json").unlink(missing_ok=True)
     staging.rmdir()
+    real_completion = result.get("claim_boundary") == "guarded_real_quarantined_no_release"
+    if real_completion:
+        if completed_fold_ids is None or len(completed_fold_ids) != 66:
+            raise V21Error("REAL_COMPLETION_FOLD_METADATA_INCOMPLETE")
+        for fold_id in completed_fold_ids:
+            guard.record_configuration_fold(fold_id)
     guard.final(
         phase="complete",
+        scientific_metrics=real_completion,
+        performance_bearing=real_completion,
+        completed_configuration_fold_count=len(guard.completed_configuration_folds),
         quarantine=(
-            "guarded_real_unverified"
-            if result.get("claim_boundary") == "guarded_real_quarantined_no_release"
-            else "synthetic_only_no_scientific_claim"
+            "guarded_real_unverified" if real_completion else "synthetic_only_no_scientific_claim"
         ),
     )
     return output / "result-v2.1.json"
@@ -818,7 +831,14 @@ def run_real(
             real_data=True,
             timeout_check=guard.check_timeout,
         )
-        return _publish(output, result, guard)
+        return _publish(
+            output,
+            result,
+            guard,
+            completed_fold_ids=[
+                f"{fold['configuration']}::{fold['test_subject']}" for fold in engine.folds
+            ],
+        )
     except BaseException as exc:
         guard.failure(exc, phase="loader_engine_analysis_schema_generator_publication")
         raise
